@@ -26,7 +26,7 @@ spl_token_22 initialize-metadata $VENDOR_TOKEN_KEY "DePHY Example Vendor" "DVND1
 spl_token_22 update-metadata $VENDOR_TOKEN_KEY 'description' 'Example DePHY Vendor'
 
 # mint it
-spl_token_22 create-account --owner $VENDOR_TOKEN_KEY --fee-payer $DePHY $VENDOR_TOKEN_KEY
+spl_token_22 create-account --owner $VENDOR_KEY --fee-payer $DePHY $VENDOR_TOKEN_KEY
 spl_token_22 mint $VENDOR_TOKEN_KEY 1 --recipient-owner $VENDOR_KEY
 
 # disable mint
