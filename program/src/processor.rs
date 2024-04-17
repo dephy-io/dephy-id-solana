@@ -18,7 +18,7 @@ use crate::{
         assert_pda, assert_program_owner, assert_same_pubkeys, assert_signer, assert_writable,
     },
     instruction::{
-        accounts::{CreateDephyAccounts, CreateProductAccounts, CreateVendorAccounts}, CreateDephyArgs, CreateProductArgs, CreateVendorArgs, DephyInstruction
+        accounts::{ActivateDeviceAccounts, CreateDephyAccounts, CreateDeviceAccounts, CreateProductAccounts, CreateVendorAccounts}, ActivateDeviceArgs, CreateDephyArgs, CreateProductArgs, CreateVendorArgs, DephyInstruction
     },
     state::{DephyAccount, DephyData, Key},
     utils::create_account,
@@ -46,13 +46,11 @@ pub fn process_instruction<'a>(
         }
         DephyInstruction::CreateDevice() => {
             msg!("Instruction: Create Device");
-            // create_device(program_id, accounts)
-            Ok(())
+            create_device(program_id, accounts)
         }
         DephyInstruction::ActivateDevice(args) => {
             msg!("Instruction: Activate Device");
-            // activate_device(program_id, accounts, args)
-            Ok(())
+            activate_device(program_id, accounts, args)
         }
     }
 }
@@ -112,6 +110,8 @@ fn create_vendor<'a>(
     let dephy_account = DephyAccount::load(ctx.accounts.dephy)?;
 
     // Guards
+    assert_program_owner("Dephy owner", ctx.accounts.dephy, program_id)?;
+
     assert_same_pubkeys("authority", ctx.accounts.authority, &dephy_account.authority)?;
     assert_signer("authority", ctx.accounts.authority)?;
 
@@ -441,3 +441,296 @@ fn create_product<'a>(
 
     Ok(())
 }
+
+fn create_device<'a>(_program_id: &Pubkey, accounts: &'a [AccountInfo<'a>]) -> ProgramResult {
+    // Accounts
+    let ctx = CreateDeviceAccounts::context(accounts)?;
+    let token_program_id = spl_token_2022::id();
+    let payer_pubkey = ctx.accounts.payer.key;
+    let vendor_pubkey = ctx.accounts.vendor.key;
+    let mint_pubkey = ctx.accounts.product_mint.key;
+    let device_pubkey = ctx.accounts.device.key;
+
+    // Guards
+    assert_same_pubkeys("token_program_2022", ctx.accounts.token_program_2022, &token_program_id)?;
+
+    let atoken_pubkey = spl_associated_token_account::get_associated_token_address_with_program_id(
+        device_pubkey,
+        &mint_pubkey,
+        &token_program_id,
+    );
+    assert_same_pubkeys("atoken_account", ctx.accounts.product_atoken, &atoken_pubkey)?;
+
+    // TODO: check product mint account state
+
+    // create atoken for device
+    invoke(
+        &spl_associated_token_account::instruction::create_associated_token_account(
+            payer_pubkey,
+            device_pubkey,
+            &mint_pubkey,
+            &token_program_id,
+        ),
+        &[
+            // 0. `[writeable,signer]` Funding account (must be a system account)
+            ctx.accounts.payer.clone(),
+            // 1. `[writeable]` Associated token account address to be created
+            ctx.accounts.product_atoken.clone(),
+            // 2. `[]` Wallet address for the new associated token account
+            ctx.accounts.device.clone(),
+            // 3. `[]` The token mint for the new associated token account
+            ctx.accounts.product_mint.clone(),
+            // 4. `[]` System program
+            ctx.accounts.system_program.clone(),
+            // 5. `[]` SPL Token program
+            ctx.accounts.token_program_2022.clone(),
+        ],
+    )?;
+
+    // mint to device
+    invoke(
+        &spl_token_2022::instruction::mint_to(
+            &token_program_id,
+            &mint_pubkey,
+            &atoken_pubkey,
+            vendor_pubkey,
+            &[vendor_pubkey],
+            1,
+        )?,
+        &[
+            // [writable] The mint.
+            ctx.accounts.product_mint.clone(),
+            // [writable] The account to mint tokens to.
+            ctx.accounts.product_atoken.clone(),
+            // [signer] The mint's minting authority.
+            ctx.accounts.vendor.clone(),
+        ],
+    )?;
+
+    Ok(())
+}
+
+
+fn activate_device<'a>(
+    program_id: &Pubkey,
+    accounts: &'a [AccountInfo<'a>],
+    args: ActivateDeviceArgs,
+) -> ProgramResult {
+    // Accounts
+    let ctx = ActivateDeviceAccounts::context(accounts)?;
+    let token_program_id = spl_token_2022::id();
+    let payer_pubkey = ctx.accounts.payer.key;
+    let device_pubkey = ctx.accounts.device.key;
+    let user_pubkey = ctx.accounts.user.key;
+
+    // Guards
+    assert_signer("user", ctx.accounts.user)?;
+
+    // TODO: check device signature
+
+    // Create the DID token
+    let mint_seeds: &[&[u8]] = &[
+        b"DePHY DID",
+        &device_pubkey.to_bytes(),
+        &user_pubkey.to_bytes(),
+        &[args.bump],
+    ];
+
+    let mint_pubkey = Pubkey::create_program_address(mint_seeds, program_id)?;
+    assert_same_pubkeys("did_mint", ctx.accounts.did_mint, &mint_pubkey)?;
+
+    let atoken_pubkey = spl_associated_token_account::get_associated_token_address_with_program_id(
+        user_pubkey,
+        &mint_pubkey,
+        &token_program_id,
+    );
+    assert_same_pubkeys("did_atoken", ctx.accounts.did_atoken, &atoken_pubkey)?;
+
+    // calc account size
+    let base_size = ExtensionType::try_calculate_account_len::<Mint>(&[
+        ExtensionType::NonTransferable,
+        ExtensionType::MetadataPointer,
+    ])?;
+
+    // TODO: from args
+    let metadata = TokenMetadata {
+        name: "DePHY Device DID".to_string(),
+        symbol: "DDID".to_string(),
+        uri: "https://example.com".to_string(),
+        additional_metadata: [(
+            "description".to_string(),
+            "Example DID Device".to_string(),
+        ), (
+            "device".to_string(),
+            device_pubkey.to_string(),
+        )]
+        .to_vec(),
+        ..Default::default()
+    };
+    let metadata_size = metadata.tlv_size_of()?;
+
+    // CPIs
+    // create mint account
+    create_account(
+        ctx.accounts.did_mint,
+        ctx.accounts.payer,
+        ctx.accounts.system_program,
+        base_size,
+        Some(base_size + metadata_size),
+        &token_program_id,
+        &[&mint_seeds],
+    )?;
+
+    // init non-transferable mint
+    invoke(
+        &spl_token_2022::instruction::initialize_non_transferable_mint(
+            &token_program_id,
+            &mint_pubkey,
+        )?,
+        &[
+            // 0. `[writable]`  The mint account to initialize.
+            ctx.accounts.did_mint.clone(),
+        ],
+    )?;
+
+    // init metadata pointer
+    invoke(
+        &metadata_pointer::instruction::initialize(
+            &token_program_id,
+            &mint_pubkey,
+            Some(mint_pubkey),
+            Some(mint_pubkey),
+        )?,
+        &[
+            // 0. `[writable]` The mint to initialize.
+            ctx.accounts.did_mint.clone(),
+        ],
+    )?;
+
+    // init the mint
+    invoke_signed(
+        &spl_token_2022::instruction::initialize_mint2(
+            &token_program_id,
+            &mint_pubkey,
+            &mint_pubkey,
+            Some(&mint_pubkey),
+            0,
+        )?,
+        &[
+            // [writable] The mint to initialize.
+            ctx.accounts.did_mint.clone(),
+        ],
+        &[mint_seeds],
+    )?;
+
+    // init metadata
+    invoke_signed(
+        &spl_token_metadata_interface::instruction::initialize(
+            &token_program_id,
+            &mint_pubkey,
+            &mint_pubkey,
+            &mint_pubkey,
+            &mint_pubkey,
+            metadata.name,
+            metadata.symbol,
+            metadata.uri,
+        ),
+        &[
+            // [w] Metadata
+            ctx.accounts.did_mint.clone(),
+            // [] Update authority
+            ctx.accounts.did_mint.clone(),
+            // [] Mint
+            ctx.accounts.did_mint.clone(),
+            // [s] Mint authority
+            ctx.accounts.did_mint.clone(),
+        ],
+        &[mint_seeds],
+    )?;
+
+    for (field, value) in metadata.additional_metadata {
+        invoke_signed(
+            &spl_token_metadata_interface::instruction::update_field(
+                &token_program_id,
+                &mint_pubkey,
+                &mint_pubkey,
+                Field::Key(field),
+                value,
+            ),
+            &[
+                // 0. `[w]` Metadata account
+                ctx.accounts.did_mint.clone(),
+                // 1. `[s]` Update authority
+                ctx.accounts.did_mint.clone(),
+            ],
+            &[mint_seeds]
+        )?;
+    }
+
+    // create atoken account
+    invoke(
+        &spl_associated_token_account::instruction::create_associated_token_account(
+            payer_pubkey,
+            user_pubkey,
+            &mint_pubkey,
+            &token_program_id,
+        ),
+        &[
+            // 0. `[writeable,signer]` Funding account (must be a system account)
+            ctx.accounts.payer.clone(),
+            // 1. `[writeable]` Associated token account address to be created
+            ctx.accounts.did_atoken.clone(),
+            // 2. `[]` Wallet address for the new associated token account
+            ctx.accounts.user.clone(),
+            // 3. `[]` The token mint for the new associated token account
+            ctx.accounts.did_mint.clone(),
+            // 4. `[]` System program
+            ctx.accounts.system_program.clone(),
+            // 5. `[]` SPL Token program
+            ctx.accounts.token_program_2022.clone(),
+        ],
+    )?;
+
+    // mint to user
+    invoke_signed(
+        &spl_token_2022::instruction::mint_to(
+            &token_program_id,
+            &mint_pubkey,
+            &atoken_pubkey,
+            &mint_pubkey,
+            &[&mint_pubkey],
+            1,
+        )?,
+        &[
+            // [writable] The mint.
+            ctx.accounts.did_mint.clone(),
+            // [writable] The account to mint tokens to.
+            ctx.accounts.did_atoken.clone(),
+            // [signer] The mint's minting authority.
+            ctx.accounts.did_mint.clone(),
+        ],
+        &[mint_seeds]
+    )?;
+
+    // disable mint
+    invoke_signed(
+        &spl_token_2022::instruction::set_authority(
+            &token_program_id,
+            &mint_pubkey,
+            None,
+            spl_token_2022::instruction::AuthorityType::MintTokens,
+            &mint_pubkey,
+            &[&mint_pubkey],
+        )?,
+        &[
+            // [writable] The mint or account to change the authority of.
+            ctx.accounts.did_mint.clone(),
+            // [signer] The current authority of the mint or account.
+            ctx.accounts.did_mint.clone(),
+        ],
+        &[mint_seeds]
+    )?;
+
+    Ok(())
+}
+
