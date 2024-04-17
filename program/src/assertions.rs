@@ -1,4 +1,4 @@
-use crate::{error::CounterError, state::Key};
+use crate::{error::DephyError, state::Key};
 use solana_program::{
     account_info::AccountInfo, entrypoint::ProgramResult, msg, program_error::ProgramError,
     pubkey::Pubkey,
@@ -18,7 +18,7 @@ pub fn assert_program_owner(
             owner,
             account.owner
         );
-        Err(CounterError::InvalidProgramOwner.into())
+        Err(DephyError::InvalidProgramOwner.into())
     } else {
         Ok(())
     }
@@ -30,8 +30,9 @@ pub fn assert_pda(
     account: &AccountInfo,
     program_id: &Pubkey,
     seeds: &[&[u8]],
-) -> Result<u8, ProgramError> {
-    let (key, bump) = Pubkey::find_program_address(seeds, program_id);
+) -> ProgramResult {
+    let key = Pubkey::create_program_address(seeds, program_id)?;
+    
     if *account.key != key {
         msg!(
             "Account \"{}\" [{}] is an invalid PDA. Expected the following valid PDA [{}]",
@@ -39,9 +40,9 @@ pub fn assert_pda(
             account.key,
             key,
         );
-        return Err(CounterError::InvalidPda.into());
+        return Err(DephyError::InvalidPda.into());
     }
-    Ok(bump)
+    Ok(())
 }
 
 /// Assert that the given account is empty.
@@ -52,7 +53,7 @@ pub fn assert_empty(account_name: &str, account: &AccountInfo) -> ProgramResult 
             account_name,
             account.key,
         );
-        Err(CounterError::ExpectedEmptyAccount.into())
+        Err(DephyError::ExpectedEmptyAccount.into())
     } else {
         Ok(())
     }
@@ -66,7 +67,7 @@ pub fn assert_non_empty(account_name: &str, account: &AccountInfo) -> ProgramRes
             account_name,
             account.key,
         );
-        Err(CounterError::ExpectedNonEmptyAccount.into())
+        Err(DephyError::ExpectedNonEmptyAccount.into())
     } else {
         Ok(())
     }
@@ -80,7 +81,7 @@ pub fn assert_signer(account_name: &str, account: &AccountInfo) -> ProgramResult
             account_name,
             account.key,
         );
-        Err(CounterError::ExpectedSignerAccount.into())
+        Err(DephyError::ExpectedSignerAccount.into())
     } else {
         Ok(())
     }
@@ -94,7 +95,7 @@ pub fn assert_writable(account_name: &str, account: &AccountInfo) -> ProgramResu
             account_name,
             account.key,
         );
-        Err(CounterError::ExpectedWritableAccount.into())
+        Err(DephyError::ExpectedWritableAccount.into())
     } else {
         Ok(())
     }
@@ -113,7 +114,7 @@ pub fn assert_same_pubkeys(
             account.key,
             expected
         );
-        Err(CounterError::AccountMismatch.into())
+        Err(DephyError::AccountMismatch.into())
     } else {
         Ok(())
     }
@@ -130,7 +131,7 @@ pub fn assert_account_key(account_name: &str, account: &AccountInfo, key: Key) -
             key_number,
             account.try_borrow_data()?[0]
         );
-        Err(CounterError::InvalidAccountKey.into())
+        Err(DephyError::InvalidAccountKey.into())
     } else {
         Ok(())
     }

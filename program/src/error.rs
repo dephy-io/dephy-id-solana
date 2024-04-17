@@ -7,7 +7,7 @@ use solana_program::{
 use thiserror::Error;
 
 #[derive(Error, Clone, Debug, Eq, PartialEq, FromPrimitive)]
-pub enum CounterError {
+pub enum DephyError {
     /// 0 - Error deserializing an account
     #[error("Error deserializing an account")]
     DeserializationError,
@@ -43,20 +43,20 @@ pub enum CounterError {
     NumericalOverflow,
 }
 
-impl PrintProgramError for CounterError {
+impl PrintProgramError for DephyError {
     fn print<E>(&self) {
         msg!(&self.to_string());
     }
 }
 
-impl From<CounterError> for ProgramError {
-    fn from(e: CounterError) -> Self {
+impl From<DephyError> for ProgramError {
+    fn from(e: DephyError) -> Self {
         ProgramError::Custom(e as u32)
     }
 }
 
-impl<T> DecodeError<T> for CounterError {
+impl<T> DecodeError<T> for DephyError {
     fn type_of() -> &'static str {
-        "Mpl Project Name Error"
+        "Dephy Error"
     }
 }
