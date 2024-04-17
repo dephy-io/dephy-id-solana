@@ -6,5 +6,8 @@
  * @see https://github.com/metaplex-foundation/kinobi
  */
 
-export * from './create';
-export * from './increment';
+export * from './activateDevice';
+export * from './createDephy';
+export * from './createDevice';
+export * from './createProduct';
+export * from './createVendor';

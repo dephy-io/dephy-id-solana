@@ -15,11 +15,13 @@ import {
   getDephyIdProgramErrorFromCode,
 } from '../errors';
 import {
-  ParsedCreateInstruction,
-  ParsedIncrementInstruction,
+  ParsedActivateDeviceInstruction,
+  ParsedCreateDephyInstruction,
+  ParsedCreateDeviceInstruction,
+  ParsedCreateProductInstruction,
+  ParsedCreateVendorInstruction,
 } from '../instructions';
 import { memcmp } from '../shared';
-import { Key, getKeyEncoder } from '../types';
 
 export const DEPHY_ID_PROGRAM_ADDRESS =
   'hdMghjD73uASxgJXi6e1mGPsXqnADMsrqB1bveqABP1' as Address<'hdMghjD73uASxgJXi6e1mGPsXqnADMsrqB1bveqABP1'>;
@@ -39,24 +41,15 @@ export function getDephyIdProgram(): DephyIdProgram {
 }
 
 export enum DephyIdAccount {
-  Counter,
-}
-
-export function identifyDephyIdAccount(
-  account: { data: Uint8Array } | Uint8Array
-): DephyIdAccount {
-  const data = account instanceof Uint8Array ? account : account.data;
-  if (memcmp(data, getKeyEncoder().encode(Key.Counter), 0)) {
-    return DephyIdAccount.Counter;
-  }
-  throw new Error(
-    'The provided account could not be identified as a dephyId account.'
-  );
+  DephyAccount,
 }
 
 export enum DephyIdInstruction {
-  Create,
-  Increment,
+  CreateDephy,
+  CreateVendor,
+  CreateProduct,
+  CreateDevice,
+  ActivateDevice,
 }
 
 export function identifyDephyIdInstruction(
@@ -65,10 +58,19 @@ export function identifyDephyIdInstruction(
   const data =
     instruction instanceof Uint8Array ? instruction : instruction.data;
   if (memcmp(data, getU8Encoder().encode(0), 0)) {
-    return DephyIdInstruction.Create;
+    return DephyIdInstruction.CreateDephy;
   }
   if (memcmp(data, getU8Encoder().encode(1), 0)) {
-    return DephyIdInstruction.Increment;
+    return DephyIdInstruction.CreateVendor;
+  }
+  if (memcmp(data, getU8Encoder().encode(2), 0)) {
+    return DephyIdInstruction.CreateProduct;
+  }
+  if (memcmp(data, getU8Encoder().encode(3), 0)) {
+    return DephyIdInstruction.CreateDevice;
+  }
+  if (memcmp(data, getU8Encoder().encode(4), 0)) {
+    return DephyIdInstruction.ActivateDevice;
   }
   throw new Error(
     'The provided instruction could not be identified as a dephyId instruction.'
@@ -79,8 +81,17 @@ export type ParsedDephyIdInstruction<
   TProgram extends string = 'hdMghjD73uASxgJXi6e1mGPsXqnADMsrqB1bveqABP1',
 > =
   | ({
-      instructionType: DephyIdInstruction.Create;
-    } & ParsedCreateInstruction<TProgram>)
+      instructionType: DephyIdInstruction.CreateDephy;
+    } & ParsedCreateDephyInstruction<TProgram>)
   | ({
-      instructionType: DephyIdInstruction.Increment;
-    } & ParsedIncrementInstruction<TProgram>);
+      instructionType: DephyIdInstruction.CreateVendor;
+    } & ParsedCreateVendorInstruction<TProgram>)
+  | ({
+      instructionType: DephyIdInstruction.CreateProduct;
+    } & ParsedCreateProductInstruction<TProgram>)
+  | ({
+      instructionType: DephyIdInstruction.CreateDevice;
+    } & ParsedCreateDeviceInstruction<TProgram>)
+  | ({
+      instructionType: DephyIdInstruction.ActivateDevice;
+    } & ParsedActivateDeviceInstruction<TProgram>);

@@ -9,44 +9,49 @@ use borsh::BorshDeserialize;
 use borsh::BorshSerialize;
 
 /// Accounts.
-pub struct Create {
-    /// The program derived address of the counter account to create (seeds: ['counter', authority])
-    pub counter: solana_program::pubkey::Pubkey,
-    /// The authority of the counter
-    pub authority: solana_program::pubkey::Pubkey,
-    /// The account paying for the storage fees
-    pub payer: solana_program::pubkey::Pubkey,
+pub struct CreateDephy {
     /// The system program
     pub system_program: solana_program::pubkey::Pubkey,
+    /// The account paying for the storage fees
+    pub payer: solana_program::pubkey::Pubkey,
+    /// The address of the DePHY account
+    pub dephy: solana_program::pubkey::Pubkey,
+    /// The authority of the DePHY account
+    pub authority: solana_program::pubkey::Pubkey,
 }
 
-impl Create {
-    pub fn instruction(&self) -> solana_program::instruction::Instruction {
-        self.instruction_with_remaining_accounts(&[])
+impl CreateDephy {
+    pub fn instruction(
+        &self,
+        args: CreateDephyInstructionArgs,
+    ) -> solana_program::instruction::Instruction {
+        self.instruction_with_remaining_accounts(args, &[])
     }
     #[allow(clippy::vec_init_then_push)]
     pub fn instruction_with_remaining_accounts(
         &self,
+        args: CreateDephyInstructionArgs,
         remaining_accounts: &[solana_program::instruction::AccountMeta],
     ) -> solana_program::instruction::Instruction {
         let mut accounts = Vec::with_capacity(4 + remaining_accounts.len());
-        accounts.push(solana_program::instruction::AccountMeta::new(
-            self.counter,
+        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+            self.system_program,
             false,
+        ));
+        accounts.push(solana_program::instruction::AccountMeta::new(
+            self.payer, true,
+        ));
+        accounts.push(solana_program::instruction::AccountMeta::new(
+            self.dephy, false,
         ));
         accounts.push(solana_program::instruction::AccountMeta::new_readonly(
             self.authority,
             true,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
-            self.payer, true,
-        ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
-            self.system_program,
-            false,
-        ));
         accounts.extend_from_slice(remaining_accounts);
-        let data = CreateInstructionData::new().try_to_vec().unwrap();
+        let mut data = CreateDephyInstructionData::new().try_to_vec().unwrap();
+        let mut args = args.try_to_vec().unwrap();
+        data.append(&mut args);
 
         solana_program::instruction::Instruction {
             program_id: crate::DEPHY_ID_ID,
@@ -57,47 +62,49 @@ impl Create {
 }
 
 #[derive(BorshDeserialize, BorshSerialize)]
-struct CreateInstructionData {
+struct CreateDephyInstructionData {
     discriminator: u8,
 }
 
-impl CreateInstructionData {
+impl CreateDephyInstructionData {
     fn new() -> Self {
         Self { discriminator: 0 }
     }
 }
 
-/// Instruction builder for `Create`.
+#[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+pub struct CreateDephyInstructionArgs {
+    pub bump: u8,
+}
+
+/// Instruction builder for `CreateDephy`.
 ///
 /// ### Accounts:
 ///
-///   0. `[writable]` counter
-///   1. `[signer]` authority
-///   2. `[writable, signer]` payer
-///   3. `[optional]` system_program (default to `11111111111111111111111111111111`)
+///   0. `[optional]` system_program (default to `11111111111111111111111111111111`)
+///   1. `[writable, signer]` payer
+///   2. `[writable]` dephy
+///   3. `[signer]` authority
 #[derive(Default)]
-pub struct CreateBuilder {
-    counter: Option<solana_program::pubkey::Pubkey>,
-    authority: Option<solana_program::pubkey::Pubkey>,
-    payer: Option<solana_program::pubkey::Pubkey>,
+pub struct CreateDephyBuilder {
     system_program: Option<solana_program::pubkey::Pubkey>,
+    payer: Option<solana_program::pubkey::Pubkey>,
+    dephy: Option<solana_program::pubkey::Pubkey>,
+    authority: Option<solana_program::pubkey::Pubkey>,
+    bump: Option<u8>,
     __remaining_accounts: Vec<solana_program::instruction::AccountMeta>,
 }
 
-impl CreateBuilder {
+impl CreateDephyBuilder {
     pub fn new() -> Self {
         Self::default()
     }
-    /// The program derived address of the counter account to create (seeds: ['counter', authority])
+    /// `[optional account, default to '11111111111111111111111111111111']`
+    /// The system program
     #[inline(always)]
-    pub fn counter(&mut self, counter: solana_program::pubkey::Pubkey) -> &mut Self {
-        self.counter = Some(counter);
-        self
-    }
-    /// The authority of the counter
-    #[inline(always)]
-    pub fn authority(&mut self, authority: solana_program::pubkey::Pubkey) -> &mut Self {
-        self.authority = Some(authority);
+    pub fn system_program(&mut self, system_program: solana_program::pubkey::Pubkey) -> &mut Self {
+        self.system_program = Some(system_program);
         self
     }
     /// The account paying for the storage fees
@@ -106,11 +113,21 @@ impl CreateBuilder {
         self.payer = Some(payer);
         self
     }
-    /// `[optional account, default to '11111111111111111111111111111111']`
-    /// The system program
+    /// The address of the DePHY account
     #[inline(always)]
-    pub fn system_program(&mut self, system_program: solana_program::pubkey::Pubkey) -> &mut Self {
-        self.system_program = Some(system_program);
+    pub fn dephy(&mut self, dephy: solana_program::pubkey::Pubkey) -> &mut Self {
+        self.dephy = Some(dephy);
+        self
+    }
+    /// The authority of the DePHY account
+    #[inline(always)]
+    pub fn authority(&mut self, authority: solana_program::pubkey::Pubkey) -> &mut Self {
+        self.authority = Some(authority);
+        self
+    }
+    #[inline(always)]
+    pub fn bump(&mut self, bump: u8) -> &mut Self {
+        self.bump = Some(bump);
         self
     }
     /// Add an aditional account to the instruction.
@@ -133,56 +150,63 @@ impl CreateBuilder {
     }
     #[allow(clippy::clone_on_copy)]
     pub fn instruction(&self) -> solana_program::instruction::Instruction {
-        let accounts = Create {
-            counter: self.counter.expect("counter is not set"),
-            authority: self.authority.expect("authority is not set"),
-            payer: self.payer.expect("payer is not set"),
+        let accounts = CreateDephy {
             system_program: self
                 .system_program
                 .unwrap_or(solana_program::pubkey!("11111111111111111111111111111111")),
+            payer: self.payer.expect("payer is not set"),
+            dephy: self.dephy.expect("dephy is not set"),
+            authority: self.authority.expect("authority is not set"),
+        };
+        let args = CreateDephyInstructionArgs {
+            bump: self.bump.clone().expect("bump is not set"),
         };
 
-        accounts.instruction_with_remaining_accounts(&self.__remaining_accounts)
+        accounts.instruction_with_remaining_accounts(args, &self.__remaining_accounts)
     }
 }
 
-/// `create` CPI accounts.
-pub struct CreateCpiAccounts<'a, 'b> {
-    /// The program derived address of the counter account to create (seeds: ['counter', authority])
-    pub counter: &'b solana_program::account_info::AccountInfo<'a>,
-    /// The authority of the counter
-    pub authority: &'b solana_program::account_info::AccountInfo<'a>,
-    /// The account paying for the storage fees
-    pub payer: &'b solana_program::account_info::AccountInfo<'a>,
+/// `create_dephy` CPI accounts.
+pub struct CreateDephyCpiAccounts<'a, 'b> {
     /// The system program
     pub system_program: &'b solana_program::account_info::AccountInfo<'a>,
+    /// The account paying for the storage fees
+    pub payer: &'b solana_program::account_info::AccountInfo<'a>,
+    /// The address of the DePHY account
+    pub dephy: &'b solana_program::account_info::AccountInfo<'a>,
+    /// The authority of the DePHY account
+    pub authority: &'b solana_program::account_info::AccountInfo<'a>,
 }
 
-/// `create` CPI instruction.
-pub struct CreateCpi<'a, 'b> {
+/// `create_dephy` CPI instruction.
+pub struct CreateDephyCpi<'a, 'b> {
     /// The program to invoke.
     pub __program: &'b solana_program::account_info::AccountInfo<'a>,
-    /// The program derived address of the counter account to create (seeds: ['counter', authority])
-    pub counter: &'b solana_program::account_info::AccountInfo<'a>,
-    /// The authority of the counter
-    pub authority: &'b solana_program::account_info::AccountInfo<'a>,
-    /// The account paying for the storage fees
-    pub payer: &'b solana_program::account_info::AccountInfo<'a>,
     /// The system program
     pub system_program: &'b solana_program::account_info::AccountInfo<'a>,
+    /// The account paying for the storage fees
+    pub payer: &'b solana_program::account_info::AccountInfo<'a>,
+    /// The address of the DePHY account
+    pub dephy: &'b solana_program::account_info::AccountInfo<'a>,
+    /// The authority of the DePHY account
+    pub authority: &'b solana_program::account_info::AccountInfo<'a>,
+    /// The arguments for the instruction.
+    pub __args: CreateDephyInstructionArgs,
 }
 
-impl<'a, 'b> CreateCpi<'a, 'b> {
+impl<'a, 'b> CreateDephyCpi<'a, 'b> {
     pub fn new(
         program: &'b solana_program::account_info::AccountInfo<'a>,
-        accounts: CreateCpiAccounts<'a, 'b>,
+        accounts: CreateDephyCpiAccounts<'a, 'b>,
+        args: CreateDephyInstructionArgs,
     ) -> Self {
         Self {
             __program: program,
-            counter: accounts.counter,
-            authority: accounts.authority,
-            payer: accounts.payer,
             system_program: accounts.system_program,
+            payer: accounts.payer,
+            dephy: accounts.dephy,
+            authority: accounts.authority,
+            __args: args,
         }
     }
     #[inline(always)]
@@ -219,21 +243,21 @@ impl<'a, 'b> CreateCpi<'a, 'b> {
         )],
     ) -> solana_program::entrypoint::ProgramResult {
         let mut accounts = Vec::with_capacity(4 + remaining_accounts.len());
-        accounts.push(solana_program::instruction::AccountMeta::new(
-            *self.counter.key,
-            false,
-        ));
         accounts.push(solana_program::instruction::AccountMeta::new_readonly(
-            *self.authority.key,
-            true,
+            *self.system_program.key,
+            false,
         ));
         accounts.push(solana_program::instruction::AccountMeta::new(
             *self.payer.key,
             true,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
-            *self.system_program.key,
+        accounts.push(solana_program::instruction::AccountMeta::new(
+            *self.dephy.key,
             false,
+        ));
+        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+            *self.authority.key,
+            true,
         ));
         remaining_accounts.iter().for_each(|remaining_account| {
             accounts.push(solana_program::instruction::AccountMeta {
@@ -242,7 +266,9 @@ impl<'a, 'b> CreateCpi<'a, 'b> {
                 is_writable: remaining_account.2,
             })
         });
-        let data = CreateInstructionData::new().try_to_vec().unwrap();
+        let mut data = CreateDephyInstructionData::new().try_to_vec().unwrap();
+        let mut args = self.__args.try_to_vec().unwrap();
+        data.append(&mut args);
 
         let instruction = solana_program::instruction::Instruction {
             program_id: crate::DEPHY_ID_ID,
@@ -251,10 +277,10 @@ impl<'a, 'b> CreateCpi<'a, 'b> {
         };
         let mut account_infos = Vec::with_capacity(4 + 1 + remaining_accounts.len());
         account_infos.push(self.__program.clone());
-        account_infos.push(self.counter.clone());
-        account_infos.push(self.authority.clone());
-        account_infos.push(self.payer.clone());
         account_infos.push(self.system_program.clone());
+        account_infos.push(self.payer.clone());
+        account_infos.push(self.dephy.clone());
+        account_infos.push(self.authority.clone());
         remaining_accounts
             .iter()
             .for_each(|remaining_account| account_infos.push(remaining_account.0.clone()));
@@ -267,53 +293,30 @@ impl<'a, 'b> CreateCpi<'a, 'b> {
     }
 }
 
-/// Instruction builder for `Create` via CPI.
+/// Instruction builder for `CreateDephy` via CPI.
 ///
 /// ### Accounts:
 ///
-///   0. `[writable]` counter
-///   1. `[signer]` authority
-///   2. `[writable, signer]` payer
-///   3. `[]` system_program
-pub struct CreateCpiBuilder<'a, 'b> {
-    instruction: Box<CreateCpiBuilderInstruction<'a, 'b>>,
+///   0. `[]` system_program
+///   1. `[writable, signer]` payer
+///   2. `[writable]` dephy
+///   3. `[signer]` authority
+pub struct CreateDephyCpiBuilder<'a, 'b> {
+    instruction: Box<CreateDephyCpiBuilderInstruction<'a, 'b>>,
 }
 
-impl<'a, 'b> CreateCpiBuilder<'a, 'b> {
+impl<'a, 'b> CreateDephyCpiBuilder<'a, 'b> {
     pub fn new(program: &'b solana_program::account_info::AccountInfo<'a>) -> Self {
-        let instruction = Box::new(CreateCpiBuilderInstruction {
+        let instruction = Box::new(CreateDephyCpiBuilderInstruction {
             __program: program,
-            counter: None,
-            authority: None,
-            payer: None,
             system_program: None,
+            payer: None,
+            dephy: None,
+            authority: None,
+            bump: None,
             __remaining_accounts: Vec::new(),
         });
         Self { instruction }
-    }
-    /// The program derived address of the counter account to create (seeds: ['counter', authority])
-    #[inline(always)]
-    pub fn counter(
-        &mut self,
-        counter: &'b solana_program::account_info::AccountInfo<'a>,
-    ) -> &mut Self {
-        self.instruction.counter = Some(counter);
-        self
-    }
-    /// The authority of the counter
-    #[inline(always)]
-    pub fn authority(
-        &mut self,
-        authority: &'b solana_program::account_info::AccountInfo<'a>,
-    ) -> &mut Self {
-        self.instruction.authority = Some(authority);
-        self
-    }
-    /// The account paying for the storage fees
-    #[inline(always)]
-    pub fn payer(&mut self, payer: &'b solana_program::account_info::AccountInfo<'a>) -> &mut Self {
-        self.instruction.payer = Some(payer);
-        self
     }
     /// The system program
     #[inline(always)]
@@ -322,6 +325,32 @@ impl<'a, 'b> CreateCpiBuilder<'a, 'b> {
         system_program: &'b solana_program::account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.system_program = Some(system_program);
+        self
+    }
+    /// The account paying for the storage fees
+    #[inline(always)]
+    pub fn payer(&mut self, payer: &'b solana_program::account_info::AccountInfo<'a>) -> &mut Self {
+        self.instruction.payer = Some(payer);
+        self
+    }
+    /// The address of the DePHY account
+    #[inline(always)]
+    pub fn dephy(&mut self, dephy: &'b solana_program::account_info::AccountInfo<'a>) -> &mut Self {
+        self.instruction.dephy = Some(dephy);
+        self
+    }
+    /// The authority of the DePHY account
+    #[inline(always)]
+    pub fn authority(
+        &mut self,
+        authority: &'b solana_program::account_info::AccountInfo<'a>,
+    ) -> &mut Self {
+        self.instruction.authority = Some(authority);
+        self
+    }
+    #[inline(always)]
+    pub fn bump(&mut self, bump: u8) -> &mut Self {
+        self.instruction.bump = Some(bump);
         self
     }
     /// Add an additional account to the instruction.
@@ -365,19 +394,23 @@ impl<'a, 'b> CreateCpiBuilder<'a, 'b> {
         &self,
         signers_seeds: &[&[&[u8]]],
     ) -> solana_program::entrypoint::ProgramResult {
-        let instruction = CreateCpi {
+        let args = CreateDephyInstructionArgs {
+            bump: self.instruction.bump.clone().expect("bump is not set"),
+        };
+        let instruction = CreateDephyCpi {
             __program: self.instruction.__program,
-
-            counter: self.instruction.counter.expect("counter is not set"),
-
-            authority: self.instruction.authority.expect("authority is not set"),
-
-            payer: self.instruction.payer.expect("payer is not set"),
 
             system_program: self
                 .instruction
                 .system_program
                 .expect("system_program is not set"),
+
+            payer: self.instruction.payer.expect("payer is not set"),
+
+            dephy: self.instruction.dephy.expect("dephy is not set"),
+
+            authority: self.instruction.authority.expect("authority is not set"),
+            __args: args,
         };
         instruction.invoke_signed_with_remaining_accounts(
             signers_seeds,
@@ -386,12 +419,13 @@ impl<'a, 'b> CreateCpiBuilder<'a, 'b> {
     }
 }
 
-struct CreateCpiBuilderInstruction<'a, 'b> {
+struct CreateDephyCpiBuilderInstruction<'a, 'b> {
     __program: &'b solana_program::account_info::AccountInfo<'a>,
-    counter: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    authority: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    payer: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     system_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    payer: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    dephy: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    authority: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    bump: Option<u8>,
     /// Additional instruction accounts `(AccountInfo, is_writable, is_signer)`.
     __remaining_accounts: Vec<(
         &'b solana_program::account_info::AccountInfo<'a>,

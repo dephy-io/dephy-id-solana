@@ -5,6 +5,7 @@
 //! [https://github.com/metaplex-foundation/kinobi]
 //!
 
+use crate::generated::types::DephyData;
 use crate::generated::types::Key;
 use borsh::BorshDeserialize;
 use borsh::BorshSerialize;
@@ -12,43 +13,18 @@ use solana_program::pubkey::Pubkey;
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-pub struct Counter {
+pub struct DephyAccount {
     pub key: Key,
     #[cfg_attr(
         feature = "serde",
         serde(with = "serde_with::As::<serde_with::DisplayFromStr>")
     )]
     pub authority: Pubkey,
-    pub value: u32,
+    pub data: DephyData,
 }
 
-impl Counter {
-    pub const LEN: usize = 37;
-
-    /// Prefix values used to generate a PDA for this account.
-    ///
-    /// Values are positional and appear in the following order:
-    ///
-    ///   0. `Counter::PREFIX`
-    ///   1. authority (`Pubkey`)
-    pub const PREFIX: &'static [u8] = "counter".as_bytes();
-
-    pub fn create_pda(
-        authority: Pubkey,
-        bump: u8,
-    ) -> Result<solana_program::pubkey::Pubkey, solana_program::pubkey::PubkeyError> {
-        solana_program::pubkey::Pubkey::create_program_address(
-            &["counter".as_bytes(), authority.as_ref(), &[bump]],
-            &crate::DEPHY_ID_ID,
-        )
-    }
-
-    pub fn find_pda(authority: &Pubkey) -> (solana_program::pubkey::Pubkey, u8) {
-        solana_program::pubkey::Pubkey::find_program_address(
-            &["counter".as_bytes(), authority.as_ref()],
-            &crate::DEPHY_ID_ID,
-        )
-    }
+impl DephyAccount {
+    pub const LEN: usize = 34;
 
     #[inline(always)]
     pub fn from_bytes(data: &[u8]) -> Result<Self, std::io::Error> {
@@ -57,7 +33,7 @@ impl Counter {
     }
 }
 
-impl<'a> TryFrom<&solana_program::account_info::AccountInfo<'a>> for Counter {
+impl<'a> TryFrom<&solana_program::account_info::AccountInfo<'a>> for DephyAccount {
     type Error = std::io::Error;
 
     fn try_from(

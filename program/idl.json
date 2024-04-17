@@ -3,22 +3,14 @@
   "name": "dephy_io_dephy_id",
   "instructions": [
     {
-      "name": "Create",
+      "name": "CreateDephy",
       "accounts": [
         {
-          "name": "counter",
-          "isMut": true,
+          "name": "systemProgram",
+          "isMut": false,
           "isSigner": false,
           "docs": [
-            "The program derived address of the counter account to create (seeds: ['counter', authority])"
-          ]
-        },
-        {
-          "name": "authority",
-          "isMut": false,
-          "isSigner": true,
-          "docs": [
-            "The authority of the counter"
+            "The system program"
           ]
         },
         {
@@ -30,29 +22,11 @@
           ]
         },
         {
-          "name": "systemProgram",
-          "isMut": false,
-          "isSigner": false,
-          "docs": [
-            "The system program"
-          ]
-        }
-      ],
-      "args": [],
-      "discriminant": {
-        "type": "u8",
-        "value": 0
-      }
-    },
-    {
-      "name": "Increment",
-      "accounts": [
-        {
-          "name": "counter",
+          "name": "dephy",
           "isMut": true,
           "isSigner": false,
           "docs": [
-            "The program derived address of the counter account to increment (seeds: ['counter', authority])"
+            "The address of the DePHY account"
           ]
         },
         {
@@ -60,15 +34,104 @@
           "isMut": false,
           "isSigner": true,
           "docs": [
-            "The authority of the counter"
+            "The authority of the DePHY account"
           ]
         }
       ],
       "args": [
         {
-          "name": "amount",
+          "name": "createDephyArgs",
           "type": {
-            "option": "u32"
+            "defined": "CreateDephyArgs"
+          }
+        }
+      ],
+      "discriminant": {
+        "type": "u8",
+        "value": 0
+      }
+    },
+    {
+      "name": "CreateVendor",
+      "accounts": [
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The system program"
+          ]
+        },
+        {
+          "name": "tokenProgram2022",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The token 2022 program"
+          ]
+        },
+        {
+          "name": "atokenProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The associated token program"
+          ]
+        },
+        {
+          "name": "payer",
+          "isMut": true,
+          "isSigner": true,
+          "docs": [
+            "The account paying for the storage fees"
+          ]
+        },
+        {
+          "name": "authority",
+          "isMut": false,
+          "isSigner": true,
+          "docs": [
+            "The DePHY authority"
+          ]
+        },
+        {
+          "name": "dephy",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The DePHY account"
+          ]
+        },
+        {
+          "name": "vendor",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "Vendor account"
+          ]
+        },
+        {
+          "name": "vendorMint",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "The Vendor mint"
+          ]
+        },
+        {
+          "name": "vendorAtoken",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "The atoken account for vendor"
+          ]
+        }
+      ],
+      "args": [
+        {
+          "name": "createVendorArgs",
+          "type": {
+            "defined": "CreateVendorArgs"
           }
         }
       ],
@@ -76,11 +139,223 @@
         "type": "u8",
         "value": 1
       }
+    },
+    {
+      "name": "CreateProduct",
+      "accounts": [
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The system program"
+          ]
+        },
+        {
+          "name": "tokenProgram2022",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The SPL Token 2022 program"
+          ]
+        },
+        {
+          "name": "payer",
+          "isMut": true,
+          "isSigner": true,
+          "docs": [
+            "The account paying for the storage fees"
+          ]
+        },
+        {
+          "name": "vendor",
+          "isMut": false,
+          "isSigner": true,
+          "docs": [
+            "Vendor account"
+          ]
+        },
+        {
+          "name": "productMint",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "The product mint account"
+          ]
+        }
+      ],
+      "args": [
+        {
+          "name": "createProductArgs",
+          "type": {
+            "defined": "CreateProductArgs"
+          }
+        }
+      ],
+      "discriminant": {
+        "type": "u8",
+        "value": 2
+      }
+    },
+    {
+      "name": "CreateDevice",
+      "accounts": [
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The system program"
+          ]
+        },
+        {
+          "name": "tokenProgram2022",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The SPL Token 2022 program"
+          ]
+        },
+        {
+          "name": "atokenProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The associated token program"
+          ]
+        },
+        {
+          "name": "payer",
+          "isMut": true,
+          "isSigner": true,
+          "docs": [
+            "The account paying for the storage fees"
+          ]
+        },
+        {
+          "name": "vendor",
+          "isMut": false,
+          "isSigner": true,
+          "docs": [
+            "Vendor account"
+          ]
+        },
+        {
+          "name": "device",
+          "isMut": false,
+          "isSigner": true,
+          "docs": [
+            "The Device account"
+          ]
+        },
+        {
+          "name": "productMint",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The Product mint account"
+          ]
+        },
+        {
+          "name": "productAtoken",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "The Product atoken for Device"
+          ]
+        }
+      ],
+      "args": [],
+      "discriminant": {
+        "type": "u8",
+        "value": 3
+      }
+    },
+    {
+      "name": "ActivateDevice",
+      "accounts": [
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The system program"
+          ]
+        },
+        {
+          "name": "tokenProgram2022",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The SPL Token 2022 program"
+          ]
+        },
+        {
+          "name": "atokenProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The associated token program"
+          ]
+        },
+        {
+          "name": "payer",
+          "isMut": true,
+          "isSigner": true,
+          "docs": [
+            "The account paying for the storage fees"
+          ]
+        },
+        {
+          "name": "device",
+          "isMut": false,
+          "isSigner": true,
+          "docs": [
+            "The Device"
+          ]
+        },
+        {
+          "name": "user",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The Device Owner pubkey"
+          ]
+        },
+        {
+          "name": "didMint",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The NFT mint account"
+          ]
+        },
+        {
+          "name": "didAtoken",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The NFT atoken account"
+          ]
+        }
+      ],
+      "args": [
+        {
+          "name": "activateDeviceArgs",
+          "type": {
+            "defined": "ActivateDeviceArgs"
+          }
+        }
+      ],
+      "discriminant": {
+        "type": "u8",
+        "value": 4
+      }
     }
   ],
   "accounts": [
     {
-      "name": "Counter",
+      "name": "DephyAccount",
       "type": {
         "kind": "struct",
         "fields": [
@@ -95,14 +370,120 @@
             "type": "publicKey"
           },
           {
-            "name": "value",
-            "type": "u32"
+            "name": "data",
+            "type": {
+              "defined": "DephyData"
+            }
           }
         ]
       }
     }
   ],
   "types": [
+    {
+      "name": "CreateDephyArgs",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "CreateVendorArgs",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "bump",
+            "type": "u8"
+          },
+          {
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "name": "symbol",
+            "type": "string"
+          },
+          {
+            "name": "uri",
+            "type": "string"
+          },
+          {
+            "name": "additionalMetadata",
+            "type": {
+              "vec": {
+                "tuple": [
+                  "string",
+                  "string"
+                ]
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "CreateProductArgs",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "seed",
+            "type": {
+              "array": [
+                "u8",
+                8
+              ]
+            }
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "CreateDeviceArgs",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "ActivateDeviceArgs",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "DephyData",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "version",
+            "type": "u8"
+          }
+        ]
+      }
+    },
     {
       "name": "Key",
       "type": {
@@ -112,7 +493,7 @@
             "name": "Uninitialized"
           },
           {
-            "name": "Counter"
+            "name": "DephyAccount"
           }
         ]
       }

@@ -20,7 +20,7 @@ In this PoC, we leverage SPL token 2022 to represent DePHY entities and their re
     - `VENDORX` as the vendor's keypair
     - `PRODUCTX` as the product token issued by the vendor
     - `DEVICEX` as the device's keypair
-    - `USERX` as the end user who bought the device。
+    - `USERX` as the end user who bought the device
 
 1. Register Vendor:
     - The DePHY admin can issue a NFT to a Vendor

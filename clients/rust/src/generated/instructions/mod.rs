@@ -5,8 +5,14 @@
 //! [https://github.com/metaplex-foundation/kinobi]
 //!
 
-pub(crate) mod r#create;
-pub(crate) mod r#increment;
+pub(crate) mod r#activate_device;
+pub(crate) mod r#create_dephy;
+pub(crate) mod r#create_device;
+pub(crate) mod r#create_product;
+pub(crate) mod r#create_vendor;
 
-pub use self::r#create::*;
-pub use self::r#increment::*;
+pub use self::r#activate_device::*;
+pub use self::r#create_dephy::*;
+pub use self::r#create_device::*;
+pub use self::r#create_product::*;
+pub use self::r#create_vendor::*;
