@@ -4,7 +4,6 @@
 
 # A Vendor is just an address holding a DePHY vendor token
 
-
 source ./utils.sh
 
 VENDOR_KEY=$1

@@ -14,7 +14,7 @@
 
 4. Deploy
 
-        solana -u l program deploy target/deploy/dephy_io_dephy_id.so
+        solana -u l program deploy target/deploy/dephy_io_dephy_id.so --program-id ./program/keypair.json
 
 5. Create DePHY
 
