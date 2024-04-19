@@ -4,7 +4,7 @@
 
 1. Build program:
 
-        cargo-build-sbf
+        cargo-build-sbf --tools-version v1.41
 
 2. Run `solana-test-validator`
 
