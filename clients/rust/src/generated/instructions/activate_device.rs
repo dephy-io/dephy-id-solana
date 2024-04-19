@@ -64,11 +64,11 @@ impl ActivateDevice {
         accounts.push(solana_program::instruction::AccountMeta::new_readonly(
             self.user, false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_program::instruction::AccountMeta::new(
             self.did_mint,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_program::instruction::AccountMeta::new(
             self.did_atoken,
             false,
         ));
@@ -112,8 +112,8 @@ pub struct ActivateDeviceInstructionArgs {
 ///   3. `[writable, signer]` payer
 ///   4. `[signer]` device
 ///   5. `[]` user
-///   6. `[]` did_mint
-///   7. `[]` did_atoken
+///   6. `[writable]` did_mint
+///   7. `[writable]` did_atoken
 #[derive(Default)]
 pub struct ActivateDeviceBuilder {
     system_program: Option<solana_program::pubkey::Pubkey>,
@@ -352,11 +352,11 @@ impl<'a, 'b> ActivateDeviceCpi<'a, 'b> {
             *self.user.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_program::instruction::AccountMeta::new(
             *self.did_mint.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_program::instruction::AccountMeta::new(
             *self.did_atoken.key,
             false,
         ));
@@ -408,8 +408,8 @@ impl<'a, 'b> ActivateDeviceCpi<'a, 'b> {
 ///   3. `[writable, signer]` payer
 ///   4. `[signer]` device
 ///   5. `[]` user
-///   6. `[]` did_mint
-///   7. `[]` did_atoken
+///   6. `[writable]` did_mint
+///   7. `[writable]` did_atoken
 pub struct ActivateDeviceCpiBuilder<'a, 'b> {
     instruction: Box<ActivateDeviceCpiBuilderInstruction<'a, 'b>>,
 }

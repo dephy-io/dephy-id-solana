@@ -17,16 +17,16 @@ import {
   getU8Encoder,
 } from '@solana/codecs';
 
-export type DephyData = { version: number };
+export type DephyData = { bump: number };
 
 export type DephyDataArgs = DephyData;
 
 export function getDephyDataEncoder(): Encoder<DephyDataArgs> {
-  return getStructEncoder([['version', getU8Encoder()]]);
+  return getStructEncoder([['bump', getU8Encoder()]]);
 }
 
 export function getDephyDataDecoder(): Decoder<DephyData> {
-  return getStructDecoder([['version', getU8Decoder()]]);
+  return getStructDecoder([['bump', getU8Decoder()]]);
 }
 
 export function getDephyDataCodec(): Codec<DephyDataArgs, DephyData> {

@@ -38,7 +38,7 @@ async fn test_dephy() {
 
     // Create DePHY account
     let (dephy_pubkey, bump) =
-        Pubkey::find_program_address(&[b"DePHY", &admin.pubkey().to_bytes()], &program_id);
+        Pubkey::find_program_address(&[b"DePHY"], &program_id);
 
     let mut transaction = Transaction::new_with_payer(
         &[Instruction::new_with_borsh(

@@ -71,7 +71,7 @@ export type CreateDeviceInstruction<
             IAccountSignerMeta<TAccountDevice>
         : TAccountDevice,
       TAccountProductMint extends string
-        ? ReadonlyAccount<TAccountProductMint>
+        ? WritableAccount<TAccountProductMint>
         : TAccountProductMint,
       TAccountProductAtoken extends string
         ? WritableAccount<TAccountProductAtoken>
@@ -178,7 +178,7 @@ export function getCreateDeviceInstruction<
     payer: { value: input.payer ?? null, isWritable: true },
     vendor: { value: input.vendor ?? null, isWritable: false },
     device: { value: input.device ?? null, isWritable: false },
-    productMint: { value: input.productMint ?? null, isWritable: false },
+    productMint: { value: input.productMint ?? null, isWritable: true },
     productAtoken: { value: input.productAtoken ?? null, isWritable: true },
   };
   const accounts = originalAccounts as Record<

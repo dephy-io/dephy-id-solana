@@ -1,0 +1,20 @@
+[package]
+name = "dephy-cli"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+dephy-io-dephy-id-client = { version = "0.0.0", path = "../clients/rust" }
+solana-sdk = "~1.18"
+solana-client = "~1.18"
+spl-token-2022 = "^3.0"
+spl-associated-token-account = { version = "^3.0", features = ["no-entrypoint"] }
+tokio = { version = "1", features = [] }
+clap = { version = "4.5.4", features = ["derive"] }
+diesel = { version = "2.1.5", features = ["postgres", "sqlite"] }
+
+[[bin]]
+name = "indexer"
+

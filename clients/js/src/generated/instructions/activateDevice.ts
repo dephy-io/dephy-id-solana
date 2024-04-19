@@ -25,6 +25,7 @@ import {
   IInstructionWithData,
   ReadonlyAccount,
   ReadonlySignerAccount,
+  WritableAccount,
   WritableSignerAccount,
 } from '@solana/instructions';
 import { IAccountSignerMeta, TransactionSigner } from '@solana/signers';
@@ -69,10 +70,10 @@ export type ActivateDeviceInstruction<
         ? ReadonlyAccount<TAccountUser>
         : TAccountUser,
       TAccountDidMint extends string
-        ? ReadonlyAccount<TAccountDidMint>
+        ? WritableAccount<TAccountDidMint>
         : TAccountDidMint,
       TAccountDidAtoken extends string
-        ? ReadonlyAccount<TAccountDidAtoken>
+        ? WritableAccount<TAccountDidAtoken>
         : TAccountDidAtoken,
       ...TRemainingAccounts,
     ]
@@ -186,8 +187,8 @@ export function getActivateDeviceInstruction<
     payer: { value: input.payer ?? null, isWritable: true },
     device: { value: input.device ?? null, isWritable: false },
     user: { value: input.user ?? null, isWritable: false },
-    didMint: { value: input.didMint ?? null, isWritable: false },
-    didAtoken: { value: input.didAtoken ?? null, isWritable: false },
+    didMint: { value: input.didMint ?? null, isWritable: true },
+    didAtoken: { value: input.didAtoken ?? null, isWritable: true },
   };
   const accounts = originalAccounts as Record<
     keyof typeof originalAccounts,

@@ -38,7 +38,7 @@ pub enum DephyInstruction {
     #[account(3, writable, signer, name="payer", desc = "The account paying for the storage fees")]
     #[account(4, signer, name="vendor", desc = "Vendor account")]
     #[account(5, signer, name="device", desc = "The Device account")]
-    #[account(6, name="product_mint", desc = "The Product mint account")]
+    #[account(6, writable, name="product_mint", desc = "The Product mint account")]
     #[account(7, writable, name="product_atoken", desc = "The Product atoken for Device")]
     CreateDevice(),
 
@@ -49,8 +49,8 @@ pub enum DephyInstruction {
     #[account(3, writable, signer, name="payer", desc = "The account paying for the storage fees")]
     #[account(4, signer, name="device", desc = "The Device")]
     #[account(5, name="user", desc = "The Device Owner pubkey")]
-    #[account(6, name="did_mint", desc = "The NFT mint account")]
-    #[account(7, name="did_atoken", desc = "The NFT atoken account")]
+    #[account(6, writable, name="did_mint", desc = "The NFT mint account")]
+    #[account(7, writable, name="did_atoken", desc = "The NFT atoken account")]
     ActivateDevice(ActivateDeviceArgs),
 }
 
@@ -74,6 +74,7 @@ pub struct CreateVendorArgs {
 #[repr(C)]
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
 pub struct CreateProductArgs {
+    // TODO: metadata, hash name as seed
     pub seed: [u8; 8],
     pub bump: u8,
 }

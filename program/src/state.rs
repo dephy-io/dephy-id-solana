@@ -43,7 +43,7 @@ impl DephyAccount {
 ///
 #[derive(Clone, BorshSerialize, BorshDeserialize, Debug)]
 pub struct DephyData {
-    pub version: u8,
+    pub bump: u8,
 }
 
 impl DephyData {

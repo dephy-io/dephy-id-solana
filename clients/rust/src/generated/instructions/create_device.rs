@@ -61,7 +61,7 @@ impl CreateDevice {
             self.device,
             true,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_program::instruction::AccountMeta::new(
             self.product_mint,
             false,
         ));
@@ -101,7 +101,7 @@ impl CreateDeviceInstructionData {
 ///   3. `[writable, signer]` payer
 ///   4. `[signer]` vendor
 ///   5. `[signer]` device
-///   6. `[]` product_mint
+///   6. `[writable]` product_mint
 ///   7. `[writable]` product_atoken
 #[derive(Default)]
 pub struct CreateDeviceBuilder {
@@ -328,7 +328,7 @@ impl<'a, 'b> CreateDeviceCpi<'a, 'b> {
             *self.device.key,
             true,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_program::instruction::AccountMeta::new(
             *self.product_mint.key,
             false,
         ));
@@ -382,7 +382,7 @@ impl<'a, 'b> CreateDeviceCpi<'a, 'b> {
 ///   3. `[writable, signer]` payer
 ///   4. `[signer]` vendor
 ///   5. `[signer]` device
-///   6. `[]` product_mint
+///   6. `[writable]` product_mint
 ///   7. `[writable]` product_atoken
 pub struct CreateDeviceCpiBuilder<'a, 'b> {
     instruction: Box<CreateDeviceCpiBuilderInstruction<'a, 'b>>,

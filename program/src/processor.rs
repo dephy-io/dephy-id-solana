@@ -63,7 +63,7 @@ fn create_dephy<'a>(
     // Accounts
     let ctx = CreateDephyAccounts::context(accounts)?;
 
-    let seeds: &[&[u8]] = &[b"DePHY", ctx.accounts.authority.key.as_ref(), &[args.bump]];
+    let seeds: &[&[u8]] = &[b"DePHY", &[args.bump]];
 
     // Guards
     assert_pda("Dephy", ctx.accounts.dephy, program_id, seeds)?;
@@ -89,7 +89,7 @@ fn create_dephy<'a>(
     let dephy_account = DephyAccount {
         key: Key::DephyAccount,
         authority: *ctx.accounts.authority.key,
-        data: DephyData { version: 1 },
+        data: DephyData { bump: args.bump },
     };
 
     dephy_account.save(ctx.accounts.dephy)
@@ -121,7 +121,7 @@ fn create_vendor<'a>(
         &system_program::id(),
     )?;
 
-    let mint_seeds: &[&[u8]] = &[b"DePHY VENDOR", &vendor_pubkey.to_bytes(), &[args.bump]];
+    let mint_seeds: &[&[u8]] = &[b"DePHY VENDOR", vendor_pubkey.as_ref(), &[args.bump]];
     let mint_pubkey = Pubkey::create_program_address(mint_seeds, program_id)?;
     assert_same_pubkeys("vendor_mint", ctx.accounts.vendor_mint, &mint_pubkey)?;
     assert_writable("vendor_mint", ctx.accounts.vendor_mint)?;
@@ -140,7 +140,6 @@ fn create_vendor<'a>(
         ExtensionType::MetadataPointer,
     ])?;
 
-    // TODO: from args
     let metadata = TokenMetadata {
         name: args.name,
         symbol: args.symbol,
@@ -327,7 +326,7 @@ fn create_product<'a>(
 
     let mint_seeds: &[&[u8]] = &[
         b"DePHY PRODUCT",
-        &ctx.accounts.vendor.key.to_bytes(),
+        ctx.accounts.vendor.key.as_ref(),
         &args.seed,
         &[args.bump],
     ];
@@ -531,8 +530,8 @@ fn activate_device<'a>(
     // Create the DID token
     let mint_seeds: &[&[u8]] = &[
         b"DePHY DID",
-        &device_pubkey.to_bytes(),
-        &user_pubkey.to_bytes(),
+        device_pubkey.as_ref(),
+        user_pubkey.as_ref(),
         &[args.bump],
     ];
 
