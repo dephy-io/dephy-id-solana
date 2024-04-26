@@ -56,8 +56,8 @@ impl CreateProduct {
             false,
         ));
         accounts.extend_from_slice(remaining_accounts);
-        let mut data = CreateProductInstructionData::new().try_to_vec().unwrap();
-        let mut args = args.try_to_vec().unwrap();
+        let mut data = borsh::to_vec(&CreateProductInstructionData::new()).unwrap();
+        let mut args = borsh::to_vec(&args).unwrap();
         data.append(&mut args);
 
         solana_program::instruction::Instruction {
@@ -69,12 +69,12 @@ impl CreateProduct {
 }
 
 #[derive(BorshDeserialize, BorshSerialize)]
-struct CreateProductInstructionData {
+pub struct CreateProductInstructionData {
     discriminator: u8,
 }
 
 impl CreateProductInstructionData {
-    fn new() -> Self {
+    pub fn new() -> Self {
         Self { discriminator: 2 }
     }
 }
@@ -95,7 +95,7 @@ pub struct CreateProductInstructionArgs {
 ///   2. `[writable, signer]` payer
 ///   3. `[signer]` vendor
 ///   4. `[writable]` product_mint
-#[derive(Default)]
+#[derive(Clone, Debug, Default)]
 pub struct CreateProductBuilder {
     system_program: Option<solana_program::pubkey::Pubkey>,
     token_program2022: Option<solana_program::pubkey::Pubkey>,
@@ -304,8 +304,8 @@ impl<'a, 'b> CreateProductCpi<'a, 'b> {
                 is_writable: remaining_account.2,
             })
         });
-        let mut data = CreateProductInstructionData::new().try_to_vec().unwrap();
-        let mut args = self.__args.try_to_vec().unwrap();
+        let mut data = borsh::to_vec(&CreateProductInstructionData::new()).unwrap();
+        let mut args = borsh::to_vec(&self.__args).unwrap();
         data.append(&mut args);
 
         let instruction = solana_program::instruction::Instruction {
@@ -341,6 +341,7 @@ impl<'a, 'b> CreateProductCpi<'a, 'b> {
 ///   2. `[writable, signer]` payer
 ///   3. `[signer]` vendor
 ///   4. `[writable]` product_mint
+#[derive(Clone, Debug)]
 pub struct CreateProductCpiBuilder<'a, 'b> {
     instruction: Box<CreateProductCpiBuilderInstruction<'a, 'b>>,
 }
@@ -487,6 +488,7 @@ impl<'a, 'b> CreateProductCpiBuilder<'a, 'b> {
     }
 }
 
+#[derive(Clone, Debug)]
 struct CreateProductCpiBuilderInstruction<'a, 'b> {
     __program: &'b solana_program::account_info::AccountInfo<'a>,
     system_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,

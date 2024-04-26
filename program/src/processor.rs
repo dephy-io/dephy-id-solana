@@ -66,7 +66,7 @@ fn create_dephy<'a>(
     let seeds: &[&[u8]] = &[b"DePHY", &[args.bump]];
 
     // Guards
-    assert_pda("Dephy", ctx.accounts.dephy, program_id, seeds)?;
+    assert_pda("DePHY", ctx.accounts.dephy, program_id, seeds)?;
     assert_signer("authority", ctx.accounts.authority)?;
     assert_same_pubkeys(
         "system_program",

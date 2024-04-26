@@ -6,14 +6,7 @@
  * @see https://github.com/metaplex-foundation/kinobi
  */
 
-import { Address } from '@solana/addresses';
-import { getU8Encoder } from '@solana/codecs';
-import { Program, ProgramWithErrors } from '@solana/programs';
-import {
-  DephyIdProgramError,
-  DephyIdProgramErrorCode,
-  getDephyIdProgramErrorFromCode,
-} from '../errors';
+import { Address, containsBytes, getU8Encoder } from '@solana/web3.js';
 import {
   ParsedActivateDeviceInstruction,
   ParsedCreateDephyInstruction,
@@ -21,24 +14,9 @@ import {
   ParsedCreateProductInstruction,
   ParsedCreateVendorInstruction,
 } from '../instructions';
-import { memcmp } from '../shared';
 
 export const DEPHY_ID_PROGRAM_ADDRESS =
   'hdMghjD73uASxgJXi6e1mGPsXqnADMsrqB1bveqABP1' as Address<'hdMghjD73uASxgJXi6e1mGPsXqnADMsrqB1bveqABP1'>;
-
-export type DephyIdProgram =
-  Program<'hdMghjD73uASxgJXi6e1mGPsXqnADMsrqB1bveqABP1'> &
-    ProgramWithErrors<DephyIdProgramErrorCode, DephyIdProgramError>;
-
-export function getDephyIdProgram(): DephyIdProgram {
-  return {
-    name: 'dephyId',
-    address: DEPHY_ID_PROGRAM_ADDRESS,
-    getErrorFromCode(code: DephyIdProgramErrorCode, cause?: Error) {
-      return getDephyIdProgramErrorFromCode(code, cause);
-    },
-  };
-}
 
 export enum DephyIdAccount {
   DephyAccount,
@@ -57,19 +35,19 @@ export function identifyDephyIdInstruction(
 ): DephyIdInstruction {
   const data =
     instruction instanceof Uint8Array ? instruction : instruction.data;
-  if (memcmp(data, getU8Encoder().encode(0), 0)) {
+  if (containsBytes(data, getU8Encoder().encode(0), 0)) {
     return DephyIdInstruction.CreateDephy;
   }
-  if (memcmp(data, getU8Encoder().encode(1), 0)) {
+  if (containsBytes(data, getU8Encoder().encode(1), 0)) {
     return DephyIdInstruction.CreateVendor;
   }
-  if (memcmp(data, getU8Encoder().encode(2), 0)) {
+  if (containsBytes(data, getU8Encoder().encode(2), 0)) {
     return DephyIdInstruction.CreateProduct;
   }
-  if (memcmp(data, getU8Encoder().encode(3), 0)) {
+  if (containsBytes(data, getU8Encoder().encode(3), 0)) {
     return DephyIdInstruction.CreateDevice;
   }
-  if (memcmp(data, getU8Encoder().encode(4), 0)) {
+  if (containsBytes(data, getU8Encoder().encode(4), 0)) {
     return DephyIdInstruction.ActivateDevice;
   }
   throw new Error(

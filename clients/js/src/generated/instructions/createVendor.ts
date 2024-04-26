@@ -6,35 +6,38 @@
  * @see https://github.com/metaplex-foundation/kinobi
  */
 
-import { Address } from '@solana/addresses';
 import {
+  Address,
   Codec,
   Decoder,
   Encoder,
-  combineCodec,
-  getArrayDecoder,
-  getArrayEncoder,
-  getStringDecoder,
-  getStringEncoder,
-  getStructDecoder,
-  getStructEncoder,
-  getTupleDecoder,
-  getTupleEncoder,
-  getU8Decoder,
-  getU8Encoder,
-  mapEncoder,
-} from '@solana/codecs';
-import {
   IAccountMeta,
+  IAccountSignerMeta,
   IInstruction,
   IInstructionWithAccounts,
   IInstructionWithData,
   ReadonlyAccount,
   ReadonlySignerAccount,
+  TransactionSigner,
   WritableAccount,
   WritableSignerAccount,
-} from '@solana/instructions';
-import { IAccountSignerMeta, TransactionSigner } from '@solana/signers';
+  addDecoderSizePrefix,
+  addEncoderSizePrefix,
+  combineCodec,
+  getArrayDecoder,
+  getArrayEncoder,
+  getStructDecoder,
+  getStructEncoder,
+  getTupleDecoder,
+  getTupleEncoder,
+  getU32Decoder,
+  getU32Encoder,
+  getU8Decoder,
+  getU8Encoder,
+  getUtf8Decoder,
+  getUtf8Encoder,
+  transformEncoder,
+} from '@solana/web3.js';
 import { DEPHY_ID_PROGRAM_ADDRESS } from '../programs';
 import { ResolvedAccount, getAccountMetaFactory } from '../shared';
 
@@ -95,7 +98,7 @@ export type CreateVendorInstructionData = {
   name: string;
   symbol: string;
   uri: string;
-  additionalMetadata: Array<[string, string]>;
+  additionalMetadata: Array<readonly [string, string]>;
 };
 
 export type CreateVendorInstructionDataArgs = {
@@ -103,21 +106,24 @@ export type CreateVendorInstructionDataArgs = {
   name: string;
   symbol: string;
   uri: string;
-  additionalMetadata: Array<[string, string]>;
+  additionalMetadata: Array<readonly [string, string]>;
 };
 
 export function getCreateVendorInstructionDataEncoder(): Encoder<CreateVendorInstructionDataArgs> {
-  return mapEncoder(
+  return transformEncoder(
     getStructEncoder([
       ['discriminator', getU8Encoder()],
       ['bump', getU8Encoder()],
-      ['name', getStringEncoder()],
-      ['symbol', getStringEncoder()],
-      ['uri', getStringEncoder()],
+      ['name', addEncoderSizePrefix(getUtf8Encoder(), getU32Encoder())],
+      ['symbol', addEncoderSizePrefix(getUtf8Encoder(), getU32Encoder())],
+      ['uri', addEncoderSizePrefix(getUtf8Encoder(), getU32Encoder())],
       [
         'additionalMetadata',
         getArrayEncoder(
-          getTupleEncoder([getStringEncoder(), getStringEncoder()])
+          getTupleEncoder([
+            addEncoderSizePrefix(getUtf8Encoder(), getU32Encoder()),
+            addEncoderSizePrefix(getUtf8Encoder(), getU32Encoder()),
+          ])
         ),
       ],
     ]),
@@ -129,13 +135,16 @@ export function getCreateVendorInstructionDataDecoder(): Decoder<CreateVendorIns
   return getStructDecoder([
     ['discriminator', getU8Decoder()],
     ['bump', getU8Decoder()],
-    ['name', getStringDecoder()],
-    ['symbol', getStringDecoder()],
-    ['uri', getStringDecoder()],
+    ['name', addDecoderSizePrefix(getUtf8Decoder(), getU32Decoder())],
+    ['symbol', addDecoderSizePrefix(getUtf8Decoder(), getU32Decoder())],
+    ['uri', addDecoderSizePrefix(getUtf8Decoder(), getU32Decoder())],
     [
       'additionalMetadata',
       getArrayDecoder(
-        getTupleDecoder([getStringDecoder(), getStringDecoder()])
+        getTupleDecoder([
+          addDecoderSizePrefix(getUtf8Decoder(), getU32Decoder()),
+          addDecoderSizePrefix(getUtf8Decoder(), getU32Decoder()),
+        ])
       ),
     ],
   ]);

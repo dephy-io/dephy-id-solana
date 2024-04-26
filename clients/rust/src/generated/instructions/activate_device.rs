@@ -73,8 +73,8 @@ impl ActivateDevice {
             false,
         ));
         accounts.extend_from_slice(remaining_accounts);
-        let mut data = ActivateDeviceInstructionData::new().try_to_vec().unwrap();
-        let mut args = args.try_to_vec().unwrap();
+        let mut data = borsh::to_vec(&ActivateDeviceInstructionData::new()).unwrap();
+        let mut args = borsh::to_vec(&args).unwrap();
         data.append(&mut args);
 
         solana_program::instruction::Instruction {
@@ -86,12 +86,12 @@ impl ActivateDevice {
 }
 
 #[derive(BorshDeserialize, BorshSerialize)]
-struct ActivateDeviceInstructionData {
+pub struct ActivateDeviceInstructionData {
     discriminator: u8,
 }
 
 impl ActivateDeviceInstructionData {
-    fn new() -> Self {
+    pub fn new() -> Self {
         Self { discriminator: 4 }
     }
 }
@@ -114,7 +114,7 @@ pub struct ActivateDeviceInstructionArgs {
 ///   5. `[]` user
 ///   6. `[writable]` did_mint
 ///   7. `[writable]` did_atoken
-#[derive(Default)]
+#[derive(Clone, Debug, Default)]
 pub struct ActivateDeviceBuilder {
     system_program: Option<solana_program::pubkey::Pubkey>,
     token_program2022: Option<solana_program::pubkey::Pubkey>,
@@ -367,8 +367,8 @@ impl<'a, 'b> ActivateDeviceCpi<'a, 'b> {
                 is_writable: remaining_account.2,
             })
         });
-        let mut data = ActivateDeviceInstructionData::new().try_to_vec().unwrap();
-        let mut args = self.__args.try_to_vec().unwrap();
+        let mut data = borsh::to_vec(&ActivateDeviceInstructionData::new()).unwrap();
+        let mut args = borsh::to_vec(&self.__args).unwrap();
         data.append(&mut args);
 
         let instruction = solana_program::instruction::Instruction {
@@ -410,6 +410,7 @@ impl<'a, 'b> ActivateDeviceCpi<'a, 'b> {
 ///   5. `[]` user
 ///   6. `[writable]` did_mint
 ///   7. `[writable]` did_atoken
+#[derive(Clone, Debug)]
 pub struct ActivateDeviceCpiBuilder<'a, 'b> {
     instruction: Box<ActivateDeviceCpiBuilderInstruction<'a, 'b>>,
 }
@@ -582,6 +583,7 @@ impl<'a, 'b> ActivateDeviceCpiBuilder<'a, 'b> {
     }
 }
 
+#[derive(Clone, Debug)]
 struct ActivateDeviceCpiBuilderInstruction<'a, 'b> {
     __program: &'b solana_program::account_info::AccountInfo<'a>,
     system_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,

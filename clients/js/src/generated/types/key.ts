@@ -11,9 +11,9 @@ import {
   Decoder,
   Encoder,
   combineCodec,
-  getScalarEnumDecoder,
-  getScalarEnumEncoder,
-} from '@solana/codecs';
+  getEnumDecoder,
+  getEnumEncoder,
+} from '@solana/web3.js';
 
 export enum Key {
   Uninitialized,
@@ -23,11 +23,11 @@ export enum Key {
 export type KeyArgs = Key;
 
 export function getKeyEncoder(): Encoder<KeyArgs> {
-  return getScalarEnumEncoder(Key);
+  return getEnumEncoder(Key);
 }
 
 export function getKeyDecoder(): Decoder<Key> {
-  return getScalarEnumDecoder(Key);
+  return getEnumDecoder(Key);
 }
 
 export function getKeyCodec(): Codec<KeyArgs, Key> {

@@ -15,7 +15,7 @@ import {
   getStructEncoder,
   getU8Decoder,
   getU8Encoder,
-} from '@solana/codecs';
+} from '@solana/web3.js';
 
 export type DephyData = { bump: number };
 

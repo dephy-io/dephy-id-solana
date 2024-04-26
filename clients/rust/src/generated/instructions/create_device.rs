@@ -70,7 +70,7 @@ impl CreateDevice {
             false,
         ));
         accounts.extend_from_slice(remaining_accounts);
-        let data = CreateDeviceInstructionData::new().try_to_vec().unwrap();
+        let data = borsh::to_vec(&CreateDeviceInstructionData::new()).unwrap();
 
         solana_program::instruction::Instruction {
             program_id: crate::DEPHY_ID_ID,
@@ -81,12 +81,12 @@ impl CreateDevice {
 }
 
 #[derive(BorshDeserialize, BorshSerialize)]
-struct CreateDeviceInstructionData {
+pub struct CreateDeviceInstructionData {
     discriminator: u8,
 }
 
 impl CreateDeviceInstructionData {
-    fn new() -> Self {
+    pub fn new() -> Self {
         Self { discriminator: 3 }
     }
 }
@@ -103,7 +103,7 @@ impl CreateDeviceInstructionData {
 ///   5. `[signer]` device
 ///   6. `[writable]` product_mint
 ///   7. `[writable]` product_atoken
-#[derive(Default)]
+#[derive(Clone, Debug, Default)]
 pub struct CreateDeviceBuilder {
     system_program: Option<solana_program::pubkey::Pubkey>,
     token_program2022: Option<solana_program::pubkey::Pubkey>,
@@ -343,7 +343,7 @@ impl<'a, 'b> CreateDeviceCpi<'a, 'b> {
                 is_writable: remaining_account.2,
             })
         });
-        let data = CreateDeviceInstructionData::new().try_to_vec().unwrap();
+        let data = borsh::to_vec(&CreateDeviceInstructionData::new()).unwrap();
 
         let instruction = solana_program::instruction::Instruction {
             program_id: crate::DEPHY_ID_ID,
@@ -384,6 +384,7 @@ impl<'a, 'b> CreateDeviceCpi<'a, 'b> {
 ///   5. `[signer]` device
 ///   6. `[writable]` product_mint
 ///   7. `[writable]` product_atoken
+#[derive(Clone, Debug)]
 pub struct CreateDeviceCpiBuilder<'a, 'b> {
     instruction: Box<CreateDeviceCpiBuilderInstruction<'a, 'b>>,
 }
@@ -555,6 +556,7 @@ impl<'a, 'b> CreateDeviceCpiBuilder<'a, 'b> {
     }
 }
 
+#[derive(Clone, Debug)]
 struct CreateDeviceCpiBuilderInstruction<'a, 'b> {
     __program: &'b solana_program::account_info::AccountInfo<'a>,
     system_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,

@@ -79,8 +79,8 @@ impl CreateVendor {
             false,
         ));
         accounts.extend_from_slice(remaining_accounts);
-        let mut data = CreateVendorInstructionData::new().try_to_vec().unwrap();
-        let mut args = args.try_to_vec().unwrap();
+        let mut data = borsh::to_vec(&CreateVendorInstructionData::new()).unwrap();
+        let mut args = borsh::to_vec(&args).unwrap();
         data.append(&mut args);
 
         solana_program::instruction::Instruction {
@@ -92,12 +92,12 @@ impl CreateVendor {
 }
 
 #[derive(BorshDeserialize, BorshSerialize)]
-struct CreateVendorInstructionData {
+pub struct CreateVendorInstructionData {
     discriminator: u8,
 }
 
 impl CreateVendorInstructionData {
-    fn new() -> Self {
+    pub fn new() -> Self {
         Self { discriminator: 1 }
     }
 }
@@ -125,7 +125,7 @@ pub struct CreateVendorInstructionArgs {
 ///   6. `[]` vendor
 ///   7. `[writable]` vendor_mint
 ///   8. `[writable]` vendor_atoken
-#[derive(Default)]
+#[derive(Clone, Debug, Default)]
 pub struct CreateVendorBuilder {
     system_program: Option<solana_program::pubkey::Pubkey>,
     token_program2022: Option<solana_program::pubkey::Pubkey>,
@@ -426,8 +426,8 @@ impl<'a, 'b> CreateVendorCpi<'a, 'b> {
                 is_writable: remaining_account.2,
             })
         });
-        let mut data = CreateVendorInstructionData::new().try_to_vec().unwrap();
-        let mut args = self.__args.try_to_vec().unwrap();
+        let mut data = borsh::to_vec(&CreateVendorInstructionData::new()).unwrap();
+        let mut args = borsh::to_vec(&self.__args).unwrap();
         data.append(&mut args);
 
         let instruction = solana_program::instruction::Instruction {
@@ -471,6 +471,7 @@ impl<'a, 'b> CreateVendorCpi<'a, 'b> {
 ///   6. `[]` vendor
 ///   7. `[writable]` vendor_mint
 ///   8. `[writable]` vendor_atoken
+#[derive(Clone, Debug)]
 pub struct CreateVendorCpiBuilder<'a, 'b> {
     instruction: Box<CreateVendorCpiBuilderInstruction<'a, 'b>>,
 }
@@ -693,6 +694,7 @@ impl<'a, 'b> CreateVendorCpiBuilder<'a, 'b> {
     }
 }
 
+#[derive(Clone, Debug)]
 struct CreateVendorCpiBuilderInstruction<'a, 'b> {
     __program: &'b solana_program::account_info::AccountInfo<'a>,
     system_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
