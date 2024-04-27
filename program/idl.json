@@ -437,13 +437,36 @@
             "type": {
               "array": [
                 "u8",
-                8
+                32
               ]
             }
           },
           {
             "name": "bump",
             "type": "u8"
+          },
+          {
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "name": "symbol",
+            "type": "string"
+          },
+          {
+            "name": "uri",
+            "type": "string"
+          },
+          {
+            "name": "additionalMetadata",
+            "type": {
+              "vec": {
+                "tuple": [
+                  "string",
+                  "string"
+                ]
+              }
+            }
           }
         ]
       }

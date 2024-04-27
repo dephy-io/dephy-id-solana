@@ -7,11 +7,7 @@ use dephy_io_dephy_id_client::instructions::{
 };
 use solana_client::rpc_client::RpcClient;
 use solana_sdk::{
-    commitment_config::CommitmentConfig,
-    pubkey::Pubkey,
-    signature::Keypair,
-    signer::{EncodableKey, Signer},
-    transaction::Transaction,
+    commitment_config::CommitmentConfig, hash, pubkey::Pubkey, signature::Keypair, signer::{EncodableKey, Signer}, transaction::Transaction
 };
 
 #[derive(Debug, Parser)]
@@ -70,6 +66,11 @@ struct CreateProductCliArgs {
     #[arg(long = "vendor")]
     vendor_keypair: String,
     seed: String,
+    name: String,
+    symbol: String,
+    uri: String,
+    #[arg(short = 'm', value_parser = parse_key_val::<String, String>)]
+    additional_metadata: Vec<(String, String)>,
     #[command(flatten)]
     common: CommonArgs,
 }
@@ -258,9 +259,9 @@ fn create_product(args: CreateProductCliArgs) {
     let vendor = read_key(&args.vendor_keypair);
     let payer = read_key_or(args.common.payer, &args.vendor_keypair);
 
-    let seed: [u8; 8] = args.seed.as_bytes().try_into().unwrap();
+    let seed = hash::hash(args.seed.as_ref());
     let (product_mint_pubkey, bump) = Pubkey::find_program_address(
-        &[b"DePHY PRODUCT", vendor.pubkey().as_ref(), &seed],
+        &[b"DePHY PRODUCT", vendor.pubkey().as_ref(), seed.as_ref()],
         &program_id,
     );
 
@@ -271,8 +272,12 @@ fn create_product(args: CreateProductCliArgs) {
             .payer(payer.pubkey())
             .vendor(vendor.pubkey())
             .product_mint(product_mint_pubkey)
-            .seed(seed)
+            .seed(seed.to_bytes())
             .bump(bump)
+            .name(args.name)
+            .symbol(args.symbol)
+            .uri(args.uri)
+            .additional_metadata(args.additional_metadata)
             .instruction()],
         Some(&payer.pubkey()),
         &[&vendor, &payer],

@@ -18,16 +18,29 @@ import {
   IInstructionWithData,
   ReadonlyAccount,
   ReadonlySignerAccount,
+  ReadonlyUint8Array,
   TransactionSigner,
   WritableAccount,
   WritableSignerAccount,
+  addDecoderSizePrefix,
+  addEncoderSizePrefix,
   combineCodec,
+  fixDecoderSize,
+  fixEncoderSize,
   getArrayDecoder,
   getArrayEncoder,
+  getBytesDecoder,
+  getBytesEncoder,
   getStructDecoder,
   getStructEncoder,
+  getTupleDecoder,
+  getTupleEncoder,
+  getU32Decoder,
+  getU32Encoder,
   getU8Decoder,
   getU8Encoder,
+  getUtf8Decoder,
+  getUtf8Encoder,
   transformEncoder,
 } from '@solana/web3.js';
 import { DEPHY_ID_PROGRAM_ADDRESS } from '../programs';
@@ -70,21 +83,41 @@ export type CreateProductInstruction<
 
 export type CreateProductInstructionData = {
   discriminator: number;
-  seed: Array<number>;
+  seed: ReadonlyUint8Array;
   bump: number;
+  name: string;
+  symbol: string;
+  uri: string;
+  additionalMetadata: Array<readonly [string, string]>;
 };
 
 export type CreateProductInstructionDataArgs = {
-  seed: Array<number>;
+  seed: ReadonlyUint8Array;
   bump: number;
+  name: string;
+  symbol: string;
+  uri: string;
+  additionalMetadata: Array<readonly [string, string]>;
 };
 
 export function getCreateProductInstructionDataEncoder(): Encoder<CreateProductInstructionDataArgs> {
   return transformEncoder(
     getStructEncoder([
       ['discriminator', getU8Encoder()],
-      ['seed', getArrayEncoder(getU8Encoder(), { size: 8 })],
+      ['seed', fixEncoderSize(getBytesEncoder(), 32)],
       ['bump', getU8Encoder()],
+      ['name', addEncoderSizePrefix(getUtf8Encoder(), getU32Encoder())],
+      ['symbol', addEncoderSizePrefix(getUtf8Encoder(), getU32Encoder())],
+      ['uri', addEncoderSizePrefix(getUtf8Encoder(), getU32Encoder())],
+      [
+        'additionalMetadata',
+        getArrayEncoder(
+          getTupleEncoder([
+            addEncoderSizePrefix(getUtf8Encoder(), getU32Encoder()),
+            addEncoderSizePrefix(getUtf8Encoder(), getU32Encoder()),
+          ])
+        ),
+      ],
     ]),
     (value) => ({ ...value, discriminator: 2 })
   );
@@ -93,8 +126,20 @@ export function getCreateProductInstructionDataEncoder(): Encoder<CreateProductI
 export function getCreateProductInstructionDataDecoder(): Decoder<CreateProductInstructionData> {
   return getStructDecoder([
     ['discriminator', getU8Decoder()],
-    ['seed', getArrayDecoder(getU8Decoder(), { size: 8 })],
+    ['seed', fixDecoderSize(getBytesDecoder(), 32)],
     ['bump', getU8Decoder()],
+    ['name', addDecoderSizePrefix(getUtf8Decoder(), getU32Decoder())],
+    ['symbol', addDecoderSizePrefix(getUtf8Decoder(), getU32Decoder())],
+    ['uri', addDecoderSizePrefix(getUtf8Decoder(), getU32Decoder())],
+    [
+      'additionalMetadata',
+      getArrayDecoder(
+        getTupleDecoder([
+          addDecoderSizePrefix(getUtf8Decoder(), getU32Decoder()),
+          addDecoderSizePrefix(getUtf8Decoder(), getU32Decoder()),
+        ])
+      ),
+    ],
   ]);
 }
 
@@ -127,6 +172,10 @@ export type CreateProductInput<
   productMint: Address<TAccountProductMint>;
   seed: CreateProductInstructionDataArgs['seed'];
   bump: CreateProductInstructionDataArgs['bump'];
+  name: CreateProductInstructionDataArgs['name'];
+  symbol: CreateProductInstructionDataArgs['symbol'];
+  uri: CreateProductInstructionDataArgs['uri'];
+  additionalMetadata: CreateProductInstructionDataArgs['additionalMetadata'];
 };
 
 export function getCreateProductInstruction<

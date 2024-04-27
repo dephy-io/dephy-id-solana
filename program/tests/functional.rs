@@ -9,12 +9,7 @@ use dephy_io_dephy_id::{
 use solana_program::pubkey::Pubkey;
 use solana_program_test::*;
 use solana_sdk::{
-    account::ReadableAccount,
-    instruction::{AccountMeta, Instruction},
-    signature::Keypair,
-    signer::Signer,
-    system_program,
-    transaction::Transaction,
+    account::ReadableAccount, hash::hash, instruction::{AccountMeta, Instruction}, signature::Keypair, signer::Signer, system_program, transaction::Transaction
 };
 use spl_token_2022::{
     extension::{BaseStateWithExtensions, StateWithExtensions},
@@ -178,10 +173,12 @@ async fn test_create_product(
     banks_client: &mut BanksClient,
     payer: &Keypair,
     vendor: &Keypair,
-    product_seed: &[u8; 8],
+    product_seed: &[u8],
 ) {
+    let seed = hash(product_seed);
+
     let (mint_pubkey, mint_bump) = Pubkey::find_program_address(
-        &[b"DePHY PRODUCT", &vendor.pubkey().to_bytes(), product_seed],
+        &[b"DePHY PRODUCT", &vendor.pubkey().to_bytes(), seed.as_ref()],
         &program_id,
     );
 
@@ -189,8 +186,14 @@ async fn test_create_product(
         &[Instruction::new_with_borsh(
             program_id,
             &DephyInstruction::CreateProduct(CreateProductArgs {
-                seed: *product_seed,
+                seed: seed.to_bytes(),
                 bump: mint_bump,
+                name: "Example Product 1".to_string(),
+                symbol: "PD1".to_string(),
+                uri: "https://example.com".to_string(),
+                additional_metadata: vec![
+                    ("desc".to_string(), "Product by Vendor".to_string())
+                ],
             }),
             vec![
                 AccountMeta::new(system_program::id(), false),
@@ -225,7 +228,7 @@ async fn test_create_product(
         .get_variable_len_extension::<TokenMetadata>()
         .unwrap();
     assert_eq!(
-        mint_metadata.name, "Example Vendor Product 1",
+        mint_metadata.name, "Example Product 1",
         "metadata name"
     );
 }
@@ -238,8 +241,10 @@ async fn test_create_device(
     device: &Keypair,
     product_seed: &[u8; 8],
 ) {
+    let seed = hash(product_seed);
+
     let (product_mint_pubkey, _mint_bump) = Pubkey::find_program_address(
-        &[b"DePHY PRODUCT", &vendor.pubkey().to_bytes(), product_seed],
+        &[b"DePHY PRODUCT", &vendor.pubkey().to_bytes(), seed.as_ref()],
         &program_id,
     );
 

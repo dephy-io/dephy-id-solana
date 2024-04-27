@@ -340,14 +340,10 @@ fn create_product<'a>(
 
     // TODO: from args
     let metadata = TokenMetadata {
-        name: "Example Vendor Product 1".to_string(),
-        symbol: "PD1".to_string(),
-        uri: "https://example.com/metadata.json".to_string(),
-        additional_metadata: [(
-            "description".to_string(),
-            "Example Vendor Product 1".to_string(),
-        )]
-        .to_vec(),
+        name: args.name,
+        symbol: args.symbol,
+        uri: args.uri,
+        additional_metadata: args.additional_metadata,
         ..Default::default()
     };
     let metadata_size = metadata.tlv_size_of()?;
