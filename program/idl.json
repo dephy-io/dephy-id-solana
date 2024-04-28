@@ -71,7 +71,7 @@
           ]
         },
         {
-          "name": "atokenProgram",
+          "name": "ataProgram",
           "isMut": false,
           "isSigner": false,
           "docs": [
@@ -107,7 +107,7 @@
           "isMut": false,
           "isSigner": false,
           "docs": [
-            "Vendor account"
+            "The Vendor pubkey"
           ]
         },
         {
@@ -172,7 +172,7 @@
           "isMut": false,
           "isSigner": true,
           "docs": [
-            "Vendor account"
+            "The Vendor pubkey"
           ]
         },
         {
@@ -217,7 +217,7 @@
           ]
         },
         {
-          "name": "atokenProgram",
+          "name": "ataProgram",
           "isMut": false,
           "isSigner": false,
           "docs": [
@@ -237,7 +237,7 @@
           "isMut": false,
           "isSigner": true,
           "docs": [
-            "Vendor account"
+            "The Vendor pubkey"
           ]
         },
         {
@@ -245,7 +245,7 @@
           "isMut": false,
           "isSigner": true,
           "docs": [
-            "The Device account"
+            "The Device pubkey"
           ]
         },
         {
@@ -291,7 +291,7 @@
           ]
         },
         {
-          "name": "atokenProgram",
+          "name": "ataProgram",
           "isMut": false,
           "isSigner": false,
           "docs": [
@@ -311,7 +311,31 @@
           "isMut": false,
           "isSigner": true,
           "docs": [
-            "The Device"
+            "The Device pubkey"
+          ]
+        },
+        {
+          "name": "vendor",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "Vendor of the Device"
+          ]
+        },
+        {
+          "name": "productMint",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "Product of the Device"
+          ]
+        },
+        {
+          "name": "productAtoken",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The Product atoken for Device"
           ]
         },
         {

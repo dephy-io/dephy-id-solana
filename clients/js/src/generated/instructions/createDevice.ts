@@ -37,7 +37,9 @@ export type CreateDeviceInstruction<
     | string
     | IAccountMeta<string> = '11111111111111111111111111111111',
   TAccountTokenProgram2022 extends string | IAccountMeta<string> = string,
-  TAccountAtokenProgram extends string | IAccountMeta<string> = string,
+  TAccountAtaProgram extends
+    | string
+    | IAccountMeta<string> = 'ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL',
   TAccountPayer extends string | IAccountMeta<string> = string,
   TAccountVendor extends string | IAccountMeta<string> = string,
   TAccountDevice extends string | IAccountMeta<string> = string,
@@ -54,9 +56,9 @@ export type CreateDeviceInstruction<
       TAccountTokenProgram2022 extends string
         ? ReadonlyAccount<TAccountTokenProgram2022>
         : TAccountTokenProgram2022,
-      TAccountAtokenProgram extends string
-        ? ReadonlyAccount<TAccountAtokenProgram>
-        : TAccountAtokenProgram,
+      TAccountAtaProgram extends string
+        ? ReadonlyAccount<TAccountAtaProgram>
+        : TAccountAtaProgram,
       TAccountPayer extends string
         ? WritableSignerAccount<TAccountPayer> &
             IAccountSignerMeta<TAccountPayer>
@@ -107,7 +109,7 @@ export function getCreateDeviceInstructionDataCodec(): Codec<
 export type CreateDeviceInput<
   TAccountSystemProgram extends string = string,
   TAccountTokenProgram2022 extends string = string,
-  TAccountAtokenProgram extends string = string,
+  TAccountAtaProgram extends string = string,
   TAccountPayer extends string = string,
   TAccountVendor extends string = string,
   TAccountDevice extends string = string,
@@ -119,12 +121,12 @@ export type CreateDeviceInput<
   /** The SPL Token 2022 program */
   tokenProgram2022: Address<TAccountTokenProgram2022>;
   /** The associated token program */
-  atokenProgram: Address<TAccountAtokenProgram>;
+  ataProgram?: Address<TAccountAtaProgram>;
   /** The account paying for the storage fees */
   payer: TransactionSigner<TAccountPayer>;
-  /** Vendor account */
+  /** The Vendor pubkey */
   vendor: TransactionSigner<TAccountVendor>;
-  /** The Device account */
+  /** The Device pubkey */
   device: TransactionSigner<TAccountDevice>;
   /** The Product mint account */
   productMint: Address<TAccountProductMint>;
@@ -135,7 +137,7 @@ export type CreateDeviceInput<
 export function getCreateDeviceInstruction<
   TAccountSystemProgram extends string,
   TAccountTokenProgram2022 extends string,
-  TAccountAtokenProgram extends string,
+  TAccountAtaProgram extends string,
   TAccountPayer extends string,
   TAccountVendor extends string,
   TAccountDevice extends string,
@@ -145,7 +147,7 @@ export function getCreateDeviceInstruction<
   input: CreateDeviceInput<
     TAccountSystemProgram,
     TAccountTokenProgram2022,
-    TAccountAtokenProgram,
+    TAccountAtaProgram,
     TAccountPayer,
     TAccountVendor,
     TAccountDevice,
@@ -156,7 +158,7 @@ export function getCreateDeviceInstruction<
   typeof DEPHY_ID_PROGRAM_ADDRESS,
   TAccountSystemProgram,
   TAccountTokenProgram2022,
-  TAccountAtokenProgram,
+  TAccountAtaProgram,
   TAccountPayer,
   TAccountVendor,
   TAccountDevice,
@@ -173,7 +175,7 @@ export function getCreateDeviceInstruction<
       value: input.tokenProgram2022 ?? null,
       isWritable: false,
     },
-    atokenProgram: { value: input.atokenProgram ?? null, isWritable: false },
+    ataProgram: { value: input.ataProgram ?? null, isWritable: false },
     payer: { value: input.payer ?? null, isWritable: true },
     vendor: { value: input.vendor ?? null, isWritable: false },
     device: { value: input.device ?? null, isWritable: false },
@@ -190,13 +192,17 @@ export function getCreateDeviceInstruction<
     accounts.systemProgram.value =
       '11111111111111111111111111111111' as Address<'11111111111111111111111111111111'>;
   }
+  if (!accounts.ataProgram.value) {
+    accounts.ataProgram.value =
+      'ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL' as Address<'ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL'>;
+  }
 
   const getAccountMeta = getAccountMetaFactory(programAddress, 'programId');
   const instruction = {
     accounts: [
       getAccountMeta(accounts.systemProgram),
       getAccountMeta(accounts.tokenProgram2022),
-      getAccountMeta(accounts.atokenProgram),
+      getAccountMeta(accounts.ataProgram),
       getAccountMeta(accounts.payer),
       getAccountMeta(accounts.vendor),
       getAccountMeta(accounts.device),
@@ -209,7 +215,7 @@ export function getCreateDeviceInstruction<
     typeof DEPHY_ID_PROGRAM_ADDRESS,
     TAccountSystemProgram,
     TAccountTokenProgram2022,
-    TAccountAtokenProgram,
+    TAccountAtaProgram,
     TAccountPayer,
     TAccountVendor,
     TAccountDevice,
@@ -231,12 +237,12 @@ export type ParsedCreateDeviceInstruction<
     /** The SPL Token 2022 program */
     tokenProgram2022: TAccountMetas[1];
     /** The associated token program */
-    atokenProgram: TAccountMetas[2];
+    ataProgram: TAccountMetas[2];
     /** The account paying for the storage fees */
     payer: TAccountMetas[3];
-    /** Vendor account */
+    /** The Vendor pubkey */
     vendor: TAccountMetas[4];
-    /** The Device account */
+    /** The Device pubkey */
     device: TAccountMetas[5];
     /** The Product mint account */
     productMint: TAccountMetas[6];
@@ -269,7 +275,7 @@ export function parseCreateDeviceInstruction<
     accounts: {
       systemProgram: getNextAccount(),
       tokenProgram2022: getNextAccount(),
-      atokenProgram: getNextAccount(),
+      ataProgram: getNextAccount(),
       payer: getNextAccount(),
       vendor: getNextAccount(),
       device: getNextAccount(),

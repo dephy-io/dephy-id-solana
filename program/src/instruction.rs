@@ -14,30 +14,32 @@ pub enum DephyInstruction {
     /// DePHY register a Vendor
     #[account(0, name="system_program", desc = "The system program")]
     #[account(1, name="token_program_2022", desc = "The token 2022 program")]
-    #[account(2, name="atoken_program", desc = "The associated token program")]
+    #[account(2, name="ata_program", desc = "The associated token program")]
     #[account(3, writable, signer, name="payer", desc = "The account paying for the storage fees")]
     #[account(4, signer, name="authority", desc = "The DePHY authority")]
     #[account(5, name="dephy", desc = "The DePHY account")]
-    #[account(6, name="vendor", desc = "Vendor account")]
+    #[account(6, name="vendor", desc = "The Vendor pubkey")]
     #[account(7, writable, name="vendor_mint", desc = "The Vendor mint")]
     #[account(8, writable, name="vendor_atoken", desc = "The atoken account for vendor")]
     CreateVendor(CreateVendorArgs),
 
     /// Vendor register a Product
+    // TODO: verify Vendor
     #[account(0, name="system_program", desc = "The system program")]
     #[account(1, name="token_program_2022", desc = "The SPL Token 2022 program")]
     #[account(2, writable, signer, name="payer", desc = "The account paying for the storage fees")]
-    #[account(3, signer, name="vendor", desc = "Vendor account")]
+    #[account(3, signer, name="vendor", desc = "The Vendor pubkey")]
     #[account(4, writable, name="product_mint", desc = "The product mint account")]
     CreateProduct(CreateProductArgs),
 
     /// Vendor register a Device
+    // TODO: verify Vendor
     #[account(0, name="system_program", desc = "The system program")]
     #[account(1, name="token_program_2022", desc = "The SPL Token 2022 program")]
-    #[account(2, name="atoken_program", desc = "The associated token program")]
+    #[account(2, name="ata_program", desc = "The associated token program")]
     #[account(3, writable, signer, name="payer", desc = "The account paying for the storage fees")]
-    #[account(4, signer, name="vendor", desc = "Vendor account")]
-    #[account(5, signer, name="device", desc = "The Device account")]
+    #[account(4, signer, name="vendor", desc = "The Vendor pubkey")]
+    #[account(5, signer, name="device", desc = "The Device pubkey")]
     #[account(6, writable, name="product_mint", desc = "The Product mint account")]
     #[account(7, writable, name="product_atoken", desc = "The Product atoken for Device")]
     CreateDevice(),
@@ -45,12 +47,15 @@ pub enum DephyInstruction {
     /// User activate a Device
     #[account(0, name="system_program", desc = "The system program")]
     #[account(1, name="token_program_2022", desc = "The SPL Token 2022 program")]
-    #[account(2, name="atoken_program", desc = "The associated token program")]
+    #[account(2, name="ata_program", desc = "The associated token program")]
     #[account(3, writable, signer, name="payer", desc = "The account paying for the storage fees")]
-    #[account(4, signer, name="device", desc = "The Device")]
-    #[account(5, name="user", desc = "The Device Owner pubkey")]
-    #[account(6, writable, name="did_mint", desc = "The NFT mint account")]
-    #[account(7, writable, name="did_atoken", desc = "The NFT atoken account")]
+    #[account(4, signer, name="device", desc = "The Device pubkey")]
+    #[account(5, name="vendor", desc = "Vendor of the Device")]
+    #[account(6, name="product_mint", desc = "Product of the Device")]
+    #[account(7, name="product_atoken", desc = "The Product atoken for Device")]
+    #[account(8, name="user", desc = "The Device Owner pubkey")]
+    #[account(9, writable, name="did_mint", desc = "The NFT mint account")]
+    #[account(10, writable, name="did_atoken", desc = "The NFT atoken account")]
     ActivateDevice(ActivateDeviceArgs),
 }
 

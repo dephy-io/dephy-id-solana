@@ -324,6 +324,8 @@ fn create_product<'a>(
     // Guards
     assert_signer("vendor", ctx.accounts.vendor)?;
 
+    // TODO: check vendor token
+
     let mint_seeds: &[&[u8]] = &[
         b"DePHY PRODUCT",
         ctx.accounts.vendor.key.as_ref(),
@@ -338,7 +340,6 @@ fn create_product<'a>(
         ExtensionType::MetadataPointer,
     ])?;
 
-    // TODO: from args
     let metadata = TokenMetadata {
         name: args.name,
         symbol: args.symbol,
@@ -521,7 +522,8 @@ fn activate_device<'a>(
     // Guards
     assert_signer("user", ctx.accounts.user)?;
 
-    // TODO: check device signature
+    // TODO: check device signature in args
+    // TODO: verify Device/Product/Vendor
 
     // Create the DID token
     let mint_seeds: &[&[u8]] = &[
@@ -547,7 +549,7 @@ fn activate_device<'a>(
         ExtensionType::MetadataPointer,
     ])?;
 
-    // TODO: from args
+    // TODO: calc metadata
     let metadata = TokenMetadata {
         name: "DePHY Device DID".to_string(),
         symbol: "DDID".to_string(),

@@ -166,7 +166,7 @@ export type CreateProductInput<
   tokenProgram2022: Address<TAccountTokenProgram2022>;
   /** The account paying for the storage fees */
   payer: TransactionSigner<TAccountPayer>;
-  /** Vendor account */
+  /** The Vendor pubkey */
   vendor: TransactionSigner<TAccountVendor>;
   /** The product mint account */
   productMint: Address<TAccountProductMint>;
@@ -265,7 +265,7 @@ export type ParsedCreateProductInstruction<
     tokenProgram2022: TAccountMetas[1];
     /** The account paying for the storage fees */
     payer: TAccountMetas[2];
-    /** Vendor account */
+    /** The Vendor pubkey */
     vendor: TAccountMetas[3];
     /** The product mint account */
     productMint: TAccountMetas[4];

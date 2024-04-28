@@ -15,11 +15,17 @@ pub struct ActivateDevice {
     /// The SPL Token 2022 program
     pub token_program2022: solana_program::pubkey::Pubkey,
     /// The associated token program
-    pub atoken_program: solana_program::pubkey::Pubkey,
+    pub ata_program: solana_program::pubkey::Pubkey,
     /// The account paying for the storage fees
     pub payer: solana_program::pubkey::Pubkey,
-    /// The Device
+    /// The Device pubkey
     pub device: solana_program::pubkey::Pubkey,
+    /// Vendor of the Device
+    pub vendor: solana_program::pubkey::Pubkey,
+    /// Product of the Device
+    pub product_mint: solana_program::pubkey::Pubkey,
+    /// The Product atoken for Device
+    pub product_atoken: solana_program::pubkey::Pubkey,
     /// The Device Owner pubkey
     pub user: solana_program::pubkey::Pubkey,
     /// The NFT mint account
@@ -41,7 +47,7 @@ impl ActivateDevice {
         args: ActivateDeviceInstructionArgs,
         remaining_accounts: &[solana_program::instruction::AccountMeta],
     ) -> solana_program::instruction::Instruction {
-        let mut accounts = Vec::with_capacity(8 + remaining_accounts.len());
+        let mut accounts = Vec::with_capacity(11 + remaining_accounts.len());
         accounts.push(solana_program::instruction::AccountMeta::new_readonly(
             self.system_program,
             false,
@@ -51,7 +57,7 @@ impl ActivateDevice {
             false,
         ));
         accounts.push(solana_program::instruction::AccountMeta::new_readonly(
-            self.atoken_program,
+            self.ata_program,
             false,
         ));
         accounts.push(solana_program::instruction::AccountMeta::new(
@@ -60,6 +66,18 @@ impl ActivateDevice {
         accounts.push(solana_program::instruction::AccountMeta::new_readonly(
             self.device,
             true,
+        ));
+        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+            self.vendor,
+            false,
+        ));
+        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+            self.product_mint,
+            false,
+        ));
+        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+            self.product_atoken,
+            false,
         ));
         accounts.push(solana_program::instruction::AccountMeta::new_readonly(
             self.user, false,
@@ -108,19 +126,25 @@ pub struct ActivateDeviceInstructionArgs {
 ///
 ///   0. `[optional]` system_program (default to `11111111111111111111111111111111`)
 ///   1. `[]` token_program2022
-///   2. `[]` atoken_program
+///   2. `[optional]` ata_program (default to `ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL`)
 ///   3. `[writable, signer]` payer
 ///   4. `[signer]` device
-///   5. `[]` user
-///   6. `[writable]` did_mint
-///   7. `[writable]` did_atoken
+///   5. `[]` vendor
+///   6. `[]` product_mint
+///   7. `[]` product_atoken
+///   8. `[]` user
+///   9. `[writable]` did_mint
+///   10. `[writable]` did_atoken
 #[derive(Clone, Debug, Default)]
 pub struct ActivateDeviceBuilder {
     system_program: Option<solana_program::pubkey::Pubkey>,
     token_program2022: Option<solana_program::pubkey::Pubkey>,
-    atoken_program: Option<solana_program::pubkey::Pubkey>,
+    ata_program: Option<solana_program::pubkey::Pubkey>,
     payer: Option<solana_program::pubkey::Pubkey>,
     device: Option<solana_program::pubkey::Pubkey>,
+    vendor: Option<solana_program::pubkey::Pubkey>,
+    product_mint: Option<solana_program::pubkey::Pubkey>,
+    product_atoken: Option<solana_program::pubkey::Pubkey>,
     user: Option<solana_program::pubkey::Pubkey>,
     did_mint: Option<solana_program::pubkey::Pubkey>,
     did_atoken: Option<solana_program::pubkey::Pubkey>,
@@ -148,10 +172,11 @@ impl ActivateDeviceBuilder {
         self.token_program2022 = Some(token_program2022);
         self
     }
+    /// `[optional account, default to 'ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL']`
     /// The associated token program
     #[inline(always)]
-    pub fn atoken_program(&mut self, atoken_program: solana_program::pubkey::Pubkey) -> &mut Self {
-        self.atoken_program = Some(atoken_program);
+    pub fn ata_program(&mut self, ata_program: solana_program::pubkey::Pubkey) -> &mut Self {
+        self.ata_program = Some(ata_program);
         self
     }
     /// The account paying for the storage fees
@@ -160,10 +185,28 @@ impl ActivateDeviceBuilder {
         self.payer = Some(payer);
         self
     }
-    /// The Device
+    /// The Device pubkey
     #[inline(always)]
     pub fn device(&mut self, device: solana_program::pubkey::Pubkey) -> &mut Self {
         self.device = Some(device);
+        self
+    }
+    /// Vendor of the Device
+    #[inline(always)]
+    pub fn vendor(&mut self, vendor: solana_program::pubkey::Pubkey) -> &mut Self {
+        self.vendor = Some(vendor);
+        self
+    }
+    /// Product of the Device
+    #[inline(always)]
+    pub fn product_mint(&mut self, product_mint: solana_program::pubkey::Pubkey) -> &mut Self {
+        self.product_mint = Some(product_mint);
+        self
+    }
+    /// The Product atoken for Device
+    #[inline(always)]
+    pub fn product_atoken(&mut self, product_atoken: solana_program::pubkey::Pubkey) -> &mut Self {
+        self.product_atoken = Some(product_atoken);
         self
     }
     /// The Device Owner pubkey
@@ -216,9 +259,14 @@ impl ActivateDeviceBuilder {
             token_program2022: self
                 .token_program2022
                 .expect("token_program2022 is not set"),
-            atoken_program: self.atoken_program.expect("atoken_program is not set"),
+            ata_program: self.ata_program.unwrap_or(solana_program::pubkey!(
+                "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+            )),
             payer: self.payer.expect("payer is not set"),
             device: self.device.expect("device is not set"),
+            vendor: self.vendor.expect("vendor is not set"),
+            product_mint: self.product_mint.expect("product_mint is not set"),
+            product_atoken: self.product_atoken.expect("product_atoken is not set"),
             user: self.user.expect("user is not set"),
             did_mint: self.did_mint.expect("did_mint is not set"),
             did_atoken: self.did_atoken.expect("did_atoken is not set"),
@@ -238,11 +286,17 @@ pub struct ActivateDeviceCpiAccounts<'a, 'b> {
     /// The SPL Token 2022 program
     pub token_program2022: &'b solana_program::account_info::AccountInfo<'a>,
     /// The associated token program
-    pub atoken_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub ata_program: &'b solana_program::account_info::AccountInfo<'a>,
     /// The account paying for the storage fees
     pub payer: &'b solana_program::account_info::AccountInfo<'a>,
-    /// The Device
+    /// The Device pubkey
     pub device: &'b solana_program::account_info::AccountInfo<'a>,
+    /// Vendor of the Device
+    pub vendor: &'b solana_program::account_info::AccountInfo<'a>,
+    /// Product of the Device
+    pub product_mint: &'b solana_program::account_info::AccountInfo<'a>,
+    /// The Product atoken for Device
+    pub product_atoken: &'b solana_program::account_info::AccountInfo<'a>,
     /// The Device Owner pubkey
     pub user: &'b solana_program::account_info::AccountInfo<'a>,
     /// The NFT mint account
@@ -260,11 +314,17 @@ pub struct ActivateDeviceCpi<'a, 'b> {
     /// The SPL Token 2022 program
     pub token_program2022: &'b solana_program::account_info::AccountInfo<'a>,
     /// The associated token program
-    pub atoken_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub ata_program: &'b solana_program::account_info::AccountInfo<'a>,
     /// The account paying for the storage fees
     pub payer: &'b solana_program::account_info::AccountInfo<'a>,
-    /// The Device
+    /// The Device pubkey
     pub device: &'b solana_program::account_info::AccountInfo<'a>,
+    /// Vendor of the Device
+    pub vendor: &'b solana_program::account_info::AccountInfo<'a>,
+    /// Product of the Device
+    pub product_mint: &'b solana_program::account_info::AccountInfo<'a>,
+    /// The Product atoken for Device
+    pub product_atoken: &'b solana_program::account_info::AccountInfo<'a>,
     /// The Device Owner pubkey
     pub user: &'b solana_program::account_info::AccountInfo<'a>,
     /// The NFT mint account
@@ -285,9 +345,12 @@ impl<'a, 'b> ActivateDeviceCpi<'a, 'b> {
             __program: program,
             system_program: accounts.system_program,
             token_program2022: accounts.token_program2022,
-            atoken_program: accounts.atoken_program,
+            ata_program: accounts.ata_program,
             payer: accounts.payer,
             device: accounts.device,
+            vendor: accounts.vendor,
+            product_mint: accounts.product_mint,
+            product_atoken: accounts.product_atoken,
             user: accounts.user,
             did_mint: accounts.did_mint,
             did_atoken: accounts.did_atoken,
@@ -327,7 +390,7 @@ impl<'a, 'b> ActivateDeviceCpi<'a, 'b> {
             bool,
         )],
     ) -> solana_program::entrypoint::ProgramResult {
-        let mut accounts = Vec::with_capacity(8 + remaining_accounts.len());
+        let mut accounts = Vec::with_capacity(11 + remaining_accounts.len());
         accounts.push(solana_program::instruction::AccountMeta::new_readonly(
             *self.system_program.key,
             false,
@@ -337,7 +400,7 @@ impl<'a, 'b> ActivateDeviceCpi<'a, 'b> {
             false,
         ));
         accounts.push(solana_program::instruction::AccountMeta::new_readonly(
-            *self.atoken_program.key,
+            *self.ata_program.key,
             false,
         ));
         accounts.push(solana_program::instruction::AccountMeta::new(
@@ -347,6 +410,18 @@ impl<'a, 'b> ActivateDeviceCpi<'a, 'b> {
         accounts.push(solana_program::instruction::AccountMeta::new_readonly(
             *self.device.key,
             true,
+        ));
+        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+            *self.vendor.key,
+            false,
+        ));
+        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+            *self.product_mint.key,
+            false,
+        ));
+        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+            *self.product_atoken.key,
+            false,
         ));
         accounts.push(solana_program::instruction::AccountMeta::new_readonly(
             *self.user.key,
@@ -376,13 +451,16 @@ impl<'a, 'b> ActivateDeviceCpi<'a, 'b> {
             accounts,
             data,
         };
-        let mut account_infos = Vec::with_capacity(8 + 1 + remaining_accounts.len());
+        let mut account_infos = Vec::with_capacity(11 + 1 + remaining_accounts.len());
         account_infos.push(self.__program.clone());
         account_infos.push(self.system_program.clone());
         account_infos.push(self.token_program2022.clone());
-        account_infos.push(self.atoken_program.clone());
+        account_infos.push(self.ata_program.clone());
         account_infos.push(self.payer.clone());
         account_infos.push(self.device.clone());
+        account_infos.push(self.vendor.clone());
+        account_infos.push(self.product_mint.clone());
+        account_infos.push(self.product_atoken.clone());
         account_infos.push(self.user.clone());
         account_infos.push(self.did_mint.clone());
         account_infos.push(self.did_atoken.clone());
@@ -404,12 +482,15 @@ impl<'a, 'b> ActivateDeviceCpi<'a, 'b> {
 ///
 ///   0. `[]` system_program
 ///   1. `[]` token_program2022
-///   2. `[]` atoken_program
+///   2. `[]` ata_program
 ///   3. `[writable, signer]` payer
 ///   4. `[signer]` device
-///   5. `[]` user
-///   6. `[writable]` did_mint
-///   7. `[writable]` did_atoken
+///   5. `[]` vendor
+///   6. `[]` product_mint
+///   7. `[]` product_atoken
+///   8. `[]` user
+///   9. `[writable]` did_mint
+///   10. `[writable]` did_atoken
 #[derive(Clone, Debug)]
 pub struct ActivateDeviceCpiBuilder<'a, 'b> {
     instruction: Box<ActivateDeviceCpiBuilderInstruction<'a, 'b>>,
@@ -421,9 +502,12 @@ impl<'a, 'b> ActivateDeviceCpiBuilder<'a, 'b> {
             __program: program,
             system_program: None,
             token_program2022: None,
-            atoken_program: None,
+            ata_program: None,
             payer: None,
             device: None,
+            vendor: None,
+            product_mint: None,
+            product_atoken: None,
             user: None,
             did_mint: None,
             did_atoken: None,
@@ -452,11 +536,11 @@ impl<'a, 'b> ActivateDeviceCpiBuilder<'a, 'b> {
     }
     /// The associated token program
     #[inline(always)]
-    pub fn atoken_program(
+    pub fn ata_program(
         &mut self,
-        atoken_program: &'b solana_program::account_info::AccountInfo<'a>,
+        ata_program: &'b solana_program::account_info::AccountInfo<'a>,
     ) -> &mut Self {
-        self.instruction.atoken_program = Some(atoken_program);
+        self.instruction.ata_program = Some(ata_program);
         self
     }
     /// The account paying for the storage fees
@@ -465,13 +549,40 @@ impl<'a, 'b> ActivateDeviceCpiBuilder<'a, 'b> {
         self.instruction.payer = Some(payer);
         self
     }
-    /// The Device
+    /// The Device pubkey
     #[inline(always)]
     pub fn device(
         &mut self,
         device: &'b solana_program::account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.device = Some(device);
+        self
+    }
+    /// Vendor of the Device
+    #[inline(always)]
+    pub fn vendor(
+        &mut self,
+        vendor: &'b solana_program::account_info::AccountInfo<'a>,
+    ) -> &mut Self {
+        self.instruction.vendor = Some(vendor);
+        self
+    }
+    /// Product of the Device
+    #[inline(always)]
+    pub fn product_mint(
+        &mut self,
+        product_mint: &'b solana_program::account_info::AccountInfo<'a>,
+    ) -> &mut Self {
+        self.instruction.product_mint = Some(product_mint);
+        self
+    }
+    /// The Product atoken for Device
+    #[inline(always)]
+    pub fn product_atoken(
+        &mut self,
+        product_atoken: &'b solana_program::account_info::AccountInfo<'a>,
+    ) -> &mut Self {
+        self.instruction.product_atoken = Some(product_atoken);
         self
     }
     /// The Device Owner pubkey
@@ -560,14 +671,26 @@ impl<'a, 'b> ActivateDeviceCpiBuilder<'a, 'b> {
                 .token_program2022
                 .expect("token_program2022 is not set"),
 
-            atoken_program: self
+            ata_program: self
                 .instruction
-                .atoken_program
-                .expect("atoken_program is not set"),
+                .ata_program
+                .expect("ata_program is not set"),
 
             payer: self.instruction.payer.expect("payer is not set"),
 
             device: self.instruction.device.expect("device is not set"),
+
+            vendor: self.instruction.vendor.expect("vendor is not set"),
+
+            product_mint: self
+                .instruction
+                .product_mint
+                .expect("product_mint is not set"),
+
+            product_atoken: self
+                .instruction
+                .product_atoken
+                .expect("product_atoken is not set"),
 
             user: self.instruction.user.expect("user is not set"),
 
@@ -588,9 +711,12 @@ struct ActivateDeviceCpiBuilderInstruction<'a, 'b> {
     __program: &'b solana_program::account_info::AccountInfo<'a>,
     system_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     token_program2022: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    atoken_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    ata_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     payer: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     device: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    vendor: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    product_mint: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    product_atoken: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     user: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     did_mint: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     did_atoken: Option<&'b solana_program::account_info::AccountInfo<'a>>,

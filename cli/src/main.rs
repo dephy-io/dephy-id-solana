@@ -65,6 +65,7 @@ struct CreateVendorCliArgs {
 struct CreateProductCliArgs {
     #[arg(long = "vendor")]
     vendor_keypair: String,
+    #[arg(long)]
     seed: String,
     name: String,
     symbol: String,
@@ -93,6 +94,8 @@ struct ActivateDeviceCliArgs {
     device_keypair: String,
     #[arg(long = "user")]
     user_keypair: String,
+    #[arg(long = "vendor")]
+    vendor_pubkey: Pubkey,
     #[arg(long = "product")]
     product_pubkey: Pubkey,
     #[command(flatten)]
@@ -219,7 +222,6 @@ fn create_vendor(args: CreateVendorCliArgs) {
     let transaction = Transaction::new_signed_with_payer(
         &[CreateVendorBuilder::new()
             .token_program2022(token_program_id)
-            .atoken_program(spl_associated_token_account::ID)
             .payer(payer.pubkey())
             .authority(admin.pubkey())
             .dephy(dephy_pubkey)
@@ -314,7 +316,6 @@ fn create_device(args: CreateDeviceCliArgs) {
     let transaction = Transaction::new_signed_with_payer(
         &[CreateDeviceBuilder::new()
             .token_program2022(token_program_id)
-            .atoken_program(spl_associated_token_account::ID)
             .payer(payer.pubkey())
             .vendor(vendor.pubkey())
             .device(device.pubkey())
@@ -349,6 +350,13 @@ fn activate_device(args: ActivateDeviceCliArgs) {
     let user = read_key(&args.user_keypair);
     let payer = read_key_or(args.common.payer, &args.user_keypair);
 
+    let product_atoken_pubkey =
+        spl_associated_token_account::get_associated_token_address_with_program_id(
+            &device.pubkey(),
+            &args.product_pubkey,
+            &token_program_id,
+        );
+
     let (did_mint_pubkey, bump) = Pubkey::find_program_address(
         &[
             b"DePHY DID",
@@ -369,9 +377,11 @@ fn activate_device(args: ActivateDeviceCliArgs) {
     let transaction = Transaction::new_signed_with_payer(
         &[ActivateDeviceBuilder::new()
             .token_program2022(token_program_id)
-            .atoken_program(spl_associated_token_account::ID)
             .payer(payer.pubkey())
             .device(device.pubkey())
+            .vendor(args.vendor_pubkey)
+            .product_mint(args.product_pubkey)
+            .product_atoken(product_atoken_pubkey)
             .user(user.pubkey())
             .did_mint(did_mint_pubkey)
             .did_atoken(did_atoken_pubkey)

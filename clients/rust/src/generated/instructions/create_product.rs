@@ -16,7 +16,7 @@ pub struct CreateProduct {
     pub token_program2022: solana_program::pubkey::Pubkey,
     /// The account paying for the storage fees
     pub payer: solana_program::pubkey::Pubkey,
-    /// Vendor account
+    /// The Vendor pubkey
     pub vendor: solana_program::pubkey::Pubkey,
     /// The product mint account
     pub product_mint: solana_program::pubkey::Pubkey,
@@ -141,7 +141,7 @@ impl CreateProductBuilder {
         self.payer = Some(payer);
         self
     }
-    /// Vendor account
+    /// The Vendor pubkey
     #[inline(always)]
     pub fn vendor(&mut self, vendor: solana_program::pubkey::Pubkey) -> &mut Self {
         self.vendor = Some(vendor);
@@ -238,7 +238,7 @@ pub struct CreateProductCpiAccounts<'a, 'b> {
     pub token_program2022: &'b solana_program::account_info::AccountInfo<'a>,
     /// The account paying for the storage fees
     pub payer: &'b solana_program::account_info::AccountInfo<'a>,
-    /// Vendor account
+    /// The Vendor pubkey
     pub vendor: &'b solana_program::account_info::AccountInfo<'a>,
     /// The product mint account
     pub product_mint: &'b solana_program::account_info::AccountInfo<'a>,
@@ -254,7 +254,7 @@ pub struct CreateProductCpi<'a, 'b> {
     pub token_program2022: &'b solana_program::account_info::AccountInfo<'a>,
     /// The account paying for the storage fees
     pub payer: &'b solana_program::account_info::AccountInfo<'a>,
-    /// Vendor account
+    /// The Vendor pubkey
     pub vendor: &'b solana_program::account_info::AccountInfo<'a>,
     /// The product mint account
     pub product_mint: &'b solana_program::account_info::AccountInfo<'a>,
@@ -424,7 +424,7 @@ impl<'a, 'b> CreateProductCpiBuilder<'a, 'b> {
         self.instruction.payer = Some(payer);
         self
     }
-    /// Vendor account
+    /// The Vendor pubkey
     #[inline(always)]
     pub fn vendor(
         &mut self,
