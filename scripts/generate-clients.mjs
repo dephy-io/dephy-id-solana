@@ -4,7 +4,8 @@ import * as k from "@metaplex-foundation/kinobi";
 import { getAllProgramIdls } from "./utils.mjs";
 
 // Instanciate Kinobi.
-const kinobi = k.createFromIdls(getAllProgramIdls());
+const [idl, ...additionalIdls] = getAllProgramIdls();
+const kinobi = k.createFromIdl(idl, additionalIdls);
 
 // Update programs.
 kinobi.update(
@@ -16,47 +17,14 @@ kinobi.update(
 // Update accounts.
 kinobi.update(
   k.updateAccountsVisitor({
-    counter: {
+    dephyAccount: {
       seeds: [
-        k.constantPdaSeedNodeFromString("counter"),
-        k.variablePdaSeedNode(
-          "authority",
-          k.publicKeyTypeNode(),
-          "The authority of the counter account"
-        ),
+        k.constantPdaSeedNodeFromString('utf8', "DePHY"),
       ],
     },
   })
 );
 
-// Update instructions.
-kinobi.update(
-  k.updateInstructionsVisitor({
-    create: {
-      byteDeltas: [k.instructionByteDeltaNode(k.accountLinkNode("counter"))],
-      accounts: {
-        counter: { defaultValue: k.pdaValueNode("counter") },
-        payer: { defaultValue: k.accountValueNode("authority") },
-      },
-    },
-    increment: {
-      accounts: {
-        counter: { defaultValue: k.pdaValueNode("counter") },
-      },
-      arguments: {
-        amount: { defaultValue: k.noneValueNode() },
-      },
-    },
-  })
-);
-
-// Set account discriminators.
-const key = (name) => ({ field: "key", value: k.enumValueNode("Key", name) });
-kinobi.update(
-  k.setAccountDiscriminatorFromFieldVisitor({
-    counter: key("counter"),
-  })
-);
 
 // Render JavaScript.
 const jsClient = path.join(__dirname, "..", "clients", "js");

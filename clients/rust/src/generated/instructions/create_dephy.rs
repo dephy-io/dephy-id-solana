@@ -49,8 +49,8 @@ impl CreateDephy {
             true,
         ));
         accounts.extend_from_slice(remaining_accounts);
-        let mut data = CreateDephyInstructionData::new().try_to_vec().unwrap();
-        let mut args = args.try_to_vec().unwrap();
+        let mut data = borsh::to_vec(&CreateDephyInstructionData::new()).unwrap();
+        let mut args = borsh::to_vec(&args).unwrap();
         data.append(&mut args);
 
         solana_program::instruction::Instruction {
@@ -62,12 +62,12 @@ impl CreateDephy {
 }
 
 #[derive(BorshDeserialize, BorshSerialize)]
-struct CreateDephyInstructionData {
+pub struct CreateDephyInstructionData {
     discriminator: u8,
 }
 
 impl CreateDephyInstructionData {
-    fn new() -> Self {
+    pub fn new() -> Self {
         Self { discriminator: 0 }
     }
 }
@@ -86,7 +86,7 @@ pub struct CreateDephyInstructionArgs {
 ///   1. `[writable, signer]` payer
 ///   2. `[writable]` dephy
 ///   3. `[signer]` authority
-#[derive(Default)]
+#[derive(Clone, Debug, Default)]
 pub struct CreateDephyBuilder {
     system_program: Option<solana_program::pubkey::Pubkey>,
     payer: Option<solana_program::pubkey::Pubkey>,
@@ -266,8 +266,8 @@ impl<'a, 'b> CreateDephyCpi<'a, 'b> {
                 is_writable: remaining_account.2,
             })
         });
-        let mut data = CreateDephyInstructionData::new().try_to_vec().unwrap();
-        let mut args = self.__args.try_to_vec().unwrap();
+        let mut data = borsh::to_vec(&CreateDephyInstructionData::new()).unwrap();
+        let mut args = borsh::to_vec(&self.__args).unwrap();
         data.append(&mut args);
 
         let instruction = solana_program::instruction::Instruction {
@@ -301,6 +301,7 @@ impl<'a, 'b> CreateDephyCpi<'a, 'b> {
 ///   1. `[writable, signer]` payer
 ///   2. `[writable]` dephy
 ///   3. `[signer]` authority
+#[derive(Clone, Debug)]
 pub struct CreateDephyCpiBuilder<'a, 'b> {
     instruction: Box<CreateDephyCpiBuilderInstruction<'a, 'b>>,
 }
@@ -419,6 +420,7 @@ impl<'a, 'b> CreateDephyCpiBuilder<'a, 'b> {
     }
 }
 
+#[derive(Clone, Debug)]
 struct CreateDephyCpiBuilderInstruction<'a, 'b> {
     __program: &'b solana_program::account_info::AccountInfo<'a>,
     system_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,

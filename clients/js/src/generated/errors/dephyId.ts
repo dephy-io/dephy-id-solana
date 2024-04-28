@@ -6,123 +6,63 @@
  * @see https://github.com/metaplex-foundation/kinobi
  */
 
-export const enum DephyIdProgramErrorCode {
-  /** DeserializationError: Error deserializing an account */
-  DESERIALIZATION_ERROR = 0x0, // 0
-  /** SerializationError: Error serializing an account */
-  SERIALIZATION_ERROR = 0x1, // 1
-  /** InvalidProgramOwner: Invalid program owner. This likely mean the provided account does not exist */
-  INVALID_PROGRAM_OWNER = 0x2, // 2
-  /** InvalidPda: Invalid PDA derivation */
-  INVALID_PDA = 0x3, // 3
-  /** ExpectedEmptyAccount: Expected empty account */
-  EXPECTED_EMPTY_ACCOUNT = 0x4, // 4
-  /** ExpectedNonEmptyAccount: Expected non empty account */
-  EXPECTED_NON_EMPTY_ACCOUNT = 0x5, // 5
-  /** ExpectedSignerAccount: Expected signer account */
-  EXPECTED_SIGNER_ACCOUNT = 0x6, // 6
-  /** ExpectedWritableAccount: Expected writable account */
-  EXPECTED_WRITABLE_ACCOUNT = 0x7, // 7
-  /** AccountMismatch: Account mismatch */
-  ACCOUNT_MISMATCH = 0x8, // 8
-  /** InvalidAccountKey: Invalid account key */
-  INVALID_ACCOUNT_KEY = 0x9, // 9
-  /** NumericalOverflow: Numerical overflow */
-  NUMERICAL_OVERFLOW = 0xa, // 10
-}
+/** DeserializationError: Error deserializing an account */
+export const DEPHY_ID_ERROR__DESERIALIZATION_ERROR = 0x0; // 0
+/** SerializationError: Error serializing an account */
+export const DEPHY_ID_ERROR__SERIALIZATION_ERROR = 0x1; // 1
+/** InvalidProgramOwner: Invalid program owner. This likely mean the provided account does not exist */
+export const DEPHY_ID_ERROR__INVALID_PROGRAM_OWNER = 0x2; // 2
+/** InvalidPda: Invalid PDA derivation */
+export const DEPHY_ID_ERROR__INVALID_PDA = 0x3; // 3
+/** ExpectedEmptyAccount: Expected empty account */
+export const DEPHY_ID_ERROR__EXPECTED_EMPTY_ACCOUNT = 0x4; // 4
+/** ExpectedNonEmptyAccount: Expected non empty account */
+export const DEPHY_ID_ERROR__EXPECTED_NON_EMPTY_ACCOUNT = 0x5; // 5
+/** ExpectedSignerAccount: Expected signer account */
+export const DEPHY_ID_ERROR__EXPECTED_SIGNER_ACCOUNT = 0x6; // 6
+/** ExpectedWritableAccount: Expected writable account */
+export const DEPHY_ID_ERROR__EXPECTED_WRITABLE_ACCOUNT = 0x7; // 7
+/** AccountMismatch: Account mismatch */
+export const DEPHY_ID_ERROR__ACCOUNT_MISMATCH = 0x8; // 8
+/** InvalidAccountKey: Invalid account key */
+export const DEPHY_ID_ERROR__INVALID_ACCOUNT_KEY = 0x9; // 9
+/** NumericalOverflow: Numerical overflow */
+export const DEPHY_ID_ERROR__NUMERICAL_OVERFLOW = 0xa; // 10
 
-export class DephyIdProgramError extends Error {
-  override readonly name = 'DephyIdProgramError';
+export type DephyIdError =
+  | typeof DEPHY_ID_ERROR__ACCOUNT_MISMATCH
+  | typeof DEPHY_ID_ERROR__DESERIALIZATION_ERROR
+  | typeof DEPHY_ID_ERROR__EXPECTED_EMPTY_ACCOUNT
+  | typeof DEPHY_ID_ERROR__EXPECTED_NON_EMPTY_ACCOUNT
+  | typeof DEPHY_ID_ERROR__EXPECTED_SIGNER_ACCOUNT
+  | typeof DEPHY_ID_ERROR__EXPECTED_WRITABLE_ACCOUNT
+  | typeof DEPHY_ID_ERROR__INVALID_ACCOUNT_KEY
+  | typeof DEPHY_ID_ERROR__INVALID_PDA
+  | typeof DEPHY_ID_ERROR__INVALID_PROGRAM_OWNER
+  | typeof DEPHY_ID_ERROR__NUMERICAL_OVERFLOW
+  | typeof DEPHY_ID_ERROR__SERIALIZATION_ERROR;
 
-  readonly code: DephyIdProgramErrorCode;
-
-  readonly cause: Error | undefined;
-
-  constructor(
-    code: DephyIdProgramErrorCode,
-    name: string,
-    message: string,
-    cause?: Error
-  ) {
-    super(`${name} (${code}): ${message}`);
-    this.code = code;
-    this.cause = cause;
-  }
-}
-
-let dephyIdProgramErrorCodeMap:
-  | Record<DephyIdProgramErrorCode, [string, string]>
-  | undefined;
+let dephyIdErrorMessages: Record<DephyIdError, string> | undefined;
 if (__DEV__) {
-  dephyIdProgramErrorCodeMap = {
-    [DephyIdProgramErrorCode.DESERIALIZATION_ERROR]: [
-      'DeserializationError',
-      `Error deserializing an account`,
-    ],
-    [DephyIdProgramErrorCode.SERIALIZATION_ERROR]: [
-      'SerializationError',
-      `Error serializing an account`,
-    ],
-    [DephyIdProgramErrorCode.INVALID_PROGRAM_OWNER]: [
-      'InvalidProgramOwner',
-      `Invalid program owner. This likely mean the provided account does not exist`,
-    ],
-    [DephyIdProgramErrorCode.INVALID_PDA]: [
-      'InvalidPda',
-      `Invalid PDA derivation`,
-    ],
-    [DephyIdProgramErrorCode.EXPECTED_EMPTY_ACCOUNT]: [
-      'ExpectedEmptyAccount',
-      `Expected empty account`,
-    ],
-    [DephyIdProgramErrorCode.EXPECTED_NON_EMPTY_ACCOUNT]: [
-      'ExpectedNonEmptyAccount',
-      `Expected non empty account`,
-    ],
-    [DephyIdProgramErrorCode.EXPECTED_SIGNER_ACCOUNT]: [
-      'ExpectedSignerAccount',
-      `Expected signer account`,
-    ],
-    [DephyIdProgramErrorCode.EXPECTED_WRITABLE_ACCOUNT]: [
-      'ExpectedWritableAccount',
-      `Expected writable account`,
-    ],
-    [DephyIdProgramErrorCode.ACCOUNT_MISMATCH]: [
-      'AccountMismatch',
-      `Account mismatch`,
-    ],
-    [DephyIdProgramErrorCode.INVALID_ACCOUNT_KEY]: [
-      'InvalidAccountKey',
-      `Invalid account key`,
-    ],
-    [DephyIdProgramErrorCode.NUMERICAL_OVERFLOW]: [
-      'NumericalOverflow',
-      `Numerical overflow`,
-    ],
+  dephyIdErrorMessages = {
+    [DEPHY_ID_ERROR__ACCOUNT_MISMATCH]: `Account mismatch`,
+    [DEPHY_ID_ERROR__DESERIALIZATION_ERROR]: `Error deserializing an account`,
+    [DEPHY_ID_ERROR__EXPECTED_EMPTY_ACCOUNT]: `Expected empty account`,
+    [DEPHY_ID_ERROR__EXPECTED_NON_EMPTY_ACCOUNT]: `Expected non empty account`,
+    [DEPHY_ID_ERROR__EXPECTED_SIGNER_ACCOUNT]: `Expected signer account`,
+    [DEPHY_ID_ERROR__EXPECTED_WRITABLE_ACCOUNT]: `Expected writable account`,
+    [DEPHY_ID_ERROR__INVALID_ACCOUNT_KEY]: `Invalid account key`,
+    [DEPHY_ID_ERROR__INVALID_PDA]: `Invalid PDA derivation`,
+    [DEPHY_ID_ERROR__INVALID_PROGRAM_OWNER]: `Invalid program owner. This likely mean the provided account does not exist`,
+    [DEPHY_ID_ERROR__NUMERICAL_OVERFLOW]: `Numerical overflow`,
+    [DEPHY_ID_ERROR__SERIALIZATION_ERROR]: `Error serializing an account`,
   };
 }
 
-export function getDephyIdProgramErrorFromCode(
-  code: DephyIdProgramErrorCode,
-  cause?: Error
-): DephyIdProgramError {
+export function getDephyIdErrorMessage(code: DephyIdError): string {
   if (__DEV__) {
-    return new DephyIdProgramError(
-      code,
-      ...(
-        dephyIdProgramErrorCodeMap as Record<
-          DephyIdProgramErrorCode,
-          [string, string]
-        >
-      )[code],
-      cause
-    );
+    return (dephyIdErrorMessages as Record<DephyIdError, string>)[code];
   }
 
-  return new DephyIdProgramError(
-    code,
-    'Unknown',
-    'Error message not available in production bundles. Compile with __DEV__ set to true to see more information.',
-    cause
-  );
+  return 'Error message not available in production bundles. Compile with `__DEV__` set to true to see more information.';
 }

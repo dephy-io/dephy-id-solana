@@ -8,30 +8,27 @@
 
 import {
   Account,
+  Address,
+  Codec,
+  Decoder,
   EncodedAccount,
+  Encoder,
   FetchAccountConfig,
   FetchAccountsConfig,
   MaybeAccount,
   MaybeEncodedAccount,
   assertAccountExists,
   assertAccountsExist,
+  combineCodec,
   decodeAccount,
   fetchEncodedAccount,
   fetchEncodedAccounts,
-} from '@solana/accounts';
-import {
-  Address,
   getAddressDecoder,
   getAddressEncoder,
-} from '@solana/addresses';
-import {
-  Codec,
-  Decoder,
-  Encoder,
-  combineCodec,
   getStructDecoder,
   getStructEncoder,
-} from '@solana/codecs';
+} from '@solana/web3.js';
+import { findDephyAccountPda } from '../pdas';
 import {
   DephyData,
   DephyDataArgs,
@@ -43,29 +40,15 @@ import {
   getKeyEncoder,
 } from '../types';
 
-export type DephyAccount<TAddress extends string = string> = Account<
-  DephyAccountAccountData,
-  TAddress
->;
+export type DephyAccount = { key: Key; authority: Address; data: DephyData };
 
-export type MaybeDephyAccount<TAddress extends string = string> = MaybeAccount<
-  DephyAccountAccountData,
-  TAddress
->;
-
-export type DephyAccountAccountData = {
-  key: Key;
-  authority: Address;
-  data: DephyData;
-};
-
-export type DephyAccountAccountDataArgs = {
+export type DephyAccountArgs = {
   key: KeyArgs;
   authority: Address;
   data: DephyDataArgs;
 };
 
-export function getDephyAccountAccountDataEncoder(): Encoder<DephyAccountAccountDataArgs> {
+export function getDephyAccountEncoder(): Encoder<DephyAccountArgs> {
   return getStructEncoder([
     ['key', getKeyEncoder()],
     ['authority', getAddressEncoder()],
@@ -73,7 +56,7 @@ export function getDephyAccountAccountDataEncoder(): Encoder<DephyAccountAccount
   ]);
 }
 
-export function getDephyAccountAccountDataDecoder(): Decoder<DephyAccountAccountData> {
+export function getDephyAccountDecoder(): Decoder<DephyAccount> {
   return getStructDecoder([
     ['key', getKeyDecoder()],
     ['authority', getAddressDecoder()],
@@ -81,28 +64,22 @@ export function getDephyAccountAccountDataDecoder(): Decoder<DephyAccountAccount
   ]);
 }
 
-export function getDephyAccountAccountDataCodec(): Codec<
-  DephyAccountAccountDataArgs,
-  DephyAccountAccountData
-> {
-  return combineCodec(
-    getDephyAccountAccountDataEncoder(),
-    getDephyAccountAccountDataDecoder()
-  );
+export function getDephyAccountCodec(): Codec<DephyAccountArgs, DephyAccount> {
+  return combineCodec(getDephyAccountEncoder(), getDephyAccountDecoder());
 }
 
 export function decodeDephyAccount<TAddress extends string = string>(
   encodedAccount: EncodedAccount<TAddress>
-): DephyAccount<TAddress>;
+): Account<DephyAccount, TAddress>;
 export function decodeDephyAccount<TAddress extends string = string>(
   encodedAccount: MaybeEncodedAccount<TAddress>
-): MaybeDephyAccount<TAddress>;
+): MaybeAccount<DephyAccount, TAddress>;
 export function decodeDephyAccount<TAddress extends string = string>(
   encodedAccount: EncodedAccount<TAddress> | MaybeEncodedAccount<TAddress>
-): DephyAccount<TAddress> | MaybeDephyAccount<TAddress> {
+): Account<DephyAccount, TAddress> | MaybeAccount<DephyAccount, TAddress> {
   return decodeAccount(
     encodedAccount as MaybeEncodedAccount<TAddress>,
-    getDephyAccountAccountDataDecoder()
+    getDephyAccountDecoder()
   );
 }
 
@@ -110,7 +87,7 @@ export async function fetchDephyAccount<TAddress extends string = string>(
   rpc: Parameters<typeof fetchEncodedAccount>[0],
   address: Address<TAddress>,
   config?: FetchAccountConfig
-): Promise<DephyAccount<TAddress>> {
+): Promise<Account<DephyAccount, TAddress>> {
   const maybeAccount = await fetchMaybeDephyAccount(rpc, address, config);
   assertAccountExists(maybeAccount);
   return maybeAccount;
@@ -120,7 +97,7 @@ export async function fetchMaybeDephyAccount<TAddress extends string = string>(
   rpc: Parameters<typeof fetchEncodedAccount>[0],
   address: Address<TAddress>,
   config?: FetchAccountConfig
-): Promise<MaybeDephyAccount<TAddress>> {
+): Promise<MaybeAccount<DephyAccount, TAddress>> {
   const maybeAccount = await fetchEncodedAccount(rpc, address, config);
   return decodeDephyAccount(maybeAccount);
 }
@@ -129,7 +106,7 @@ export async function fetchAllDephyAccount(
   rpc: Parameters<typeof fetchEncodedAccounts>[0],
   addresses: Array<Address>,
   config?: FetchAccountsConfig
-): Promise<DephyAccount[]> {
+): Promise<Account<DephyAccount>[]> {
   const maybeAccounts = await fetchAllMaybeDephyAccount(rpc, addresses, config);
   assertAccountsExist(maybeAccounts);
   return maybeAccounts;
@@ -139,11 +116,29 @@ export async function fetchAllMaybeDephyAccount(
   rpc: Parameters<typeof fetchEncodedAccounts>[0],
   addresses: Array<Address>,
   config?: FetchAccountsConfig
-): Promise<MaybeDephyAccount[]> {
+): Promise<MaybeAccount<DephyAccount>[]> {
   const maybeAccounts = await fetchEncodedAccounts(rpc, addresses, config);
   return maybeAccounts.map((maybeAccount) => decodeDephyAccount(maybeAccount));
 }
 
 export function getDephyAccountSize(): number {
   return 34;
+}
+
+export async function fetchDephyAccountFromSeeds(
+  rpc: Parameters<typeof fetchEncodedAccount>[0],
+  config: FetchAccountConfig & { programAddress?: Address } = {}
+): Promise<Account<DephyAccount>> {
+  const maybeAccount = await fetchMaybeDephyAccountFromSeeds(rpc, config);
+  assertAccountExists(maybeAccount);
+  return maybeAccount;
+}
+
+export async function fetchMaybeDephyAccountFromSeeds(
+  rpc: Parameters<typeof fetchEncodedAccount>[0],
+  config: FetchAccountConfig & { programAddress?: Address } = {}
+): Promise<MaybeAccount<DephyAccount>> {
+  const { programAddress, ...fetchConfig } = config;
+  const [address] = await findDephyAccountPda({ programAddress });
+  return await fetchMaybeDephyAccount(rpc, address, fetchConfig);
 }

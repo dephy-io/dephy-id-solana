@@ -15,12 +15,12 @@ pub struct CreateDevice {
     /// The SPL Token 2022 program
     pub token_program2022: solana_program::pubkey::Pubkey,
     /// The associated token program
-    pub atoken_program: solana_program::pubkey::Pubkey,
+    pub ata_program: solana_program::pubkey::Pubkey,
     /// The account paying for the storage fees
     pub payer: solana_program::pubkey::Pubkey,
-    /// Vendor account
+    /// The Vendor pubkey
     pub vendor: solana_program::pubkey::Pubkey,
-    /// The Device account
+    /// The Device pubkey
     pub device: solana_program::pubkey::Pubkey,
     /// The Product mint account
     pub product_mint: solana_program::pubkey::Pubkey,
@@ -47,7 +47,7 @@ impl CreateDevice {
             false,
         ));
         accounts.push(solana_program::instruction::AccountMeta::new_readonly(
-            self.atoken_program,
+            self.ata_program,
             false,
         ));
         accounts.push(solana_program::instruction::AccountMeta::new(
@@ -70,7 +70,7 @@ impl CreateDevice {
             false,
         ));
         accounts.extend_from_slice(remaining_accounts);
-        let data = CreateDeviceInstructionData::new().try_to_vec().unwrap();
+        let data = borsh::to_vec(&CreateDeviceInstructionData::new()).unwrap();
 
         solana_program::instruction::Instruction {
             program_id: crate::DEPHY_ID_ID,
@@ -81,12 +81,12 @@ impl CreateDevice {
 }
 
 #[derive(BorshDeserialize, BorshSerialize)]
-struct CreateDeviceInstructionData {
+pub struct CreateDeviceInstructionData {
     discriminator: u8,
 }
 
 impl CreateDeviceInstructionData {
-    fn new() -> Self {
+    pub fn new() -> Self {
         Self { discriminator: 3 }
     }
 }
@@ -97,17 +97,17 @@ impl CreateDeviceInstructionData {
 ///
 ///   0. `[optional]` system_program (default to `11111111111111111111111111111111`)
 ///   1. `[]` token_program2022
-///   2. `[]` atoken_program
+///   2. `[optional]` ata_program (default to `ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL`)
 ///   3. `[writable, signer]` payer
 ///   4. `[signer]` vendor
 ///   5. `[signer]` device
 ///   6. `[writable]` product_mint
 ///   7. `[writable]` product_atoken
-#[derive(Default)]
+#[derive(Clone, Debug, Default)]
 pub struct CreateDeviceBuilder {
     system_program: Option<solana_program::pubkey::Pubkey>,
     token_program2022: Option<solana_program::pubkey::Pubkey>,
-    atoken_program: Option<solana_program::pubkey::Pubkey>,
+    ata_program: Option<solana_program::pubkey::Pubkey>,
     payer: Option<solana_program::pubkey::Pubkey>,
     vendor: Option<solana_program::pubkey::Pubkey>,
     device: Option<solana_program::pubkey::Pubkey>,
@@ -136,10 +136,11 @@ impl CreateDeviceBuilder {
         self.token_program2022 = Some(token_program2022);
         self
     }
+    /// `[optional account, default to 'ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL']`
     /// The associated token program
     #[inline(always)]
-    pub fn atoken_program(&mut self, atoken_program: solana_program::pubkey::Pubkey) -> &mut Self {
-        self.atoken_program = Some(atoken_program);
+    pub fn ata_program(&mut self, ata_program: solana_program::pubkey::Pubkey) -> &mut Self {
+        self.ata_program = Some(ata_program);
         self
     }
     /// The account paying for the storage fees
@@ -148,13 +149,13 @@ impl CreateDeviceBuilder {
         self.payer = Some(payer);
         self
     }
-    /// Vendor account
+    /// The Vendor pubkey
     #[inline(always)]
     pub fn vendor(&mut self, vendor: solana_program::pubkey::Pubkey) -> &mut Self {
         self.vendor = Some(vendor);
         self
     }
-    /// The Device account
+    /// The Device pubkey
     #[inline(always)]
     pub fn device(&mut self, device: solana_program::pubkey::Pubkey) -> &mut Self {
         self.device = Some(device);
@@ -199,7 +200,9 @@ impl CreateDeviceBuilder {
             token_program2022: self
                 .token_program2022
                 .expect("token_program2022 is not set"),
-            atoken_program: self.atoken_program.expect("atoken_program is not set"),
+            ata_program: self.ata_program.unwrap_or(solana_program::pubkey!(
+                "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+            )),
             payer: self.payer.expect("payer is not set"),
             vendor: self.vendor.expect("vendor is not set"),
             device: self.device.expect("device is not set"),
@@ -218,12 +221,12 @@ pub struct CreateDeviceCpiAccounts<'a, 'b> {
     /// The SPL Token 2022 program
     pub token_program2022: &'b solana_program::account_info::AccountInfo<'a>,
     /// The associated token program
-    pub atoken_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub ata_program: &'b solana_program::account_info::AccountInfo<'a>,
     /// The account paying for the storage fees
     pub payer: &'b solana_program::account_info::AccountInfo<'a>,
-    /// Vendor account
+    /// The Vendor pubkey
     pub vendor: &'b solana_program::account_info::AccountInfo<'a>,
-    /// The Device account
+    /// The Device pubkey
     pub device: &'b solana_program::account_info::AccountInfo<'a>,
     /// The Product mint account
     pub product_mint: &'b solana_program::account_info::AccountInfo<'a>,
@@ -240,12 +243,12 @@ pub struct CreateDeviceCpi<'a, 'b> {
     /// The SPL Token 2022 program
     pub token_program2022: &'b solana_program::account_info::AccountInfo<'a>,
     /// The associated token program
-    pub atoken_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub ata_program: &'b solana_program::account_info::AccountInfo<'a>,
     /// The account paying for the storage fees
     pub payer: &'b solana_program::account_info::AccountInfo<'a>,
-    /// Vendor account
+    /// The Vendor pubkey
     pub vendor: &'b solana_program::account_info::AccountInfo<'a>,
-    /// The Device account
+    /// The Device pubkey
     pub device: &'b solana_program::account_info::AccountInfo<'a>,
     /// The Product mint account
     pub product_mint: &'b solana_program::account_info::AccountInfo<'a>,
@@ -262,7 +265,7 @@ impl<'a, 'b> CreateDeviceCpi<'a, 'b> {
             __program: program,
             system_program: accounts.system_program,
             token_program2022: accounts.token_program2022,
-            atoken_program: accounts.atoken_program,
+            ata_program: accounts.ata_program,
             payer: accounts.payer,
             vendor: accounts.vendor,
             device: accounts.device,
@@ -313,7 +316,7 @@ impl<'a, 'b> CreateDeviceCpi<'a, 'b> {
             false,
         ));
         accounts.push(solana_program::instruction::AccountMeta::new_readonly(
-            *self.atoken_program.key,
+            *self.ata_program.key,
             false,
         ));
         accounts.push(solana_program::instruction::AccountMeta::new(
@@ -343,7 +346,7 @@ impl<'a, 'b> CreateDeviceCpi<'a, 'b> {
                 is_writable: remaining_account.2,
             })
         });
-        let data = CreateDeviceInstructionData::new().try_to_vec().unwrap();
+        let data = borsh::to_vec(&CreateDeviceInstructionData::new()).unwrap();
 
         let instruction = solana_program::instruction::Instruction {
             program_id: crate::DEPHY_ID_ID,
@@ -354,7 +357,7 @@ impl<'a, 'b> CreateDeviceCpi<'a, 'b> {
         account_infos.push(self.__program.clone());
         account_infos.push(self.system_program.clone());
         account_infos.push(self.token_program2022.clone());
-        account_infos.push(self.atoken_program.clone());
+        account_infos.push(self.ata_program.clone());
         account_infos.push(self.payer.clone());
         account_infos.push(self.vendor.clone());
         account_infos.push(self.device.clone());
@@ -378,12 +381,13 @@ impl<'a, 'b> CreateDeviceCpi<'a, 'b> {
 ///
 ///   0. `[]` system_program
 ///   1. `[]` token_program2022
-///   2. `[]` atoken_program
+///   2. `[]` ata_program
 ///   3. `[writable, signer]` payer
 ///   4. `[signer]` vendor
 ///   5. `[signer]` device
 ///   6. `[writable]` product_mint
 ///   7. `[writable]` product_atoken
+#[derive(Clone, Debug)]
 pub struct CreateDeviceCpiBuilder<'a, 'b> {
     instruction: Box<CreateDeviceCpiBuilderInstruction<'a, 'b>>,
 }
@@ -394,7 +398,7 @@ impl<'a, 'b> CreateDeviceCpiBuilder<'a, 'b> {
             __program: program,
             system_program: None,
             token_program2022: None,
-            atoken_program: None,
+            ata_program: None,
             payer: None,
             vendor: None,
             device: None,
@@ -424,11 +428,11 @@ impl<'a, 'b> CreateDeviceCpiBuilder<'a, 'b> {
     }
     /// The associated token program
     #[inline(always)]
-    pub fn atoken_program(
+    pub fn ata_program(
         &mut self,
-        atoken_program: &'b solana_program::account_info::AccountInfo<'a>,
+        ata_program: &'b solana_program::account_info::AccountInfo<'a>,
     ) -> &mut Self {
-        self.instruction.atoken_program = Some(atoken_program);
+        self.instruction.ata_program = Some(ata_program);
         self
     }
     /// The account paying for the storage fees
@@ -437,7 +441,7 @@ impl<'a, 'b> CreateDeviceCpiBuilder<'a, 'b> {
         self.instruction.payer = Some(payer);
         self
     }
-    /// Vendor account
+    /// The Vendor pubkey
     #[inline(always)]
     pub fn vendor(
         &mut self,
@@ -446,7 +450,7 @@ impl<'a, 'b> CreateDeviceCpiBuilder<'a, 'b> {
         self.instruction.vendor = Some(vendor);
         self
     }
-    /// The Device account
+    /// The Device pubkey
     #[inline(always)]
     pub fn device(
         &mut self,
@@ -527,10 +531,10 @@ impl<'a, 'b> CreateDeviceCpiBuilder<'a, 'b> {
                 .token_program2022
                 .expect("token_program2022 is not set"),
 
-            atoken_program: self
+            ata_program: self
                 .instruction
-                .atoken_program
-                .expect("atoken_program is not set"),
+                .ata_program
+                .expect("ata_program is not set"),
 
             payer: self.instruction.payer.expect("payer is not set"),
 
@@ -555,11 +559,12 @@ impl<'a, 'b> CreateDeviceCpiBuilder<'a, 'b> {
     }
 }
 
+#[derive(Clone, Debug)]
 struct CreateDeviceCpiBuilderInstruction<'a, 'b> {
     __program: &'b solana_program::account_info::AccountInfo<'a>,
     system_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     token_program2022: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    atoken_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    ata_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     payer: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     vendor: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     device: Option<&'b solana_program::account_info::AccountInfo<'a>>,

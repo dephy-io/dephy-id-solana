@@ -9,12 +9,7 @@ use dephy_io_dephy_id::{
 use solana_program::pubkey::Pubkey;
 use solana_program_test::*;
 use solana_sdk::{
-    account::ReadableAccount,
-    instruction::{AccountMeta, Instruction},
-    signature::Keypair,
-    signer::Signer,
-    system_program,
-    transaction::Transaction,
+    account::ReadableAccount, hash::hash, instruction::{AccountMeta, Instruction}, signature::Keypair, signer::Signer, system_program, transaction::Transaction
 };
 use spl_token_2022::{
     extension::{BaseStateWithExtensions, StateWithExtensions},
@@ -86,7 +81,7 @@ async fn test_dephy() {
     )
     .await;
 
-    test_activate_device(program_id, &mut banks_client, &payer, &device1, &user1).await;
+    test_activate_device(program_id, &mut banks_client, &payer, &vendor, b"Product1", &device1, &user1).await;
 }
 
 async fn test_create_vendor(
@@ -178,10 +173,12 @@ async fn test_create_product(
     banks_client: &mut BanksClient,
     payer: &Keypair,
     vendor: &Keypair,
-    product_seed: &[u8; 8],
+    product_seed: &[u8],
 ) {
+    let seed = hash(product_seed);
+
     let (mint_pubkey, mint_bump) = Pubkey::find_program_address(
-        &[b"DePHY PRODUCT", &vendor.pubkey().to_bytes(), product_seed],
+        &[b"DePHY PRODUCT", &vendor.pubkey().to_bytes(), seed.as_ref()],
         &program_id,
     );
 
@@ -189,8 +186,14 @@ async fn test_create_product(
         &[Instruction::new_with_borsh(
             program_id,
             &DephyInstruction::CreateProduct(CreateProductArgs {
-                seed: *product_seed,
+                seed: seed.to_bytes(),
                 bump: mint_bump,
+                name: "Example Product 1".to_string(),
+                symbol: "PD1".to_string(),
+                uri: "https://example.com".to_string(),
+                additional_metadata: vec![
+                    ("desc".to_string(), "Product by Vendor".to_string())
+                ],
             }),
             vec![
                 AccountMeta::new(system_program::id(), false),
@@ -225,7 +228,7 @@ async fn test_create_product(
         .get_variable_len_extension::<TokenMetadata>()
         .unwrap();
     assert_eq!(
-        mint_metadata.name, "Example Vendor Product 1",
+        mint_metadata.name, "Example Product 1",
         "metadata name"
     );
 }
@@ -236,10 +239,12 @@ async fn test_create_device(
     payer: &Keypair,
     vendor: &Keypair,
     device: &Keypair,
-    product_seed: &[u8; 8],
+    product_seed: &[u8],
 ) {
+    let seed = hash(product_seed);
+
     let (product_mint_pubkey, _mint_bump) = Pubkey::find_program_address(
-        &[b"DePHY PRODUCT", &vendor.pubkey().to_bytes(), product_seed],
+        &[b"DePHY PRODUCT", &vendor.pubkey().to_bytes(), seed.as_ref()],
         &program_id,
     );
 
@@ -284,6 +289,8 @@ async fn test_activate_device(
     program_id: Pubkey,
     banks_client: &mut BanksClient,
     payer: &Keypair,
+    vendor: &Keypair,
+    product_seed: &[u8],
     device: &Keypair,
     user: &Keypair,
 ) {
@@ -294,6 +301,17 @@ async fn test_activate_device(
             &user.pubkey().to_bytes(),
         ],
         &program_id,
+    );
+
+    let (product_mint_pubkey, _) = Pubkey::find_program_address(
+        &[b"DePHY PRODUCT", &vendor.pubkey().to_bytes(), product_seed.as_ref()],
+        &program_id,
+    );
+
+    let product_atoken_pubkey = spl_associated_token_account::get_associated_token_address_with_program_id(
+        &device.pubkey(),
+        &product_mint_pubkey,
+        &spl_token_2022::id(),
     );
 
     let atoken_pubkey = spl_associated_token_account::get_associated_token_address_with_program_id(
@@ -315,13 +333,19 @@ async fn test_activate_device(
                 AccountMeta::new(spl_associated_token_account::id(), false),
                 // #[account(3, writable, signer, name="payer", desc = "The account paying for the storage fees")]
                 AccountMeta::new(payer.pubkey(), true),
-                // #[account(4, signer, name="device_account", desc = "The Device")]
+                // #[account(4, signer, name="device", desc = "The Device pubkey")]
                 AccountMeta::new(device.pubkey(), true),
-                // #[account(5, name="user_account", desc = "The Device Owner pubkey")]
+                // #[account(5, name="vendor", desc = "Vendor of the Device")]
+                AccountMeta::new(vendor.pubkey(), false),
+                // #[account(6, name="product", desc = "Product of the Device")]
+                AccountMeta::new(product_mint_pubkey, false),
+                // #[account(7, name="product_atoken", desc = "The Product atoken for Device")]
+                AccountMeta::new(product_atoken_pubkey, false),
+                // #[account(8, name="user", desc = "The Device Owner pubkey")]
                 AccountMeta::new(user.pubkey(), true),
-                // #[account(6, name="mint_account", desc = "The NFT mint account")]
+                // #[account(9, writable, name="did_mint", desc = "The NFT mint account")]
                 AccountMeta::new(mint_pubkey, false),
-                // #[account(7, name="atoken_account", desc = "The NFT atoken account")]
+                // #[account(10, writable, name="did_atoken", desc = "The NFT atoken account")]
                 AccountMeta::new(atoken_pubkey, false),
             ],
         )],

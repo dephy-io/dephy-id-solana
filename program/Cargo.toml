@@ -14,15 +14,15 @@ program-dependencies = []
 crate-type = ["cdylib", "lib"]
 
 [dependencies]
-borsh = "^1.4"
-shank = "^0.4.2"
-num-derive = "^0.4"
-num-traits = "^0.2"
-thiserror = "^1.0"
-solana-program = "~1.18"
-spl-token-2022 = "^3.0"
-spl-token-metadata-interface = "^0.3"
-spl-associated-token-account = { version = "^3.0", features = ["no-entrypoint"] }
+borsh = { workspace = true }
+shank = { workspace = true }
+num-derive = { workspace = true }
+num-traits = { workspace = true }
+thiserror = { workspace = true }
+solana-program = { workspace = true }
+spl-token-2022 = { workspace = true }
+spl-token-metadata-interface = { workspace = true }
+spl-associated-token-account = { workspace = true }
 
 [dev-dependencies]
 solana-program-test = "~1.18"

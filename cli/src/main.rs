@@ -7,11 +7,7 @@ use dephy_io_dephy_id_client::instructions::{
 };
 use solana_client::rpc_client::RpcClient;
 use solana_sdk::{
-    commitment_config::CommitmentConfig,
-    pubkey::Pubkey,
-    signature::Keypair,
-    signer::{EncodableKey, Signer},
-    transaction::Transaction,
+    commitment_config::CommitmentConfig, hash, pubkey::Pubkey, signature::Keypair, signer::{EncodableKey, Signer}, transaction::Transaction
 };
 
 #[derive(Debug, Parser)]
@@ -69,7 +65,13 @@ struct CreateVendorCliArgs {
 struct CreateProductCliArgs {
     #[arg(long = "vendor")]
     vendor_keypair: String,
+    #[arg(long)]
     seed: String,
+    name: String,
+    symbol: String,
+    uri: String,
+    #[arg(short = 'm', value_parser = parse_key_val::<String, String>)]
+    additional_metadata: Vec<(String, String)>,
     #[command(flatten)]
     common: CommonArgs,
 }
@@ -92,6 +94,8 @@ struct ActivateDeviceCliArgs {
     device_keypair: String,
     #[arg(long = "user")]
     user_keypair: String,
+    #[arg(long = "vendor")]
+    vendor_pubkey: Pubkey,
     #[arg(long = "product")]
     product_pubkey: Pubkey,
     #[command(flatten)]
@@ -218,7 +222,6 @@ fn create_vendor(args: CreateVendorCliArgs) {
     let transaction = Transaction::new_signed_with_payer(
         &[CreateVendorBuilder::new()
             .token_program2022(token_program_id)
-            .atoken_program(spl_associated_token_account::ID)
             .payer(payer.pubkey())
             .authority(admin.pubkey())
             .dephy(dephy_pubkey)
@@ -258,9 +261,9 @@ fn create_product(args: CreateProductCliArgs) {
     let vendor = read_key(&args.vendor_keypair);
     let payer = read_key_or(args.common.payer, &args.vendor_keypair);
 
-    let seed: [u8; 8] = args.seed.as_bytes().try_into().unwrap();
+    let seed = hash::hash(args.seed.as_ref());
     let (product_mint_pubkey, bump) = Pubkey::find_program_address(
-        &[b"DePHY PRODUCT", vendor.pubkey().as_ref(), &seed],
+        &[b"DePHY PRODUCT", vendor.pubkey().as_ref(), seed.as_ref()],
         &program_id,
     );
 
@@ -271,8 +274,12 @@ fn create_product(args: CreateProductCliArgs) {
             .payer(payer.pubkey())
             .vendor(vendor.pubkey())
             .product_mint(product_mint_pubkey)
-            .seed(seed)
+            .seed(seed.to_bytes())
             .bump(bump)
+            .name(args.name)
+            .symbol(args.symbol)
+            .uri(args.uri)
+            .additional_metadata(args.additional_metadata)
             .instruction()],
         Some(&payer.pubkey()),
         &[&vendor, &payer],
@@ -309,7 +316,6 @@ fn create_device(args: CreateDeviceCliArgs) {
     let transaction = Transaction::new_signed_with_payer(
         &[CreateDeviceBuilder::new()
             .token_program2022(token_program_id)
-            .atoken_program(spl_associated_token_account::ID)
             .payer(payer.pubkey())
             .vendor(vendor.pubkey())
             .device(device.pubkey())
@@ -344,6 +350,13 @@ fn activate_device(args: ActivateDeviceCliArgs) {
     let user = read_key(&args.user_keypair);
     let payer = read_key_or(args.common.payer, &args.user_keypair);
 
+    let product_atoken_pubkey =
+        spl_associated_token_account::get_associated_token_address_with_program_id(
+            &device.pubkey(),
+            &args.product_pubkey,
+            &token_program_id,
+        );
+
     let (did_mint_pubkey, bump) = Pubkey::find_program_address(
         &[
             b"DePHY DID",
@@ -364,9 +377,11 @@ fn activate_device(args: ActivateDeviceCliArgs) {
     let transaction = Transaction::new_signed_with_payer(
         &[ActivateDeviceBuilder::new()
             .token_program2022(token_program_id)
-            .atoken_program(spl_associated_token_account::ID)
             .payer(payer.pubkey())
             .device(device.pubkey())
+            .vendor(args.vendor_pubkey)
+            .product_mint(args.product_pubkey)
+            .product_atoken(product_atoken_pubkey)
             .user(user.pubkey())
             .did_mint(did_mint_pubkey)
             .did_atoken(did_atoken_pubkey)

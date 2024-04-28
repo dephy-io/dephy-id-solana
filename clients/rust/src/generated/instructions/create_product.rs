@@ -16,7 +16,7 @@ pub struct CreateProduct {
     pub token_program2022: solana_program::pubkey::Pubkey,
     /// The account paying for the storage fees
     pub payer: solana_program::pubkey::Pubkey,
-    /// Vendor account
+    /// The Vendor pubkey
     pub vendor: solana_program::pubkey::Pubkey,
     /// The product mint account
     pub product_mint: solana_program::pubkey::Pubkey,
@@ -56,8 +56,8 @@ impl CreateProduct {
             false,
         ));
         accounts.extend_from_slice(remaining_accounts);
-        let mut data = CreateProductInstructionData::new().try_to_vec().unwrap();
-        let mut args = args.try_to_vec().unwrap();
+        let mut data = borsh::to_vec(&CreateProductInstructionData::new()).unwrap();
+        let mut args = borsh::to_vec(&args).unwrap();
         data.append(&mut args);
 
         solana_program::instruction::Instruction {
@@ -69,12 +69,12 @@ impl CreateProduct {
 }
 
 #[derive(BorshDeserialize, BorshSerialize)]
-struct CreateProductInstructionData {
+pub struct CreateProductInstructionData {
     discriminator: u8,
 }
 
 impl CreateProductInstructionData {
-    fn new() -> Self {
+    pub fn new() -> Self {
         Self { discriminator: 2 }
     }
 }
@@ -82,8 +82,12 @@ impl CreateProductInstructionData {
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct CreateProductInstructionArgs {
-    pub seed: [u8; 8],
+    pub seed: [u8; 32],
     pub bump: u8,
+    pub name: String,
+    pub symbol: String,
+    pub uri: String,
+    pub additional_metadata: Vec<(String, String)>,
 }
 
 /// Instruction builder for `CreateProduct`.
@@ -95,15 +99,19 @@ pub struct CreateProductInstructionArgs {
 ///   2. `[writable, signer]` payer
 ///   3. `[signer]` vendor
 ///   4. `[writable]` product_mint
-#[derive(Default)]
+#[derive(Clone, Debug, Default)]
 pub struct CreateProductBuilder {
     system_program: Option<solana_program::pubkey::Pubkey>,
     token_program2022: Option<solana_program::pubkey::Pubkey>,
     payer: Option<solana_program::pubkey::Pubkey>,
     vendor: Option<solana_program::pubkey::Pubkey>,
     product_mint: Option<solana_program::pubkey::Pubkey>,
-    seed: Option<[u8; 8]>,
+    seed: Option<[u8; 32]>,
     bump: Option<u8>,
+    name: Option<String>,
+    symbol: Option<String>,
+    uri: Option<String>,
+    additional_metadata: Option<Vec<(String, String)>>,
     __remaining_accounts: Vec<solana_program::instruction::AccountMeta>,
 }
 
@@ -133,7 +141,7 @@ impl CreateProductBuilder {
         self.payer = Some(payer);
         self
     }
-    /// Vendor account
+    /// The Vendor pubkey
     #[inline(always)]
     pub fn vendor(&mut self, vendor: solana_program::pubkey::Pubkey) -> &mut Self {
         self.vendor = Some(vendor);
@@ -146,13 +154,33 @@ impl CreateProductBuilder {
         self
     }
     #[inline(always)]
-    pub fn seed(&mut self, seed: [u8; 8]) -> &mut Self {
+    pub fn seed(&mut self, seed: [u8; 32]) -> &mut Self {
         self.seed = Some(seed);
         self
     }
     #[inline(always)]
     pub fn bump(&mut self, bump: u8) -> &mut Self {
         self.bump = Some(bump);
+        self
+    }
+    #[inline(always)]
+    pub fn name(&mut self, name: String) -> &mut Self {
+        self.name = Some(name);
+        self
+    }
+    #[inline(always)]
+    pub fn symbol(&mut self, symbol: String) -> &mut Self {
+        self.symbol = Some(symbol);
+        self
+    }
+    #[inline(always)]
+    pub fn uri(&mut self, uri: String) -> &mut Self {
+        self.uri = Some(uri);
+        self
+    }
+    #[inline(always)]
+    pub fn additional_metadata(&mut self, additional_metadata: Vec<(String, String)>) -> &mut Self {
+        self.additional_metadata = Some(additional_metadata);
         self
     }
     /// Add an aditional account to the instruction.
@@ -189,6 +217,13 @@ impl CreateProductBuilder {
         let args = CreateProductInstructionArgs {
             seed: self.seed.clone().expect("seed is not set"),
             bump: self.bump.clone().expect("bump is not set"),
+            name: self.name.clone().expect("name is not set"),
+            symbol: self.symbol.clone().expect("symbol is not set"),
+            uri: self.uri.clone().expect("uri is not set"),
+            additional_metadata: self
+                .additional_metadata
+                .clone()
+                .expect("additional_metadata is not set"),
         };
 
         accounts.instruction_with_remaining_accounts(args, &self.__remaining_accounts)
@@ -203,7 +238,7 @@ pub struct CreateProductCpiAccounts<'a, 'b> {
     pub token_program2022: &'b solana_program::account_info::AccountInfo<'a>,
     /// The account paying for the storage fees
     pub payer: &'b solana_program::account_info::AccountInfo<'a>,
-    /// Vendor account
+    /// The Vendor pubkey
     pub vendor: &'b solana_program::account_info::AccountInfo<'a>,
     /// The product mint account
     pub product_mint: &'b solana_program::account_info::AccountInfo<'a>,
@@ -219,7 +254,7 @@ pub struct CreateProductCpi<'a, 'b> {
     pub token_program2022: &'b solana_program::account_info::AccountInfo<'a>,
     /// The account paying for the storage fees
     pub payer: &'b solana_program::account_info::AccountInfo<'a>,
-    /// Vendor account
+    /// The Vendor pubkey
     pub vendor: &'b solana_program::account_info::AccountInfo<'a>,
     /// The product mint account
     pub product_mint: &'b solana_program::account_info::AccountInfo<'a>,
@@ -304,8 +339,8 @@ impl<'a, 'b> CreateProductCpi<'a, 'b> {
                 is_writable: remaining_account.2,
             })
         });
-        let mut data = CreateProductInstructionData::new().try_to_vec().unwrap();
-        let mut args = self.__args.try_to_vec().unwrap();
+        let mut data = borsh::to_vec(&CreateProductInstructionData::new()).unwrap();
+        let mut args = borsh::to_vec(&self.__args).unwrap();
         data.append(&mut args);
 
         let instruction = solana_program::instruction::Instruction {
@@ -341,6 +376,7 @@ impl<'a, 'b> CreateProductCpi<'a, 'b> {
 ///   2. `[writable, signer]` payer
 ///   3. `[signer]` vendor
 ///   4. `[writable]` product_mint
+#[derive(Clone, Debug)]
 pub struct CreateProductCpiBuilder<'a, 'b> {
     instruction: Box<CreateProductCpiBuilderInstruction<'a, 'b>>,
 }
@@ -356,6 +392,10 @@ impl<'a, 'b> CreateProductCpiBuilder<'a, 'b> {
             product_mint: None,
             seed: None,
             bump: None,
+            name: None,
+            symbol: None,
+            uri: None,
+            additional_metadata: None,
             __remaining_accounts: Vec::new(),
         });
         Self { instruction }
@@ -384,7 +424,7 @@ impl<'a, 'b> CreateProductCpiBuilder<'a, 'b> {
         self.instruction.payer = Some(payer);
         self
     }
-    /// Vendor account
+    /// The Vendor pubkey
     #[inline(always)]
     pub fn vendor(
         &mut self,
@@ -403,13 +443,33 @@ impl<'a, 'b> CreateProductCpiBuilder<'a, 'b> {
         self
     }
     #[inline(always)]
-    pub fn seed(&mut self, seed: [u8; 8]) -> &mut Self {
+    pub fn seed(&mut self, seed: [u8; 32]) -> &mut Self {
         self.instruction.seed = Some(seed);
         self
     }
     #[inline(always)]
     pub fn bump(&mut self, bump: u8) -> &mut Self {
         self.instruction.bump = Some(bump);
+        self
+    }
+    #[inline(always)]
+    pub fn name(&mut self, name: String) -> &mut Self {
+        self.instruction.name = Some(name);
+        self
+    }
+    #[inline(always)]
+    pub fn symbol(&mut self, symbol: String) -> &mut Self {
+        self.instruction.symbol = Some(symbol);
+        self
+    }
+    #[inline(always)]
+    pub fn uri(&mut self, uri: String) -> &mut Self {
+        self.instruction.uri = Some(uri);
+        self
+    }
+    #[inline(always)]
+    pub fn additional_metadata(&mut self, additional_metadata: Vec<(String, String)>) -> &mut Self {
+        self.instruction.additional_metadata = Some(additional_metadata);
         self
     }
     /// Add an additional account to the instruction.
@@ -456,6 +516,14 @@ impl<'a, 'b> CreateProductCpiBuilder<'a, 'b> {
         let args = CreateProductInstructionArgs {
             seed: self.instruction.seed.clone().expect("seed is not set"),
             bump: self.instruction.bump.clone().expect("bump is not set"),
+            name: self.instruction.name.clone().expect("name is not set"),
+            symbol: self.instruction.symbol.clone().expect("symbol is not set"),
+            uri: self.instruction.uri.clone().expect("uri is not set"),
+            additional_metadata: self
+                .instruction
+                .additional_metadata
+                .clone()
+                .expect("additional_metadata is not set"),
         };
         let instruction = CreateProductCpi {
             __program: self.instruction.__program,
@@ -487,6 +555,7 @@ impl<'a, 'b> CreateProductCpiBuilder<'a, 'b> {
     }
 }
 
+#[derive(Clone, Debug)]
 struct CreateProductCpiBuilderInstruction<'a, 'b> {
     __program: &'b solana_program::account_info::AccountInfo<'a>,
     system_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
@@ -494,8 +563,12 @@ struct CreateProductCpiBuilderInstruction<'a, 'b> {
     payer: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     vendor: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     product_mint: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    seed: Option<[u8; 8]>,
+    seed: Option<[u8; 32]>,
     bump: Option<u8>,
+    name: Option<String>,
+    symbol: Option<String>,
+    uri: Option<String>,
+    additional_metadata: Option<Vec<(String, String)>>,
     /// Additional instruction accounts `(AccountInfo, is_writable, is_signer)`.
     __remaining_accounts: Vec<(
         &'b solana_program::account_info::AccountInfo<'a>,
