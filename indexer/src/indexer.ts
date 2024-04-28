@@ -3,10 +3,12 @@ import { RpcGraphQL, createRpcGraphQL } from "@solana/rpc-graphql"
 import {
     Account,
     Address,
-    Base58EncodedBytes,
     Commitment,
     IAccountMeta,
-    Rpc, RpcSubscriptions, SolanaRpcApiMainnet, SolanaRpcSubscriptionsApi,
+    IInstruction,
+    IInstructionWithAccounts,
+    IInstructionWithData,
+    Rpc, RpcSubscriptions, Signature, SolanaRpcApiMainnet, SolanaRpcSubscriptionsApi,
     address,
     assertAccountDecoded,
     createSolanaRpc, createSolanaRpcSubscriptions,
@@ -15,23 +17,24 @@ import {
 } from "@solana/web3.js"
 import { Client, createClient } from "edgedb"
 import e from "../dbschema/edgeql-js"
-import { DephyAccount, fetchDephyAccount, findDephyAccountPda } from "../../clients/js/src"
 import {
+    DephyAccount,
     DephyIdInstruction,
     ParsedActivateDeviceInstruction, ParsedCreateDephyInstruction, ParsedCreateDeviceInstruction,
     ParsedCreateProductInstruction, ParsedCreateVendorInstruction,
+    fetchDephyAccount,
+    findDephyAccountPda,
     identifyDephyIdInstruction,
     parseActivateDeviceInstruction, parseCreateDephyInstruction, parseCreateDeviceInstruction,
     parseCreateProductInstruction, parseCreateVendorInstruction
-} from "@dephy-io/dephy-id"
+} from "./dephy-id"
 
 
-type Ix = {
-    accounts: readonly Address[]
-    data: Base58EncodedBytes
-    programId: Address
+interface Config {
+    rpc_url?: string
+    pubsub_url?: string
+    database_url?: string
 }
-
 
 
 export class Indexer {
@@ -40,18 +43,18 @@ export class Indexer {
     rpcGraphQL: RpcGraphQL
     abortController: AbortController
     database_url: string
-    db: Client
-    dephy: Account<DephyAccount, string>
+    db!: Client
+    dephy!: Account<DephyAccount, string>
 
     constructor({
         rpc_url,
         pubsub_url,
         database_url,
-    }) {
-        this.rpc = createSolanaRpc(rpc_url)
-        this.subscriptions = createSolanaRpcSubscriptions(pubsub_url)
+    }: Config) {
+        this.rpc = createSolanaRpc(rpc_url!)
+        this.subscriptions = createSolanaRpcSubscriptions(pubsub_url!)
         this.rpcGraphQL = createRpcGraphQL(this.rpc)
-        this.database_url = database_url
+        this.database_url = database_url!
         this.abortController = new AbortController()
     }
 
@@ -88,19 +91,53 @@ export class Indexer {
         let program_address = address(program_id)
         await this.ensureDephyAccount(program_address)
 
-        const notifications = await this.subscribe_logs(program_address, commitment)
+        await this.fillMissingTransactions(program_address, commitment)
+
+        const notifications = await this.subscribeLogs(program_address, commitment)
         console.log('logs subscribed')
 
         for await (const notification of notifications) {
-            console.log(notification)
-
-            const { context: { slot }, value: { signature, err, logs } } = notification
-            let tx = await this.save_tx({ slot, signature, logs, err }).run(this.db)
-            this.processTx(tx, signature)
+            const { context: { slot }, value: { signature, err } } = notification
+            let saved_tx = await this.saveTx({ slot, signature, err })
+            this.processTx(saved_tx, signature)
         }
     }
 
-    subscribe_logs(program_address: Address, commitment: Commitment) {
+    async fillMissingTransactions(program_address: Address, commitment: Commitment) {
+        let done = false
+        let tx_signature: Signature | undefined
+        while (!done) {
+            done = true
+            let txs = await this.getTransactions(program_address, tx_signature)
+            for (const tx of txs) {
+                let saved_tx = await this.loadTx(tx.signature)
+                if (!saved_tx) {
+                    done = false
+                    let saved_tx = await this.saveTx(tx)
+                    await this.processTx(saved_tx, tx.signature)
+                }
+                tx_signature = tx.signature
+            }
+        }
+
+        console.log('all missing txs filled')
+    }
+
+    getTransaction(tx_signature: Signature, commitment: Commitment) {
+        return this.rpc.getTransaction(tx_signature, {
+            commitment,
+        }).send()
+    }
+
+    getTransactions(program_address: Address, beforeTx?: Signature) {
+        return this.rpc.getSignaturesForAddress(program_address, {
+            before: beforeTx,
+            limit: 100,
+            commitment: 'finalized',
+        }).send()
+    }
+
+    subscribeLogs(program_address: Address, commitment: Commitment) {
         return this.subscriptions
             .logsNotifications({
                 mentions: [program_address]
@@ -110,28 +147,36 @@ export class Indexer {
             })
     }
 
-    get_tx(tx_signature: string, commitment: Commitment = 'confirmed') {
+    getTx(tx_signature: string, commitment: Commitment = 'confirmed') {
         return this.rpc.getTransaction(signature(tx_signature), { commitment, encoding: 'jsonParsed' })
             .send()
     }
 
-    save_tx({ slot, signature, logs, err }: { slot: bigint, signature: string, logs: readonly string[] | null, err: any }) {
+    saveTx({ slot, signature, err }: { slot: bigint, signature: string, err: any }) {
+        console.log('Saving tx', signature, slot, err)
+
         err ??= JSON.stringify(err)
         return e.insert(e.Transaction, {
             slot,
             signature,
-            logs,
             err
         }).unlessConflict(tx => ({
             on: tx.signature,
             else: e.update(tx, () => ({
                 set: {
                     slot,
-                    logs,
                     err
                 }
             }))
-        }))
+        })).run(this.db)
+    }
+
+    loadTx(tx_signature: string) {
+        return e.select(e.Transaction, () => ({
+            filter_single: {
+                signature: tx_signature
+            }
+        })).run(this.db)
     }
 
     async handleCreateVendor(create_vendor: ParsedCreateVendorInstruction<string, readonly IAccountMeta[]>) {
@@ -143,17 +188,23 @@ export class Indexer {
                 name: create_vendor.data.name,
                 symbol: create_vendor.data.symbol,
                 uri: create_vendor.data.uri,
-                additional: create_vendor.data.additionalMetadata,
+                additional: create_vendor.data.additionalMetadata as [string, string][],
             })
         }).run(this.db)
     }
 
     async handleCreateProduct(create_product: ParsedCreateProductInstruction<string, readonly IAccountMeta[]>) {
         await e.insert(e.Product, {
+            mint_account: create_product.accounts.productMint.address,
             vendor: e.select(e.Vendor, () => ({
                 filter_single: { pubkey: create_product.accounts.vendor.address }
             })),
-            mint_account: create_product.accounts.productMint.address,
+            metadata: e.insert(e.TokenMetadata, {
+                name: create_product.data.name,
+                symbol: create_product.data.symbol,
+                uri: create_product.data.uri,
+                additional: create_product.data.additionalMetadata as [string, string][],
+            })
         }).run(this.db)
     }
 
@@ -161,22 +212,37 @@ export class Indexer {
         await e.insert(e.Device, {
             pubkey: create_device.accounts.device.address,
             token_account: create_device.accounts.productAtoken.address,
+            product: e.select(e.Product, () => ({
+                filter_single: {
+                    mint_account: create_device.accounts.productMint.address,
+                }
+            }))
         }).run(this.db)
     }
 
     async handleActivateDevice(activate_device: ParsedActivateDeviceInstruction<string, readonly IAccountMeta[]>) {
-        await e.insert(e.User, {
-            pubkey: activate_device.accounts.user.address,
+        await e.insert(e.DID, {
+            mint_account: activate_device.accounts.didMint.address,
+            token_account: activate_device.accounts.didAtoken.address,
+            device: e.select(e.Device, () => ({
+                filter_single: {
+                    pubkey: activate_device.accounts.device.address,
+                }
+            })),
+            user: e.insert(e.User, {
+                pubkey: activate_device.accounts.user.address,
+            }),
         }).run(this.db)
+
+        // TODO: fetch DID metadata
     }
 
     async handleCreateDephy(create_dephy: ParsedCreateDephyInstruction<string, readonly IAccountMeta[]>) {
-        // TODO
+        // TODO: ?
     }
 
-    async processDephyIx(ix: Ix) {
-        const data = Uint8Array.from(getBase58Encoder().encode(ix.data))
-        switch (identifyDephyIdInstruction({ data })) {
+    async processDephyIx(ix: IInstruction & IInstructionWithAccounts<IAccountMeta[]> & IInstructionWithData<Uint8Array>) {
+        switch (identifyDephyIdInstruction({ data: ix.data! })) {
             case DephyIdInstruction.CreateDephy:
                 let create_dephy = parseCreateDephyInstruction(ix)
                 await this.handleCreateDephy(create_dephy)
@@ -208,13 +274,17 @@ export class Indexer {
     }
 
     async processTx(tx_filter: { id: string }, signature: string) {
-        let tx = await this.get_tx(signature)
+        let tx = await this.getTx(signature)
 
         tx?.transaction.message.instructions.forEach(async ix => {
             if (tx.meta && !tx.meta.err && 'data' in ix) {
                 switch (ix.programId) {
                     case this.dephy.programAddress:
-                        await this.processDephyIx(ix)
+                        await this.processDephyIx({
+                            accounts: ix.accounts.map(address => ({address, role: 0})),
+                            data: Uint8Array.from(getBase58Encoder().encode(ix.data)),
+                            programAddress: ix.programId,
+                        })
                         break
 
                     default:

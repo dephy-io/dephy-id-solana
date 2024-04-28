@@ -1,3 +1,4 @@
 /node_modules
 /bun.lockb
 /dbschema/edgeql-js
+/src/generated
