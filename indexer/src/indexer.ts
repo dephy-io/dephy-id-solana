@@ -12,10 +12,7 @@ import {
     address,
     assertAccountDecoded,
     createSolanaRpc, createSolanaRpcSubscriptions,
-    getAddressEncoder,
     getBase58Encoder,
-    getProgramDerivedAddress,
-    getUtf8Encoder,
     signature,
 } from "@solana/web3.js"
 import { Client, Executor, createClient } from "edgedb"

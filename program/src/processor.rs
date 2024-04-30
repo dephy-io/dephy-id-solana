@@ -113,8 +113,8 @@ fn create_vendor<'a>(
 
     // Guards
     assert_program_owner("Dephy owner", ctx.accounts.dephy, program_id)?;
-    let seeds: &[&[u8]] = &[b"DePHY", &[args.bump]];
-    assert_pda("DePHY", ctx.accounts.dephy, program_id, seeds)?;
+    let (dephy_pubkey, _bump) = Pubkey::find_program_address(&[b"DePHY"], program_id);
+    assert_same_pubkeys("dephy", ctx.accounts.dephy, &dephy_pubkey)?;
 
     assert_same_pubkeys("authority", ctx.accounts.authority, &dephy_account.authority)?;
     assert_signer("authority", ctx.accounts.authority)?;
