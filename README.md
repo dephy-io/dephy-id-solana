@@ -14,7 +14,7 @@ This template should help get you started developing Solana programs. Let's walk
         edgedb project init --server-instance dephy-indexer --non-interactive
 
         bun install
-        bunx generate:edgeql
+        bun generate:edgeql
 
 ## Local setup
 
