@@ -1180,18 +1180,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "dephy-cli"
-version = "0.1.0"
-dependencies = [
- "clap 4.5.4",
- "dephy-io-dephy-id-client",
- "solana-client",
- "solana-sdk",
- "spl-associated-token-account 3.0.2",
- "spl-token-2022 3.0.2",
-]
-
-[[package]]
 name = "dephy-io-dephy-id"
 version = "0.0.0"
 dependencies = [
