@@ -42,6 +42,7 @@ This template should help get you started developing Solana programs. Let's walk
 6. Run Indexer
 
         cd indexer
+        cp ../../clients/js/src/generated ./src/
         bun dephy-indexer
         edgedb ui  # go to the GraphQL editor
 
