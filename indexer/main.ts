@@ -2,7 +2,6 @@ import { parseArgs } from "util"
 import { Indexer } from "./src/indexer"
 
 try {
-    // TODO: config to not store tx logs
     const { values: config } = parseArgs({
         options: {
             rpc_url: {
@@ -21,7 +20,8 @@ try {
             },
             program_id: {
                 type: 'string',
-                short: 'p'
+                short: 'p',
+                default: 'hdMghjD73uASxgJXi6e1mGPsXqnADMsrqB1bveqABP1'
             }
         }
     })
