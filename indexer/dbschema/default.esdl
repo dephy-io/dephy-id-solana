@@ -7,6 +7,7 @@ module default {
         };
         required slot: bigint;
         err: str;
+        block_ts: datetime;
         required processed: bool {
             default := false;
         };
@@ -19,60 +20,66 @@ module default {
         required additional: array<tuple<str, str>>;
     }
 
-    type Vendor {
+    # TODO: maybe more account metadata
+    abstract type SolanaAccount {
         required pubkey: str {
             constraint exclusive;
         };
-        required mint_account: str  {
-            constraint exclusive;
-        };
-        required token_account: str;
-        metadata: TokenMetadata;
-
-        multi products := .<vendor[is Product];
     }
 
-    type Product {
+    abstract type SplMint {
         required mint_account: str {
             constraint exclusive;
         };
-        required vendor: Vendor;
+
+        mint_authority: str;
+
         metadata: TokenMetadata;
+    }
+
+    abstract type SplAccount {
+        required token_account: str {
+            constraint exclusive;
+        };
+    }
+
+    abstract type WithIx {
+        required tx: Transaction {
+            ix_index: int16;
+        }
+    }
+
+    type Admin extending SolanaAccount {
+    }
+
+    type DePHY extending SolanaAccount, WithIx {
+        required authority: Admin;
+    }
+
+    type Vendor extending SolanaAccount, SplMint, SplAccount, WithIx {
+        multi products := .<vendor[is Product];
+    }
+
+    type Product extending SplMint, WithIx {
+        required vendor: Vendor;
 
         multi devices := .<product[is Device];
     }
 
-    type Device {
-        required pubkey: str {
-            constraint exclusive;
-        };
-
-        required token_account: str;
+    type Device extending SolanaAccount, SplAccount, WithIx {
         required product: Product;
 
         single did := .<device[is DID];
     }
 
-    type User {
-        required pubkey: str {
-            constraint exclusive;
-        };
-
+    type User extending SolanaAccount {
         multi dids := .<user[is DID];
     }
 
-    type DID {
-        required mint_account: str {
-            constraint exclusive;
-        };
-
-        required token_account: str;
+    type DID extending SplMint, SplAccount, WithIx {
         required device: Device {
             constraint exclusive;
         };
         required user: User;
-
-        metadata: TokenMetadata;
     }
 }
-

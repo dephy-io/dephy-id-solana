@@ -18,9 +18,9 @@ This template should help get you started developing Solana programs. Let's walk
 
 ## Local setup
 
-1. Compile and run tests
+1. Compile program
 
-        cargo test-sbf --test functional
+        cargo build-sbf
 
 2. Run validator
 
