@@ -15,7 +15,7 @@ import {
     getBase58Encoder,
     signature,
 } from "@solana/web3.js"
-import { Client, createClient } from "edgedb"
+import { Client, Executor, createClient } from "edgedb"
 import e from "../dbschema/edgeql-js"
 import {
     DephyAccount,
@@ -36,6 +36,10 @@ interface Config {
     database_url?: string
 }
 
+interface IxMeta {
+    tx: string
+    index: number
+}
 
 export class Indexer {
     rpc: Rpc<SolanaRpcApiMainnet>
@@ -83,18 +87,20 @@ export class Indexer {
         assert.equal(false, dephy_account.executable)
 
         this.dephy = dephy_account
+        console.log('Program:   ', dephy_account.programAddress)
+        console.log('Account:   ', dephy_account.address)
+        console.log('Authority: ', dephy_account.data.authority)
     }
 
-    // TODO: fetch missing txs before subscribe
 
     public async run(program_id: string, commitment: Commitment = 'finalized') {
         let program_address = address(program_id)
         await this.ensureDephyAccount(program_address)
 
-        await this.fillMissingTransactions(program_address, commitment)
-
         const notifications = await this.subscribeLogs(program_address, commitment)
         console.log('logs subscribed')
+
+        await this.fillMissingTransactions(program_address, commitment)
 
         for await (const notification of notifications) {
             const { context: { slot }, value: { signature, err } } = notification
@@ -103,6 +109,7 @@ export class Indexer {
         }
     }
 
+    // fetch all missing then process from the beginning
     async fillMissingTransactions(program_address: Address, commitment: Commitment) {
         let done = false
         let tx_signature: Signature | undefined
@@ -113,11 +120,20 @@ export class Indexer {
                 let saved_tx = await this.loadTx(tx.signature)
                 if (!saved_tx) {
                     done = false
-                    let saved_tx = await this.saveTx(tx)
-                    await this.processTx(saved_tx, tx.signature)
+                    await this.saveTx(tx)
                 }
                 tx_signature = tx.signature
             }
+        }
+
+        let unprocessed_txs = await e.select(e.Transaction, tx => ({
+            id: true,
+            signature: true,
+            filter: e.op('not', tx.processed)
+        })).run(this.db)
+
+        for (const tx of unprocessed_txs) {
+            await this.processTx(tx, tx.signature)
         }
 
         console.log('all missing txs filled')
@@ -153,9 +169,16 @@ export class Indexer {
     }
 
     saveTx({ slot, signature, err }: { slot: bigint, signature: string, err: any }) {
-        console.log('Saving tx', signature, slot, err)
+        if (err) {
+            err = JSON.stringify(err, (_k, v) => {
+                if (typeof v === 'bigint') {
+                    return Number(v)
+                }
+                return v
+            })
+        }
 
-        err ??= JSON.stringify(err)
+        console.log('Saving tx', signature, slot, err)
         return e.insert(e.Transaction, {
             slot,
             signature,
@@ -179,23 +202,46 @@ export class Indexer {
         })).run(this.db)
     }
 
-    async handleCreateVendor(create_vendor: ParsedCreateVendorInstruction<string, readonly IAccountMeta[]>) {
-        await e.insert(e.Vendor, {
+    handleCreateDephy(create_dephy: ParsedCreateDephyInstruction<string, readonly IAccountMeta[]>, meta: IxMeta) {
+        return e.insert(e.DePHY, {
+            pubkey: create_dephy.accounts.dephy.address,
+            authority: e.insert(e.Admin, {
+                pubkey: create_dephy.accounts.authority.address
+            }),
+            tx: e.select(e.Transaction, () => ({
+                filter_single: {
+                    signature: meta.tx,
+                },
+                "@ix_index": e.int16(meta.index),
+            })),
+        })
+    }
+
+    handleCreateVendor(create_vendor: ParsedCreateVendorInstruction<string, readonly IAccountMeta[]>, meta: IxMeta) {
+        return e.insert(e.Vendor, {
             pubkey: create_vendor.accounts.vendor.address,
             mint_account: create_vendor.accounts.vendorMint.address,
+            mint_authority: null,
             token_account: create_vendor.accounts.vendorAtoken.address,
             metadata: e.insert(e.TokenMetadata, {
                 name: create_vendor.data.name,
                 symbol: create_vendor.data.symbol,
                 uri: create_vendor.data.uri,
                 additional: create_vendor.data.additionalMetadata as [string, string][],
-            })
-        }).run(this.db)
+            }),
+            tx: e.select(e.Transaction, () => ({
+                filter_single: {
+                    signature: meta.tx,
+                },
+                "@ix_index": e.int16(meta.index),
+            })),
+        })
     }
 
-    async handleCreateProduct(create_product: ParsedCreateProductInstruction<string, readonly IAccountMeta[]>) {
-        await e.insert(e.Product, {
+    handleCreateProduct(create_product: ParsedCreateProductInstruction<string, readonly IAccountMeta[]>, meta: IxMeta) {
+        return e.insert(e.Product, {
             mint_account: create_product.accounts.productMint.address,
+            mint_authority: create_product.accounts.vendor.address,
             vendor: e.select(e.Vendor, () => ({
                 filter_single: { pubkey: create_product.accounts.vendor.address }
             })),
@@ -204,25 +250,38 @@ export class Indexer {
                 symbol: create_product.data.symbol,
                 uri: create_product.data.uri,
                 additional: create_product.data.additionalMetadata as [string, string][],
-            })
-        }).run(this.db)
+            }),
+            tx: e.select(e.Transaction, () => ({
+                filter_single: {
+                    signature: meta.tx,
+                },
+                "@ix_index": e.int16(meta.index),
+            })),
+        })
     }
 
-    async handleCreateDevice(create_device: ParsedCreateDeviceInstruction<string, readonly IAccountMeta[]>) {
-        await e.insert(e.Device, {
+    handleCreateDevice(create_device: ParsedCreateDeviceInstruction<string, readonly IAccountMeta[]>, meta: IxMeta) {
+        return e.insert(e.Device, {
             pubkey: create_device.accounts.device.address,
             token_account: create_device.accounts.productAtoken.address,
             product: e.select(e.Product, () => ({
                 filter_single: {
                     mint_account: create_device.accounts.productMint.address,
                 }
-            }))
-        }).run(this.db)
+            })),
+            tx: e.select(e.Transaction, () => ({
+                filter_single: {
+                    signature: meta.tx,
+                },
+                "@ix_index": e.int16(meta.index),
+            })),
+        })
     }
 
-    async handleActivateDevice(activate_device: ParsedActivateDeviceInstruction<string, readonly IAccountMeta[]>) {
-        await e.insert(e.DID, {
+    handleActivateDevice(activate_device: ParsedActivateDeviceInstruction<string, readonly IAccountMeta[]>, meta: IxMeta) {
+        return e.insert(e.DID, {
             mint_account: activate_device.accounts.didMint.address,
+            mint_authority: null,
             token_account: activate_device.accounts.didAtoken.address,
             device: e.select(e.Device, () => ({
                 filter_single: {
@@ -232,40 +291,42 @@ export class Indexer {
             user: e.insert(e.User, {
                 pubkey: activate_device.accounts.user.address,
             }),
-        }).run(this.db)
+            tx: e.select(e.Transaction, () => ({
+                filter_single: {
+                    signature: meta.tx,
+                },
+                "@ix_index": e.int16(meta.index),
+            })),
+        })
 
         // TODO: fetch DID metadata
     }
 
-    async handleCreateDephy(create_dephy: ParsedCreateDephyInstruction<string, readonly IAccountMeta[]>) {
-        // TODO: ?
-    }
-
-    async processDephyIx(ix: IInstruction & IInstructionWithAccounts<IAccountMeta[]> & IInstructionWithData<Uint8Array>) {
+    async processDephyIx(db_tx: Executor, ix: IInstruction & IInstructionWithAccounts<IAccountMeta[]> & IInstructionWithData<Uint8Array>, meta: IxMeta) {
         switch (identifyDephyIdInstruction({ data: ix.data! })) {
             case DephyIdInstruction.CreateDephy:
                 let create_dephy = parseCreateDephyInstruction(ix)
-                await this.handleCreateDephy(create_dephy)
+                await this.handleCreateDephy(create_dephy, meta).run(db_tx)
                 break
 
             case DephyIdInstruction.CreateVendor:
                 let create_vendor = parseCreateVendorInstruction(ix)
-                await this.handleCreateVendor(create_vendor)
+                await this.handleCreateVendor(create_vendor, meta).run(db_tx)
                 break
 
             case DephyIdInstruction.CreateProduct:
                 let create_product = parseCreateProductInstruction(ix)
-                await this.handleCreateProduct(create_product)
+                await this.handleCreateProduct(create_product, meta).run(db_tx)
                 break
 
             case DephyIdInstruction.CreateDevice:
                 let create_device = parseCreateDeviceInstruction(ix)
-                await this.handleCreateDevice(create_device)
+                await this.handleCreateDevice(create_device, meta).run(db_tx)
                 break
 
             case DephyIdInstruction.ActivateDevice:
                 let activate_device = parseActivateDeviceInstruction(ix)
-                await this.handleActivateDevice(activate_device)
+                await this.handleActivateDevice(activate_device, meta).run(db_tx)
                 break
 
             default:
@@ -276,31 +337,52 @@ export class Indexer {
     async processTx(tx_filter: { id: string }, signature: string) {
         let tx = await this.getTx(signature)
 
-        tx?.transaction.message.instructions.forEach(async ix => {
-            if (tx.meta && !tx.meta.err && 'data' in ix) {
-                switch (ix.programId) {
-                    case this.dephy.programAddress:
-                        await this.processDephyIx({
-                            accounts: ix.accounts.map(address => ({address, role: 0})),
-                            data: Uint8Array.from(getBase58Encoder().encode(ix.data)),
-                            programAddress: ix.programId,
-                        })
-                        break
+        if (!tx) {
+            console.error("Can't fetch", signature)
+            return
+        } else {
+            console.log('Processing', signature, tx.blockTime)
+        }
 
-                    default:
-                        break
+        await this.db.transaction(async db_tx => {
+            let i = 0
+            for (const ix of tx.transaction.message.instructions) {
+                if (tx.meta && !tx.meta.err && 'data' in ix) {
+                    switch (ix.programId) {
+                        case this.dephy.programAddress:
+                            await this.processDephyIx(db_tx, {
+                                accounts: ix.accounts.map(address => ({address, role: 0})),
+                                data: Uint8Array.from(getBase58Encoder().encode(ix.data)),
+                                programAddress: ix.programId,
+                            }, {tx: signature, index: i})
+                            break
+
+                        default:
+                            break
+                    }
                 }
+                i += 1
             }
+
+            // TODO: handle inner ix
+
+            let block_ts;
+            if (tx.blockTime) {
+                block_ts = e.datetime(new Date(Number(tx.blockTime) * 1000))
+            } else {
+                block_ts = null
+            }
+
+            await e.update(e.Transaction, () => ({
+                filter_single: tx_filter,
+                set: {
+                    block_ts,
+                    processed: true,
+                }
+            })).run(db_tx)
         })
 
-        // TODO: handle inner ix
-
-        await e.update(e.Transaction, (t) => ({
-            filter_single: tx_filter,
-            set: {
-                processed: true
-            }
-        })).run(this.db)
+        console.log('Transaction', signature, 'processed')
     }
 
 }

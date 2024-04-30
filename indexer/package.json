@@ -1,5 +1,8 @@
 {
-  "scripts": {},
+  "scripts": {
+    "generate:edgeql": "generate edgeql-js --target ts",
+    "dephy-indexer": "bun run --preload ./env.ts ./main.ts"
+  },
   "dependencies": {
     "@solana/web3.js": "^2.0.0-preview.3",
     "@solana/rpc-graphql": "^2.0.0-preview.3",

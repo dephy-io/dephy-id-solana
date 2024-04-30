@@ -6,21 +6,18 @@
     "programs:clean": "zx ./scripts/program/clean.mjs",
     "programs:format": "zx ./scripts/program/format.mjs",
     "programs:lint": "zx ./scripts/program/lint.mjs",
-    "generate:idls": "zx ./scripts/generate-idls.mjs",
-    "generate": "pnpm generate:idls && pnpm generate:clients",
-    "generate:clients": "zx ./scripts/generate-clients.mjs",
-    "validator:start": "zx ./scripts/start-validator.mjs",
-    "validator:restart": "pnpm validator:start --restart",
-    "validator:stop": "zx ./scripts/stop-validator.mjs",
-    "clients:js:test": "zx ./scripts/client/test-js.mjs",
-    "clients:rust:test": "zx ./scripts/client/test-rust.mjs"
+    "generate:idls": "shank idl -r program -o program --out-filename idl.json",
+    "generate:clients": "zx ./scripts/generate-clients.mjs"
   },
   "devDependencies": {
     "@iarna/toml": "^2.2.5",
-    "@metaplex-foundation/kinobi": "^0.19.1",
-    "@metaplex-foundation/shank-js": "^0.1.7",
-    "typescript": "^5.4.2",
+    "@metaplex-foundation/kinobi": "^0.19.2",
     "zx": "^7.2.3"
   },
-  "packageManager": "pnpm@9.0.4"
+  "packageManager": "pnpm@9.0.6",
+  "pnpm": {
+    "patchedDependencies": {
+      "@metaplex-foundation/kinobi@0.19.2": "patches/@metaplex-foundation__kinobi@0.19.2.patch"
+    }
+  }
 }

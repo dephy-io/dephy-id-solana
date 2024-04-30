@@ -32,7 +32,7 @@ pub fn assert_pda(
     seeds: &[&[u8]],
 ) -> ProgramResult {
     let key = Pubkey::create_program_address(seeds, program_id)?;
-    
+
     if *account.key != key {
         msg!(
             "Account \"{}\" [{}] is an invalid PDA. Expected the following valid PDA [{}]",

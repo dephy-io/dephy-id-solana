@@ -63,9 +63,11 @@ fn create_dephy<'a>(
     // Accounts
     let ctx = CreateDephyAccounts::context(accounts)?;
 
-    let seeds: &[&[u8]] = &[b"DePHY", &[args.bump]];
-
     // Guards
+    let (dephy_pubkey, _bump) = Pubkey::find_program_address(&[b"DePHY"], program_id);
+    assert_same_pubkeys("dephy", ctx.accounts.dephy, &dephy_pubkey)?;
+
+    let seeds: &[&[u8]] = &[b"DePHY", &[args.bump]];
     assert_pda("DePHY", ctx.accounts.dephy, program_id, seeds)?;
     assert_signer("authority", ctx.accounts.authority)?;
     assert_same_pubkeys(
@@ -111,6 +113,8 @@ fn create_vendor<'a>(
 
     // Guards
     assert_program_owner("Dephy owner", ctx.accounts.dephy, program_id)?;
+    let (dephy_pubkey, _bump) = Pubkey::find_program_address(&[b"DePHY"], program_id);
+    assert_same_pubkeys("dephy", ctx.accounts.dephy, &dephy_pubkey)?;
 
     assert_same_pubkeys("authority", ctx.accounts.authority, &dephy_account.authority)?;
     assert_signer("authority", ctx.accounts.authority)?;
@@ -119,6 +123,12 @@ fn create_vendor<'a>(
         "system_program",
         ctx.accounts.system_program,
         &system_program::id(),
+    )?;
+
+    assert_same_pubkeys(
+        "token_program_2022",
+        ctx.accounts.token_program_2022,
+        &token_program_id,
     )?;
 
     let mint_seeds: &[&[u8]] = &[b"DePHY VENDOR", vendor_pubkey.as_ref(), &[args.bump]];

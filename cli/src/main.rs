@@ -65,8 +65,6 @@ struct CreateVendorCliArgs {
 struct CreateProductCliArgs {
     #[arg(long = "vendor")]
     vendor_keypair: String,
-    #[arg(long)]
-    seed: String,
     name: String,
     symbol: String,
     uri: String,
@@ -261,7 +259,7 @@ fn create_product(args: CreateProductCliArgs) {
     let vendor = read_key(&args.vendor_keypair);
     let payer = read_key_or(args.common.payer, &args.vendor_keypair);
 
-    let seed = hash::hash(args.seed.as_ref());
+    let seed = hash::hash(args.name.as_ref());
     let (product_mint_pubkey, bump) = Pubkey::find_program_address(
         &[b"DePHY PRODUCT", vendor.pubkey().as_ref(), seed.as_ref()],
         &program_id,
