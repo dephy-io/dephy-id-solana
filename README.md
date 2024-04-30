@@ -6,6 +6,7 @@ This template should help get you started developing Solana programs. Let's walk
 
 1. [Install edgedb](https://docs.edgedb.com/get-started/quickstart#installation)
 
+        brew tap edgedb/tap
         brew install edgedb-cli
 
 2. setup local edgedb
@@ -20,7 +21,7 @@ This template should help get you started developing Solana programs. Let's walk
 
 1. Compile program
 
-        cargo build-sbf
+        cargo-build-sbf --tools-version v1.41
 
 2. Run validator
 

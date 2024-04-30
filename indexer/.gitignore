@@ -2,3 +2,5 @@
 /bun.lockb
 /dbschema/edgeql-js
 /src/generated
+
+dbschema/edgeql-js
