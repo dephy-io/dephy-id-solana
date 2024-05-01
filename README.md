@@ -42,7 +42,7 @@ This template should help get you started developing Solana programs. Let's walk
 6. Run Indexer
 
         cd indexer
-        cp ../../clients/js/src/generated ./src/
+        cp -r ../clients/js/src/generated ./src
         bun dephy-indexer
         edgedb ui  # go to the GraphQL editor
 
@@ -58,12 +58,13 @@ This template should help get you started developing Solana programs. Let's walk
 
 3. Create Device
 
-        # the PRODUCT_PUBKEY is from prev command output
+        # the PRODUCT_PUBKEY is from "Create Product" step's command output
         cargo run create-device --vendor keys/VENDOR1.json --device keys/DEVICE1.json --product <PRODUCT_PUBKEY>
 
 4. Activate Device
 
-        cargo run activate-device --device keys/DEVICE1.json --user keys/USER1.json --product <PRODUCT_PUBKEY>
+        # the VENDOR_PUBKEY is from "Create Vendor" step's command output
+        cargo run activate-device --device keys/DEVICE1.json --user keys/USER1.json --vendor <VENDOR_PUBKEY> --product <PRODUCT_PUBKEY>
 
 
 ## Managing programs
