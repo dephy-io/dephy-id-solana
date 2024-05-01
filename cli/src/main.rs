@@ -1,13 +1,16 @@
 use std::{error::Error, time::Duration};
 
 use clap::{Args, Parser, Subcommand};
-use dephy_io_dephy_id_client::instructions::{
-    ActivateDeviceBuilder, CreateDephyBuilder, CreateDeviceBuilder, CreateProductBuilder,
-    CreateVendorBuilder,
+use dephy_io_dephy_id_client::{
+    instructions::{
+        ActivateDeviceBuilder, CreateDephyBuilder, CreateDeviceBuilder, CreateProductBuilder,
+        CreateVendorBuilder,
+    },
+    types::DeviceSignature,
 };
 use solana_client::rpc_client::RpcClient;
 use solana_sdk::{
-    commitment_config::CommitmentConfig,
+    commitment_config::{CommitmentConfig, CommitmentLevel},
     ed25519_instruction::new_ed25519_instruction,
     hash,
     pubkey::Pubkey,
@@ -380,7 +383,11 @@ fn activate_device(args: ActivateDeviceCliArgs) {
         );
 
     let latest_block = client.get_latest_blockhash().unwrap();
-    let slot: u64 = client.get_slot().unwrap();
+    let slot: u64 = client
+        .get_slot_with_commitment(CommitmentConfig {
+            commitment: CommitmentLevel::Finalized,
+        })
+        .unwrap();
     let device_ed25519_keypair = ed25519_dalek::Keypair::from_bytes(&device.to_bytes()).unwrap();
     let message = [
         product_atoken_pubkey.as_ref(),
@@ -403,6 +410,7 @@ fn activate_device(args: ActivateDeviceCliArgs) {
                 .did_mint(did_mint_pubkey)
                 .did_atoken(did_atoken_pubkey)
                 .bump(bump)
+                .device_signature(DeviceSignature::Ed25519)
                 .instruction(),
         ],
         Some(&payer.pubkey()),

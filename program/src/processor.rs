@@ -563,7 +563,7 @@ fn activate_device<'a>(
             assert_eq!(message[32..64], user_pubkey.to_bytes());
             let clock = Clock::get()?;
             let slot = u64::from_le_bytes(message[64..72].try_into().unwrap());
-            assert!(clock.slot > slot);
+            assert!(clock.slot >= slot);
             assert!(clock.slot < slot + 500);
         }
         DeviceSignature::Secp256k1 => {

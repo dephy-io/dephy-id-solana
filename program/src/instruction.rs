@@ -27,6 +27,7 @@ pub enum DephyInstruction {
 
     /// Vendor register a Product
     // TODO: verify Vendor
+    // TODO: alt authority
     #[account(0, name="system_program", desc = "The system program")]
     #[account(1, name="token_program_2022", desc = "The SPL Token 2022 program")]
     #[account(2, writable, signer, name="payer", desc = "The account paying for the storage fees")]
