@@ -12,4 +12,5 @@ solana-client = { workspace = true }
 spl-token-2022 = { workspace = true }
 spl-associated-token-account = { workspace = true }
 clap = { workspace = true }
+ed25519-dalek = { workspace = true }
 

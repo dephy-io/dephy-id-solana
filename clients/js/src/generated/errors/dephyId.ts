@@ -28,6 +28,8 @@ export const DEPHY_ID_ERROR__ACCOUNT_MISMATCH = 0x8; // 8
 export const DEPHY_ID_ERROR__INVALID_ACCOUNT_KEY = 0x9; // 9
 /** NumericalOverflow: Numerical overflow */
 export const DEPHY_ID_ERROR__NUMERICAL_OVERFLOW = 0xa; // 10
+/** MissingInstruction: Missing instruction */
+export const DEPHY_ID_ERROR__MISSING_INSTRUCTION = 0xb; // 11
 
 export type DephyIdError =
   | typeof DEPHY_ID_ERROR__ACCOUNT_MISMATCH
@@ -39,6 +41,7 @@ export type DephyIdError =
   | typeof DEPHY_ID_ERROR__INVALID_ACCOUNT_KEY
   | typeof DEPHY_ID_ERROR__INVALID_PDA
   | typeof DEPHY_ID_ERROR__INVALID_PROGRAM_OWNER
+  | typeof DEPHY_ID_ERROR__MISSING_INSTRUCTION
   | typeof DEPHY_ID_ERROR__NUMERICAL_OVERFLOW
   | typeof DEPHY_ID_ERROR__SERIALIZATION_ERROR;
 
@@ -54,6 +57,7 @@ if (__DEV__) {
     [DEPHY_ID_ERROR__INVALID_ACCOUNT_KEY]: `Invalid account key`,
     [DEPHY_ID_ERROR__INVALID_PDA]: `Invalid PDA derivation`,
     [DEPHY_ID_ERROR__INVALID_PROGRAM_OWNER]: `Invalid program owner. This likely mean the provided account does not exist`,
+    [DEPHY_ID_ERROR__MISSING_INSTRUCTION]: `Missing instruction`,
     [DEPHY_ID_ERROR__NUMERICAL_OVERFLOW]: `Numerical overflow`,
     [DEPHY_ID_ERROR__SERIALIZATION_ERROR]: `Error serializing an account`,
   };

@@ -7,7 +7,14 @@ use dephy_io_dephy_id_client::instructions::{
 };
 use solana_client::rpc_client::RpcClient;
 use solana_sdk::{
-    commitment_config::CommitmentConfig, hash, pubkey::Pubkey, signature::Keypair, signer::{EncodableKey, Signer}, transaction::Transaction
+    commitment_config::CommitmentConfig,
+    ed25519_instruction::new_ed25519_instruction,
+    hash,
+    pubkey::Pubkey,
+    signature::Keypair,
+    signer::{EncodableKey, Signer},
+    sysvar::instructions,
+    transaction::Transaction,
 };
 
 #[derive(Debug, Parser)]
@@ -35,7 +42,7 @@ struct CommonArgs {
     #[arg(long)]
     payer: Option<String>,
     #[arg(long = "dephy")]
-    dephy_pubkey: Option<Pubkey>
+    dephy_pubkey: Option<Pubkey>,
 }
 
 #[derive(Debug, Args)]
@@ -343,6 +350,7 @@ fn activate_device(args: ActivateDeviceCliArgs) {
         .program_id
         .unwrap_or(dephy_io_dephy_id_client::ID);
     let token_program_id = spl_token_2022::ID;
+    let instructions_id = instructions::ID;
 
     let device = read_key(&args.device_keypair);
     let user = read_key(&args.user_keypair);
@@ -372,19 +380,31 @@ fn activate_device(args: ActivateDeviceCliArgs) {
         );
 
     let latest_block = client.get_latest_blockhash().unwrap();
+    let slot: u64 = client.get_slot().unwrap();
+    let device_ed25519_keypair = ed25519_dalek::Keypair::from_bytes(&device.to_bytes()).unwrap();
+    let message = [
+        product_atoken_pubkey.as_ref(),
+        user.pubkey().as_ref(),
+        &slot.to_le_bytes(),
+    ]
+    .concat();
     let transaction = Transaction::new_signed_with_payer(
-        &[ActivateDeviceBuilder::new()
-            .token_program2022(token_program_id)
-            .payer(payer.pubkey())
-            .device(device.pubkey())
-            .vendor(args.vendor_pubkey)
-            .product_mint(args.product_pubkey)
-            .product_atoken(product_atoken_pubkey)
-            .user(user.pubkey())
-            .did_mint(did_mint_pubkey)
-            .did_atoken(did_atoken_pubkey)
-            .bump(bump)
-            .instruction()],
+        &[
+            new_ed25519_instruction(&device_ed25519_keypair, &message),
+            ActivateDeviceBuilder::new()
+                .token_program2022(token_program_id)
+                .instructions(instructions_id)
+                .payer(payer.pubkey())
+                .device(device.pubkey())
+                .vendor(args.vendor_pubkey)
+                .product_mint(args.product_pubkey)
+                .product_atoken(product_atoken_pubkey)
+                .user(user.pubkey())
+                .did_mint(did_mint_pubkey)
+                .did_atoken(did_atoken_pubkey)
+                .bump(bump)
+                .instruction(),
+        ],
         Some(&payer.pubkey()),
         &[&user, &device, &payer],
         latest_block,
@@ -393,11 +413,15 @@ fn activate_device(args: ActivateDeviceCliArgs) {
     match client.send_and_confirm_transaction(&transaction) {
         Ok(sig) => {
             println!("Success: {:?}", sig);
-            println!("User {} activated Device {}, Token: {}", user.pubkey(), device.pubkey(), did_mint_pubkey);
+            println!(
+                "User {} activated Device {}, Token: {}",
+                user.pubkey(),
+                device.pubkey(),
+                did_mint_pubkey
+            );
         }
         Err(err) => {
             eprintln!("Error: {:?}", err);
         }
     };
 }
-

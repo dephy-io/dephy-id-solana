@@ -43,6 +43,9 @@ pub enum DephyIdError {
     /// 10 (0xA) - Numerical overflow
     #[error("Numerical overflow")]
     NumericalOverflow,
+    /// 11 (0xB) - Missing instruction
+    #[error("Missing instruction")]
+    MissingInstruction,
 }
 
 impl solana_program::program_error::PrintProgramError for DephyIdError {

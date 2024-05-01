@@ -41,6 +41,9 @@ pub enum DephyError {
     /// 10 - Numerical overflow
     #[error("Numerical overflow")]
     NumericalOverflow,
+    /// 11 - Missing instruction
+    #[error("Missing instruction")]
+    MissingInstruction,
 }
 
 impl PrintProgramError for DephyError {

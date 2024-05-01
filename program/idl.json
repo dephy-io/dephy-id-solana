@@ -299,6 +299,14 @@
           ]
         },
         {
+          "name": "instructions",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The Instructions sysvar"
+          ]
+        },
+        {
           "name": "payer",
           "isMut": true,
           "isSigner": true,
@@ -496,18 +504,6 @@
       }
     },
     {
-      "name": "CreateDeviceArgs",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "bump",
-            "type": "u8"
-          }
-        ]
-      }
-    },
-    {
       "name": "ActivateDeviceArgs",
       "type": {
         "kind": "struct",
@@ -515,6 +511,12 @@
           {
             "name": "bump",
             "type": "u8"
+          },
+          {
+            "name": "deviceSignature",
+            "type": {
+              "defined": "DeviceSignature"
+            }
           }
         ]
       }
@@ -527,6 +529,20 @@
           {
             "name": "bump",
             "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "DeviceSignature",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Ed25519"
+          },
+          {
+            "name": "Secp256k1"
           }
         ]
       }
@@ -601,6 +617,11 @@
       "code": 10,
       "name": "NumericalOverflow",
       "msg": "Numerical overflow"
+    },
+    {
+      "code": 11,
+      "name": "MissingInstruction",
+      "msg": "Missing instruction"
     }
   ],
   "metadata": {

@@ -30,6 +30,12 @@ import {
 } from '@solana/web3.js';
 import { DEPHY_ID_PROGRAM_ADDRESS } from '../programs';
 import { ResolvedAccount, getAccountMetaFactory } from '../shared';
+import {
+  DeviceSignature,
+  DeviceSignatureArgs,
+  getDeviceSignatureDecoder,
+  getDeviceSignatureEncoder,
+} from '../types';
 
 export type ActivateDeviceInstruction<
   TProgram extends string = typeof DEPHY_ID_PROGRAM_ADDRESS,
@@ -40,6 +46,7 @@ export type ActivateDeviceInstruction<
   TAccountAtaProgram extends
     | string
     | IAccountMeta<string> = 'ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL',
+  TAccountInstructions extends string | IAccountMeta<string> = string,
   TAccountPayer extends string | IAccountMeta<string> = string,
   TAccountDevice extends string | IAccountMeta<string> = string,
   TAccountVendor extends string | IAccountMeta<string> = string,
@@ -62,6 +69,9 @@ export type ActivateDeviceInstruction<
       TAccountAtaProgram extends string
         ? ReadonlyAccount<TAccountAtaProgram>
         : TAccountAtaProgram,
+      TAccountInstructions extends string
+        ? ReadonlyAccount<TAccountInstructions>
+        : TAccountInstructions,
       TAccountPayer extends string
         ? WritableSignerAccount<TAccountPayer> &
             IAccountSignerMeta<TAccountPayer>
@@ -95,15 +105,20 @@ export type ActivateDeviceInstruction<
 export type ActivateDeviceInstructionData = {
   discriminator: number;
   bump: number;
+  deviceSignature: DeviceSignature;
 };
 
-export type ActivateDeviceInstructionDataArgs = { bump: number };
+export type ActivateDeviceInstructionDataArgs = {
+  bump: number;
+  deviceSignature: DeviceSignatureArgs;
+};
 
 export function getActivateDeviceInstructionDataEncoder(): Encoder<ActivateDeviceInstructionDataArgs> {
   return transformEncoder(
     getStructEncoder([
       ['discriminator', getU8Encoder()],
       ['bump', getU8Encoder()],
+      ['deviceSignature', getDeviceSignatureEncoder()],
     ]),
     (value) => ({ ...value, discriminator: 4 })
   );
@@ -113,6 +128,7 @@ export function getActivateDeviceInstructionDataDecoder(): Decoder<ActivateDevic
   return getStructDecoder([
     ['discriminator', getU8Decoder()],
     ['bump', getU8Decoder()],
+    ['deviceSignature', getDeviceSignatureDecoder()],
   ]);
 }
 
@@ -130,6 +146,7 @@ export type ActivateDeviceInput<
   TAccountSystemProgram extends string = string,
   TAccountTokenProgram2022 extends string = string,
   TAccountAtaProgram extends string = string,
+  TAccountInstructions extends string = string,
   TAccountPayer extends string = string,
   TAccountDevice extends string = string,
   TAccountVendor extends string = string,
@@ -145,6 +162,8 @@ export type ActivateDeviceInput<
   tokenProgram2022: Address<TAccountTokenProgram2022>;
   /** The associated token program */
   ataProgram?: Address<TAccountAtaProgram>;
+  /** The Instructions sysvar */
+  instructions: Address<TAccountInstructions>;
   /** The account paying for the storage fees */
   payer: TransactionSigner<TAccountPayer>;
   /** The Device pubkey */
@@ -162,12 +181,14 @@ export type ActivateDeviceInput<
   /** The NFT atoken account */
   didAtoken: Address<TAccountDidAtoken>;
   bump: ActivateDeviceInstructionDataArgs['bump'];
+  deviceSignature: ActivateDeviceInstructionDataArgs['deviceSignature'];
 };
 
 export function getActivateDeviceInstruction<
   TAccountSystemProgram extends string,
   TAccountTokenProgram2022 extends string,
   TAccountAtaProgram extends string,
+  TAccountInstructions extends string,
   TAccountPayer extends string,
   TAccountDevice extends string,
   TAccountVendor extends string,
@@ -181,6 +202,7 @@ export function getActivateDeviceInstruction<
     TAccountSystemProgram,
     TAccountTokenProgram2022,
     TAccountAtaProgram,
+    TAccountInstructions,
     TAccountPayer,
     TAccountDevice,
     TAccountVendor,
@@ -195,6 +217,7 @@ export function getActivateDeviceInstruction<
   TAccountSystemProgram,
   TAccountTokenProgram2022,
   TAccountAtaProgram,
+  TAccountInstructions,
   TAccountPayer,
   TAccountDevice,
   TAccountVendor,
@@ -215,6 +238,7 @@ export function getActivateDeviceInstruction<
       isWritable: false,
     },
     ataProgram: { value: input.ataProgram ?? null, isWritable: false },
+    instructions: { value: input.instructions ?? null, isWritable: false },
     payer: { value: input.payer ?? null, isWritable: true },
     device: { value: input.device ?? null, isWritable: false },
     vendor: { value: input.vendor ?? null, isWritable: false },
@@ -248,6 +272,7 @@ export function getActivateDeviceInstruction<
       getAccountMeta(accounts.systemProgram),
       getAccountMeta(accounts.tokenProgram2022),
       getAccountMeta(accounts.ataProgram),
+      getAccountMeta(accounts.instructions),
       getAccountMeta(accounts.payer),
       getAccountMeta(accounts.device),
       getAccountMeta(accounts.vendor),
@@ -266,6 +291,7 @@ export function getActivateDeviceInstruction<
     TAccountSystemProgram,
     TAccountTokenProgram2022,
     TAccountAtaProgram,
+    TAccountInstructions,
     TAccountPayer,
     TAccountDevice,
     TAccountVendor,
@@ -291,22 +317,24 @@ export type ParsedActivateDeviceInstruction<
     tokenProgram2022: TAccountMetas[1];
     /** The associated token program */
     ataProgram: TAccountMetas[2];
+    /** The Instructions sysvar */
+    instructions: TAccountMetas[3];
     /** The account paying for the storage fees */
-    payer: TAccountMetas[3];
+    payer: TAccountMetas[4];
     /** The Device pubkey */
-    device: TAccountMetas[4];
+    device: TAccountMetas[5];
     /** Vendor of the Device */
-    vendor: TAccountMetas[5];
+    vendor: TAccountMetas[6];
     /** Product of the Device */
-    productMint: TAccountMetas[6];
+    productMint: TAccountMetas[7];
     /** The Product atoken for Device */
-    productAtoken: TAccountMetas[7];
+    productAtoken: TAccountMetas[8];
     /** The Device Owner pubkey */
-    user: TAccountMetas[8];
+    user: TAccountMetas[9];
     /** The NFT mint account */
-    didMint: TAccountMetas[9];
+    didMint: TAccountMetas[10];
     /** The NFT atoken account */
-    didAtoken: TAccountMetas[10];
+    didAtoken: TAccountMetas[11];
   };
   data: ActivateDeviceInstructionData;
 };
@@ -319,7 +347,7 @@ export function parseActivateDeviceInstruction<
     IInstructionWithAccounts<TAccountMetas> &
     IInstructionWithData<Uint8Array>
 ): ParsedActivateDeviceInstruction<TProgram, TAccountMetas> {
-  if (instruction.accounts.length < 11) {
+  if (instruction.accounts.length < 12) {
     // TODO: Coded error.
     throw new Error('Not enough accounts');
   }
@@ -335,6 +363,7 @@ export function parseActivateDeviceInstruction<
       systemProgram: getNextAccount(),
       tokenProgram2022: getNextAccount(),
       ataProgram: getNextAccount(),
+      instructions: getNextAccount(),
       payer: getNextAccount(),
       device: getNextAccount(),
       vendor: getNextAccount(),
