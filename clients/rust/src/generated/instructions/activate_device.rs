@@ -5,6 +5,7 @@
 //! [https://github.com/metaplex-foundation/kinobi]
 //!
 
+use crate::generated::types::DeviceSignature;
 use borsh::BorshDeserialize;
 use borsh::BorshSerialize;
 
@@ -16,6 +17,8 @@ pub struct ActivateDevice {
     pub token_program2022: solana_program::pubkey::Pubkey,
     /// The associated token program
     pub ata_program: solana_program::pubkey::Pubkey,
+    /// The Instructions sysvar
+    pub instructions: solana_program::pubkey::Pubkey,
     /// The account paying for the storage fees
     pub payer: solana_program::pubkey::Pubkey,
     /// The Device pubkey
@@ -47,7 +50,7 @@ impl ActivateDevice {
         args: ActivateDeviceInstructionArgs,
         remaining_accounts: &[solana_program::instruction::AccountMeta],
     ) -> solana_program::instruction::Instruction {
-        let mut accounts = Vec::with_capacity(11 + remaining_accounts.len());
+        let mut accounts = Vec::with_capacity(12 + remaining_accounts.len());
         accounts.push(solana_program::instruction::AccountMeta::new_readonly(
             self.system_program,
             false,
@@ -58,6 +61,10 @@ impl ActivateDevice {
         ));
         accounts.push(solana_program::instruction::AccountMeta::new_readonly(
             self.ata_program,
+            false,
+        ));
+        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+            self.instructions,
             false,
         ));
         accounts.push(solana_program::instruction::AccountMeta::new(
@@ -118,6 +125,7 @@ impl ActivateDeviceInstructionData {
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct ActivateDeviceInstructionArgs {
     pub bump: u8,
+    pub device_signature: DeviceSignature,
 }
 
 /// Instruction builder for `ActivateDevice`.
@@ -127,19 +135,21 @@ pub struct ActivateDeviceInstructionArgs {
 ///   0. `[optional]` system_program (default to `11111111111111111111111111111111`)
 ///   1. `[]` token_program2022
 ///   2. `[optional]` ata_program (default to `ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL`)
-///   3. `[writable, signer]` payer
-///   4. `[signer]` device
-///   5. `[]` vendor
-///   6. `[]` product_mint
-///   7. `[]` product_atoken
-///   8. `[]` user
-///   9. `[writable]` did_mint
-///   10. `[writable]` did_atoken
+///   3. `[]` instructions
+///   4. `[writable, signer]` payer
+///   5. `[signer]` device
+///   6. `[]` vendor
+///   7. `[]` product_mint
+///   8. `[]` product_atoken
+///   9. `[]` user
+///   10. `[writable]` did_mint
+///   11. `[writable]` did_atoken
 #[derive(Clone, Debug, Default)]
 pub struct ActivateDeviceBuilder {
     system_program: Option<solana_program::pubkey::Pubkey>,
     token_program2022: Option<solana_program::pubkey::Pubkey>,
     ata_program: Option<solana_program::pubkey::Pubkey>,
+    instructions: Option<solana_program::pubkey::Pubkey>,
     payer: Option<solana_program::pubkey::Pubkey>,
     device: Option<solana_program::pubkey::Pubkey>,
     vendor: Option<solana_program::pubkey::Pubkey>,
@@ -149,6 +159,7 @@ pub struct ActivateDeviceBuilder {
     did_mint: Option<solana_program::pubkey::Pubkey>,
     did_atoken: Option<solana_program::pubkey::Pubkey>,
     bump: Option<u8>,
+    device_signature: Option<DeviceSignature>,
     __remaining_accounts: Vec<solana_program::instruction::AccountMeta>,
 }
 
@@ -177,6 +188,12 @@ impl ActivateDeviceBuilder {
     #[inline(always)]
     pub fn ata_program(&mut self, ata_program: solana_program::pubkey::Pubkey) -> &mut Self {
         self.ata_program = Some(ata_program);
+        self
+    }
+    /// The Instructions sysvar
+    #[inline(always)]
+    pub fn instructions(&mut self, instructions: solana_program::pubkey::Pubkey) -> &mut Self {
+        self.instructions = Some(instructions);
         self
     }
     /// The account paying for the storage fees
@@ -232,6 +249,11 @@ impl ActivateDeviceBuilder {
         self.bump = Some(bump);
         self
     }
+    #[inline(always)]
+    pub fn device_signature(&mut self, device_signature: DeviceSignature) -> &mut Self {
+        self.device_signature = Some(device_signature);
+        self
+    }
     /// Add an aditional account to the instruction.
     #[inline(always)]
     pub fn add_remaining_account(
@@ -262,6 +284,7 @@ impl ActivateDeviceBuilder {
             ata_program: self.ata_program.unwrap_or(solana_program::pubkey!(
                 "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
             )),
+            instructions: self.instructions.expect("instructions is not set"),
             payer: self.payer.expect("payer is not set"),
             device: self.device.expect("device is not set"),
             vendor: self.vendor.expect("vendor is not set"),
@@ -273,6 +296,10 @@ impl ActivateDeviceBuilder {
         };
         let args = ActivateDeviceInstructionArgs {
             bump: self.bump.clone().expect("bump is not set"),
+            device_signature: self
+                .device_signature
+                .clone()
+                .expect("device_signature is not set"),
         };
 
         accounts.instruction_with_remaining_accounts(args, &self.__remaining_accounts)
@@ -287,6 +314,8 @@ pub struct ActivateDeviceCpiAccounts<'a, 'b> {
     pub token_program2022: &'b solana_program::account_info::AccountInfo<'a>,
     /// The associated token program
     pub ata_program: &'b solana_program::account_info::AccountInfo<'a>,
+    /// The Instructions sysvar
+    pub instructions: &'b solana_program::account_info::AccountInfo<'a>,
     /// The account paying for the storage fees
     pub payer: &'b solana_program::account_info::AccountInfo<'a>,
     /// The Device pubkey
@@ -315,6 +344,8 @@ pub struct ActivateDeviceCpi<'a, 'b> {
     pub token_program2022: &'b solana_program::account_info::AccountInfo<'a>,
     /// The associated token program
     pub ata_program: &'b solana_program::account_info::AccountInfo<'a>,
+    /// The Instructions sysvar
+    pub instructions: &'b solana_program::account_info::AccountInfo<'a>,
     /// The account paying for the storage fees
     pub payer: &'b solana_program::account_info::AccountInfo<'a>,
     /// The Device pubkey
@@ -346,6 +377,7 @@ impl<'a, 'b> ActivateDeviceCpi<'a, 'b> {
             system_program: accounts.system_program,
             token_program2022: accounts.token_program2022,
             ata_program: accounts.ata_program,
+            instructions: accounts.instructions,
             payer: accounts.payer,
             device: accounts.device,
             vendor: accounts.vendor,
@@ -390,7 +422,7 @@ impl<'a, 'b> ActivateDeviceCpi<'a, 'b> {
             bool,
         )],
     ) -> solana_program::entrypoint::ProgramResult {
-        let mut accounts = Vec::with_capacity(11 + remaining_accounts.len());
+        let mut accounts = Vec::with_capacity(12 + remaining_accounts.len());
         accounts.push(solana_program::instruction::AccountMeta::new_readonly(
             *self.system_program.key,
             false,
@@ -401,6 +433,10 @@ impl<'a, 'b> ActivateDeviceCpi<'a, 'b> {
         ));
         accounts.push(solana_program::instruction::AccountMeta::new_readonly(
             *self.ata_program.key,
+            false,
+        ));
+        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+            *self.instructions.key,
             false,
         ));
         accounts.push(solana_program::instruction::AccountMeta::new(
@@ -451,11 +487,12 @@ impl<'a, 'b> ActivateDeviceCpi<'a, 'b> {
             accounts,
             data,
         };
-        let mut account_infos = Vec::with_capacity(11 + 1 + remaining_accounts.len());
+        let mut account_infos = Vec::with_capacity(12 + 1 + remaining_accounts.len());
         account_infos.push(self.__program.clone());
         account_infos.push(self.system_program.clone());
         account_infos.push(self.token_program2022.clone());
         account_infos.push(self.ata_program.clone());
+        account_infos.push(self.instructions.clone());
         account_infos.push(self.payer.clone());
         account_infos.push(self.device.clone());
         account_infos.push(self.vendor.clone());
@@ -483,14 +520,15 @@ impl<'a, 'b> ActivateDeviceCpi<'a, 'b> {
 ///   0. `[]` system_program
 ///   1. `[]` token_program2022
 ///   2. `[]` ata_program
-///   3. `[writable, signer]` payer
-///   4. `[signer]` device
-///   5. `[]` vendor
-///   6. `[]` product_mint
-///   7. `[]` product_atoken
-///   8. `[]` user
-///   9. `[writable]` did_mint
-///   10. `[writable]` did_atoken
+///   3. `[]` instructions
+///   4. `[writable, signer]` payer
+///   5. `[signer]` device
+///   6. `[]` vendor
+///   7. `[]` product_mint
+///   8. `[]` product_atoken
+///   9. `[]` user
+///   10. `[writable]` did_mint
+///   11. `[writable]` did_atoken
 #[derive(Clone, Debug)]
 pub struct ActivateDeviceCpiBuilder<'a, 'b> {
     instruction: Box<ActivateDeviceCpiBuilderInstruction<'a, 'b>>,
@@ -503,6 +541,7 @@ impl<'a, 'b> ActivateDeviceCpiBuilder<'a, 'b> {
             system_program: None,
             token_program2022: None,
             ata_program: None,
+            instructions: None,
             payer: None,
             device: None,
             vendor: None,
@@ -512,6 +551,7 @@ impl<'a, 'b> ActivateDeviceCpiBuilder<'a, 'b> {
             did_mint: None,
             did_atoken: None,
             bump: None,
+            device_signature: None,
             __remaining_accounts: Vec::new(),
         });
         Self { instruction }
@@ -541,6 +581,15 @@ impl<'a, 'b> ActivateDeviceCpiBuilder<'a, 'b> {
         ata_program: &'b solana_program::account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.ata_program = Some(ata_program);
+        self
+    }
+    /// The Instructions sysvar
+    #[inline(always)]
+    pub fn instructions(
+        &mut self,
+        instructions: &'b solana_program::account_info::AccountInfo<'a>,
+    ) -> &mut Self {
+        self.instruction.instructions = Some(instructions);
         self
     }
     /// The account paying for the storage fees
@@ -614,6 +663,11 @@ impl<'a, 'b> ActivateDeviceCpiBuilder<'a, 'b> {
         self.instruction.bump = Some(bump);
         self
     }
+    #[inline(always)]
+    pub fn device_signature(&mut self, device_signature: DeviceSignature) -> &mut Self {
+        self.instruction.device_signature = Some(device_signature);
+        self
+    }
     /// Add an additional account to the instruction.
     #[inline(always)]
     pub fn add_remaining_account(
@@ -657,6 +711,11 @@ impl<'a, 'b> ActivateDeviceCpiBuilder<'a, 'b> {
     ) -> solana_program::entrypoint::ProgramResult {
         let args = ActivateDeviceInstructionArgs {
             bump: self.instruction.bump.clone().expect("bump is not set"),
+            device_signature: self
+                .instruction
+                .device_signature
+                .clone()
+                .expect("device_signature is not set"),
         };
         let instruction = ActivateDeviceCpi {
             __program: self.instruction.__program,
@@ -675,6 +734,11 @@ impl<'a, 'b> ActivateDeviceCpiBuilder<'a, 'b> {
                 .instruction
                 .ata_program
                 .expect("ata_program is not set"),
+
+            instructions: self
+                .instruction
+                .instructions
+                .expect("instructions is not set"),
 
             payer: self.instruction.payer.expect("payer is not set"),
 
@@ -712,6 +776,7 @@ struct ActivateDeviceCpiBuilderInstruction<'a, 'b> {
     system_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     token_program2022: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     ata_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    instructions: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     payer: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     device: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     vendor: Option<&'b solana_program::account_info::AccountInfo<'a>>,
@@ -721,6 +786,7 @@ struct ActivateDeviceCpiBuilderInstruction<'a, 'b> {
     did_mint: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     did_atoken: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     bump: Option<u8>,
+    device_signature: Option<DeviceSignature>,
     /// Additional instruction accounts `(AccountInfo, is_writable, is_signer)`.
     __remaining_accounts: Vec<(
         &'b solana_program::account_info::AccountInfo<'a>,

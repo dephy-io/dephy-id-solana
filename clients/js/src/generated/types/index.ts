@@ -6,6 +6,6 @@
  * @see https://github.com/metaplex-foundation/kinobi
  */
 
-export * from './createDeviceArgs';
 export * from './dephyData';
+export * from './deviceSignature';
 export * from './key';

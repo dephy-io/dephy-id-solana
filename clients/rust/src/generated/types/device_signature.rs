@@ -7,9 +7,13 @@
 
 use borsh::BorshDeserialize;
 use borsh::BorshSerialize;
+use num_derive::FromPrimitive;
 
-#[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
+#[derive(
+    BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq, PartialOrd, Hash, FromPrimitive,
+)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-pub struct CreateDeviceArgs {
-    pub bump: u8,
+pub enum DeviceSignature {
+    Ed25519,
+    Secp256k1,
 }

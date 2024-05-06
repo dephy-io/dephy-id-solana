@@ -1,14 +1,17 @@
 use borsh::BorshDeserialize;
 use solana_program::{
     account_info::AccountInfo,
+    clock::Clock,
     entrypoint::ProgramResult,
     msg,
     program::{invoke, invoke_signed},
+    program_error::ProgramError,
     pubkey::Pubkey,
     system_program,
+    sysvar::{instructions::get_instruction_relative, Sysvar},
 };
 use spl_token_2022::{
-    extension::{metadata_pointer, ExtensionType},
+    extension::{metadata_pointer, ExtensionType, StateWithExtensions},
     state::Mint,
 };
 use spl_token_metadata_interface::state::{Field, TokenMetadata};
@@ -18,7 +21,12 @@ use crate::{
         assert_pda, assert_program_owner, assert_same_pubkeys, assert_signer, assert_writable,
     },
     instruction::{
-        accounts::{ActivateDeviceAccounts, CreateDephyAccounts, CreateDeviceAccounts, CreateProductAccounts, CreateVendorAccounts}, ActivateDeviceArgs, CreateDephyArgs, CreateProductArgs, CreateVendorArgs, DephyInstruction
+        accounts::{
+            ActivateDeviceAccounts, CreateDephyAccounts, CreateDeviceAccounts,
+            CreateProductAccounts, CreateVendorAccounts,
+        },
+        ActivateDeviceArgs, CreateDephyArgs, CreateProductArgs, CreateVendorArgs, DephyInstruction,
+        DeviceSignature,
     },
     state::{DephyAccount, DephyData, Key},
     utils::create_account,
@@ -116,7 +124,11 @@ fn create_vendor<'a>(
     let (dephy_pubkey, _bump) = Pubkey::find_program_address(&[b"DePHY"], program_id);
     assert_same_pubkeys("dephy", ctx.accounts.dephy, &dephy_pubkey)?;
 
-    assert_same_pubkeys("authority", ctx.accounts.authority, &dephy_account.authority)?;
+    assert_same_pubkeys(
+        "authority",
+        ctx.accounts.authority,
+        &dephy_account.authority,
+    )?;
     assert_signer("authority", ctx.accounts.authority)?;
 
     assert_same_pubkeys(
@@ -320,7 +332,6 @@ fn create_vendor<'a>(
     Ok(())
 }
 
-
 fn create_product<'a>(
     program_id: &Pubkey,
     accounts: &'a [AccountInfo<'a>],
@@ -334,8 +345,6 @@ fn create_product<'a>(
     // Guards
     assert_signer("vendor", ctx.accounts.vendor)?;
 
-    // TODO: check vendor token
-
     let mint_seeds: &[&[u8]] = &[
         b"DePHY PRODUCT",
         ctx.accounts.vendor.key.as_ref(),
@@ -344,6 +353,23 @@ fn create_product<'a>(
     ];
     let mint_pubkey = Pubkey::create_program_address(mint_seeds, program_id)?;
     assert_same_pubkeys("product_mint", ctx.accounts.product_mint, &mint_pubkey)?;
+
+    let (vendor_mint_pubkey, _) =
+        Pubkey::find_program_address(&[b"DePHY VENDOR", vendor_pubkey.as_ref()], program_id);
+    assert_same_pubkeys("vendor_mint", ctx.accounts.vendor_mint, &vendor_mint_pubkey)?;
+
+    {
+        let vendor_mint_data = ctx.accounts.vendor_mint.data.borrow();
+        let vendor_mint_state = StateWithExtensions::<Mint>::unpack(&vendor_mint_data)?;
+        assert!(vendor_mint_state.base.is_initialized);
+        assert!(vendor_mint_state.base.mint_authority.is_none());
+
+        let vendor_atoken_data = ctx.accounts.vendor_atoken.data.borrow();
+        let vendor_atoken_state = StateWithExtensions::<spl_token_2022::state::Account>::unpack(&vendor_atoken_data)?;
+        assert_eq!(vendor_atoken_state.base.amount, 1);
+        assert_eq!(vendor_atoken_state.base.owner, *vendor_pubkey);
+        assert_eq!(vendor_atoken_state.base.mint, vendor_mint_pubkey);
+    }
 
     let base_size = ExtensionType::try_calculate_account_len::<Mint>(&[
         ExtensionType::NonTransferable,
@@ -400,6 +426,7 @@ fn create_product<'a>(
         &spl_token_2022::instruction::initialize_mint2(
             &token_program_id,
             &mint_pubkey,
+            // TODO: use PDA as authority
             vendor_pubkey,
             Some(vendor_pubkey),
             0,
@@ -458,16 +485,30 @@ fn create_device<'a>(_program_id: &Pubkey, accounts: &'a [AccountInfo<'a>]) -> P
     let device_pubkey = ctx.accounts.device.key;
 
     // Guards
-    assert_same_pubkeys("token_program_2022", ctx.accounts.token_program_2022, &token_program_id)?;
+    assert_same_pubkeys(
+        "token_program_2022",
+        ctx.accounts.token_program_2022,
+        &token_program_id,
+    )?;
 
     let atoken_pubkey = spl_associated_token_account::get_associated_token_address_with_program_id(
         device_pubkey,
         &mint_pubkey,
         &token_program_id,
     );
-    assert_same_pubkeys("atoken_account", ctx.accounts.product_atoken, &atoken_pubkey)?;
+    assert_same_pubkeys(
+        "atoken_account",
+        ctx.accounts.product_atoken,
+        &atoken_pubkey,
+    )?;
 
-    // TODO: check product mint account state
+    // TODO: check account pubkeys
+
+    {
+        let product_mint_data = ctx.accounts.product_mint.data.borrow();
+        let product_mint_state = StateWithExtensions::<Mint>::unpack(&product_mint_data)?;
+        assert_eq!(product_mint_state.base.decimals, 0);
+    }
 
     // create atoken for device
     invoke(
@@ -516,7 +557,6 @@ fn create_device<'a>(_program_id: &Pubkey, accounts: &'a [AccountInfo<'a>]) -> P
     Ok(())
 }
 
-
 fn activate_device<'a>(
     program_id: &Pubkey,
     accounts: &'a [AccountInfo<'a>],
@@ -526,13 +566,38 @@ fn activate_device<'a>(
     let ctx = ActivateDeviceAccounts::context(accounts)?;
     let token_program_id = spl_token_2022::id();
     let payer_pubkey = ctx.accounts.payer.key;
+    let product_atoken_pubkey = ctx.accounts.product_atoken.key;
     let device_pubkey = ctx.accounts.device.key;
     let user_pubkey = ctx.accounts.user.key;
 
     // Guards
     assert_signer("user", ctx.accounts.user)?;
 
-    // TODO: check device signature in args
+    // ed25519 or secp256k1 program should be called to verify signature
+    let sign_ix = get_instruction_relative(-1, ctx.accounts.instructions)?;
+    match args.device_signature {
+        DeviceSignature::Ed25519 => {
+            if sign_ix.program_id != solana_program::ed25519_program::id() {
+                return Err(ProgramError::IncorrectProgramId);
+            }
+            let (key, message) = args.device_signature.decode(&sign_ix.data)?;
+            assert_eq!(key, device_pubkey.to_bytes());
+            assert_eq!(message[0..32], product_atoken_pubkey.to_bytes());
+            assert_eq!(message[32..64], user_pubkey.to_bytes());
+            let clock = Clock::get()?;
+            let slot = u64::from_le_bytes(message[64..72].try_into().unwrap());
+            assert!(clock.slot >= slot);
+            assert!(clock.slot < slot + 500);
+        }
+        DeviceSignature::Secp256k1 => {
+            // TODO: secp256k1
+            if sign_ix.program_id != solana_program::secp256k1_program::id() {
+                return Err(ProgramError::IncorrectProgramId);
+            }
+            return Err(ProgramError::InvalidArgument);
+        }
+    }
+
     // TODO: verify Device/Product/Vendor
 
     // Create the DID token
@@ -564,13 +629,10 @@ fn activate_device<'a>(
         name: "DePHY Device DID".to_string(),
         symbol: "DDID".to_string(),
         uri: "https://example.com".to_string(),
-        additional_metadata: [(
-            "description".to_string(),
-            "Example DID Device".to_string(),
-        ), (
-            "device".to_string(),
-            device_pubkey.to_string(),
-        )]
+        additional_metadata: [
+            ("description".to_string(), "Example DID Device".to_string()),
+            ("device".to_string(), device_pubkey.to_string()),
+        ]
         .to_vec(),
         ..Default::default()
     };
@@ -670,7 +732,7 @@ fn activate_device<'a>(
                 // 1. `[s]` Update authority
                 ctx.accounts.did_mint.clone(),
             ],
-            &[mint_seeds]
+            &[mint_seeds],
         )?;
     }
 
@@ -716,7 +778,7 @@ fn activate_device<'a>(
             // [signer] The mint's minting authority.
             ctx.accounts.did_mint.clone(),
         ],
-        &[mint_seeds]
+        &[mint_seeds],
     )?;
 
     // disable mint
@@ -735,9 +797,8 @@ fn activate_device<'a>(
             // [signer] The current authority of the mint or account.
             ctx.accounts.did_mint.clone(),
         ],
-        &[mint_seeds]
+        &[mint_seeds],
     )?;
 
     Ok(())
 }
-

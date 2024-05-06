@@ -55,6 +55,8 @@ export type CreateProductInstruction<
   TAccountPayer extends string | IAccountMeta<string> = string,
   TAccountVendor extends string | IAccountMeta<string> = string,
   TAccountProductMint extends string | IAccountMeta<string> = string,
+  TAccountVendorMint extends string | IAccountMeta<string> = string,
+  TAccountVendorAtoken extends string | IAccountMeta<string> = string,
   TRemainingAccounts extends readonly IAccountMeta<string>[] = [],
 > = IInstruction<TProgram> &
   IInstructionWithData<Uint8Array> &
@@ -77,6 +79,12 @@ export type CreateProductInstruction<
       TAccountProductMint extends string
         ? WritableAccount<TAccountProductMint>
         : TAccountProductMint,
+      TAccountVendorMint extends string
+        ? ReadonlyAccount<TAccountVendorMint>
+        : TAccountVendorMint,
+      TAccountVendorAtoken extends string
+        ? ReadonlyAccount<TAccountVendorAtoken>
+        : TAccountVendorAtoken,
       ...TRemainingAccounts,
     ]
   >;
@@ -159,6 +167,8 @@ export type CreateProductInput<
   TAccountPayer extends string = string,
   TAccountVendor extends string = string,
   TAccountProductMint extends string = string,
+  TAccountVendorMint extends string = string,
+  TAccountVendorAtoken extends string = string,
 > = {
   /** The system program */
   systemProgram?: Address<TAccountSystemProgram>;
@@ -170,6 +180,10 @@ export type CreateProductInput<
   vendor: TransactionSigner<TAccountVendor>;
   /** The product mint account */
   productMint: Address<TAccountProductMint>;
+  /** The Vendor mint */
+  vendorMint: Address<TAccountVendorMint>;
+  /** The atoken account for vendor */
+  vendorAtoken: Address<TAccountVendorAtoken>;
   seed: CreateProductInstructionDataArgs['seed'];
   bump: CreateProductInstructionDataArgs['bump'];
   name: CreateProductInstructionDataArgs['name'];
@@ -184,13 +198,17 @@ export function getCreateProductInstruction<
   TAccountPayer extends string,
   TAccountVendor extends string,
   TAccountProductMint extends string,
+  TAccountVendorMint extends string,
+  TAccountVendorAtoken extends string,
 >(
   input: CreateProductInput<
     TAccountSystemProgram,
     TAccountTokenProgram2022,
     TAccountPayer,
     TAccountVendor,
-    TAccountProductMint
+    TAccountProductMint,
+    TAccountVendorMint,
+    TAccountVendorAtoken
   >
 ): CreateProductInstruction<
   typeof DEPHY_ID_PROGRAM_ADDRESS,
@@ -198,7 +216,9 @@ export function getCreateProductInstruction<
   TAccountTokenProgram2022,
   TAccountPayer,
   TAccountVendor,
-  TAccountProductMint
+  TAccountProductMint,
+  TAccountVendorMint,
+  TAccountVendorAtoken
 > {
   // Program address.
   const programAddress = DEPHY_ID_PROGRAM_ADDRESS;
@@ -213,6 +233,8 @@ export function getCreateProductInstruction<
     payer: { value: input.payer ?? null, isWritable: true },
     vendor: { value: input.vendor ?? null, isWritable: false },
     productMint: { value: input.productMint ?? null, isWritable: true },
+    vendorMint: { value: input.vendorMint ?? null, isWritable: false },
+    vendorAtoken: { value: input.vendorAtoken ?? null, isWritable: false },
   };
   const accounts = originalAccounts as Record<
     keyof typeof originalAccounts,
@@ -236,6 +258,8 @@ export function getCreateProductInstruction<
       getAccountMeta(accounts.payer),
       getAccountMeta(accounts.vendor),
       getAccountMeta(accounts.productMint),
+      getAccountMeta(accounts.vendorMint),
+      getAccountMeta(accounts.vendorAtoken),
     ],
     programAddress,
     data: getCreateProductInstructionDataEncoder().encode(
@@ -247,7 +271,9 @@ export function getCreateProductInstruction<
     TAccountTokenProgram2022,
     TAccountPayer,
     TAccountVendor,
-    TAccountProductMint
+    TAccountProductMint,
+    TAccountVendorMint,
+    TAccountVendorAtoken
   >;
 
   return instruction;
@@ -269,6 +295,10 @@ export type ParsedCreateProductInstruction<
     vendor: TAccountMetas[3];
     /** The product mint account */
     productMint: TAccountMetas[4];
+    /** The Vendor mint */
+    vendorMint: TAccountMetas[5];
+    /** The atoken account for vendor */
+    vendorAtoken: TAccountMetas[6];
   };
   data: CreateProductInstructionData;
 };
@@ -281,7 +311,7 @@ export function parseCreateProductInstruction<
     IInstructionWithAccounts<TAccountMetas> &
     IInstructionWithData<Uint8Array>
 ): ParsedCreateProductInstruction<TProgram, TAccountMetas> {
-  if (instruction.accounts.length < 5) {
+  if (instruction.accounts.length < 7) {
     // TODO: Coded error.
     throw new Error('Not enough accounts');
   }
@@ -299,6 +329,8 @@ export function parseCreateProductInstruction<
       payer: getNextAccount(),
       vendor: getNextAccount(),
       productMint: getNextAccount(),
+      vendorMint: getNextAccount(),
+      vendorAtoken: getNextAccount(),
     },
     data: getCreateProductInstructionDataDecoder().decode(instruction.data),
   };

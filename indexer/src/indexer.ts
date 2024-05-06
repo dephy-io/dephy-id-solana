@@ -364,8 +364,6 @@ export class Indexer {
                 i += 1
             }
 
-            // TODO: handle inner ix
-
             let block_ts;
             if (tx.blockTime) {
                 block_ts = e.datetime(new Date(Number(tx.blockTime) * 1000))

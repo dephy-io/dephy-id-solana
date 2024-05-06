@@ -5,10 +5,10 @@
 //! [https://github.com/metaplex-foundation/kinobi]
 //!
 
-pub(crate) mod r#create_device_args;
 pub(crate) mod r#dephy_data;
+pub(crate) mod r#device_signature;
 pub(crate) mod r#key;
 
-pub use self::r#create_device_args::*;
 pub use self::r#dephy_data::*;
+pub use self::r#device_signature::*;
 pub use self::r#key::*;

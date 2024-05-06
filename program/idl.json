@@ -182,6 +182,22 @@
           "docs": [
             "The product mint account"
           ]
+        },
+        {
+          "name": "vendorMint",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The Vendor mint"
+          ]
+        },
+        {
+          "name": "vendorAtoken",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The atoken account for vendor"
+          ]
         }
       ],
       "args": [
@@ -296,6 +312,14 @@
           "isSigner": false,
           "docs": [
             "The associated token program"
+          ]
+        },
+        {
+          "name": "instructions",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The Instructions sysvar"
           ]
         },
         {
@@ -496,18 +520,6 @@
       }
     },
     {
-      "name": "CreateDeviceArgs",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "bump",
-            "type": "u8"
-          }
-        ]
-      }
-    },
-    {
       "name": "ActivateDeviceArgs",
       "type": {
         "kind": "struct",
@@ -515,6 +527,12 @@
           {
             "name": "bump",
             "type": "u8"
+          },
+          {
+            "name": "deviceSignature",
+            "type": {
+              "defined": "DeviceSignature"
+            }
           }
         ]
       }
@@ -527,6 +545,20 @@
           {
             "name": "bump",
             "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "DeviceSignature",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Ed25519"
+          },
+          {
+            "name": "Secp256k1"
           }
         ]
       }
@@ -601,6 +633,11 @@
       "code": 10,
       "name": "NumericalOverflow",
       "msg": "Numerical overflow"
+    },
+    {
+      "code": 11,
+      "name": "MissingInstruction",
+      "msg": "Missing instruction"
     }
   ],
   "metadata": {

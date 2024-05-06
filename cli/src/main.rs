@@ -1,13 +1,23 @@
 use std::{error::Error, time::Duration};
 
 use clap::{Args, Parser, Subcommand};
-use dephy_io_dephy_id_client::instructions::{
-    ActivateDeviceBuilder, CreateDephyBuilder, CreateDeviceBuilder, CreateProductBuilder,
-    CreateVendorBuilder,
+use dephy_io_dephy_id_client::{
+    instructions::{
+        ActivateDeviceBuilder, CreateDephyBuilder, CreateDeviceBuilder, CreateProductBuilder,
+        CreateVendorBuilder,
+    },
+    types::DeviceSignature,
 };
 use solana_client::rpc_client::RpcClient;
 use solana_sdk::{
-    commitment_config::CommitmentConfig, hash, pubkey::Pubkey, signature::Keypair, signer::{EncodableKey, Signer}, transaction::Transaction
+    commitment_config::{CommitmentConfig, CommitmentLevel},
+    ed25519_instruction::new_ed25519_instruction,
+    hash,
+    pubkey::Pubkey,
+    signature::Keypair,
+    signer::{EncodableKey, Signer},
+    sysvar::instructions,
+    transaction::Transaction,
 };
 
 #[derive(Debug, Parser)]
@@ -35,7 +45,7 @@ struct CommonArgs {
     #[arg(long)]
     payer: Option<String>,
     #[arg(long = "dephy")]
-    dephy_pubkey: Option<Pubkey>
+    dephy_pubkey: Option<Pubkey>,
 }
 
 #[derive(Debug, Args)]
@@ -265,6 +275,15 @@ fn create_product(args: CreateProductCliArgs) {
         &program_id,
     );
 
+    let (vendor_mint_pubkey, _) =
+        Pubkey::find_program_address(&[b"DePHY VENDOR", &vendor.pubkey().to_bytes()], &program_id);
+
+    let vendor_atoken_pubkey = spl_associated_token_account::get_associated_token_address_with_program_id(
+        &vendor.pubkey(),
+        &vendor_mint_pubkey,
+        &spl_token_2022::id(),
+    );
+
     let latest_block = client.get_latest_blockhash().unwrap();
     let transaction = Transaction::new_signed_with_payer(
         &[CreateProductBuilder::new()
@@ -272,6 +291,8 @@ fn create_product(args: CreateProductCliArgs) {
             .payer(payer.pubkey())
             .vendor(vendor.pubkey())
             .product_mint(product_mint_pubkey)
+            .vendor_mint(vendor_mint_pubkey)
+            .vendor_atoken(vendor_atoken_pubkey)
             .seed(seed.to_bytes())
             .bump(bump)
             .name(args.name)
@@ -343,6 +364,7 @@ fn activate_device(args: ActivateDeviceCliArgs) {
         .program_id
         .unwrap_or(dephy_io_dephy_id_client::ID);
     let token_program_id = spl_token_2022::ID;
+    let instructions_id = instructions::ID;
 
     let device = read_key(&args.device_keypair);
     let user = read_key(&args.user_keypair);
@@ -372,19 +394,36 @@ fn activate_device(args: ActivateDeviceCliArgs) {
         );
 
     let latest_block = client.get_latest_blockhash().unwrap();
+    let slot: u64 = client
+        .get_slot_with_commitment(CommitmentConfig {
+            commitment: CommitmentLevel::Finalized,
+        })
+        .unwrap();
+    let device_ed25519_keypair = ed25519_dalek::Keypair::from_bytes(&device.to_bytes()).unwrap();
+    let message = [
+        product_atoken_pubkey.as_ref(),
+        user.pubkey().as_ref(),
+        &slot.to_le_bytes(),
+    ]
+    .concat();
     let transaction = Transaction::new_signed_with_payer(
-        &[ActivateDeviceBuilder::new()
-            .token_program2022(token_program_id)
-            .payer(payer.pubkey())
-            .device(device.pubkey())
-            .vendor(args.vendor_pubkey)
-            .product_mint(args.product_pubkey)
-            .product_atoken(product_atoken_pubkey)
-            .user(user.pubkey())
-            .did_mint(did_mint_pubkey)
-            .did_atoken(did_atoken_pubkey)
-            .bump(bump)
-            .instruction()],
+        &[
+            new_ed25519_instruction(&device_ed25519_keypair, &message),
+            ActivateDeviceBuilder::new()
+                .token_program2022(token_program_id)
+                .instructions(instructions_id)
+                .payer(payer.pubkey())
+                .device(device.pubkey())
+                .vendor(args.vendor_pubkey)
+                .product_mint(args.product_pubkey)
+                .product_atoken(product_atoken_pubkey)
+                .user(user.pubkey())
+                .did_mint(did_mint_pubkey)
+                .did_atoken(did_atoken_pubkey)
+                .bump(bump)
+                .device_signature(DeviceSignature::Ed25519)
+                .instruction(),
+        ],
         Some(&payer.pubkey()),
         &[&user, &device, &payer],
         latest_block,
@@ -393,11 +432,15 @@ fn activate_device(args: ActivateDeviceCliArgs) {
     match client.send_and_confirm_transaction(&transaction) {
         Ok(sig) => {
             println!("Success: {:?}", sig);
-            println!("User {} activated Device {}, Token: {}", user.pubkey(), device.pubkey(), did_mint_pubkey);
+            println!(
+                "User {} activated Device {}, Token: {}",
+                user.pubkey(),
+                device.pubkey(),
+                did_mint_pubkey
+            );
         }
         Err(err) => {
             eprintln!("Error: {:?}", err);
         }
     };
 }
-
