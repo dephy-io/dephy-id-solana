@@ -275,6 +275,15 @@ fn create_product(args: CreateProductCliArgs) {
         &program_id,
     );
 
+    let (vendor_mint_pubkey, _) =
+        Pubkey::find_program_address(&[b"DePHY VENDOR", &vendor.pubkey().to_bytes()], &program_id);
+
+    let vendor_atoken_pubkey = spl_associated_token_account::get_associated_token_address_with_program_id(
+        &vendor.pubkey(),
+        &vendor_mint_pubkey,
+        &spl_token_2022::id(),
+    );
+
     let latest_block = client.get_latest_blockhash().unwrap();
     let transaction = Transaction::new_signed_with_payer(
         &[CreateProductBuilder::new()
@@ -282,6 +291,8 @@ fn create_product(args: CreateProductCliArgs) {
             .payer(payer.pubkey())
             .vendor(vendor.pubkey())
             .product_mint(product_mint_pubkey)
+            .vendor_mint(vendor_mint_pubkey)
+            .vendor_atoken(vendor_atoken_pubkey)
             .seed(seed.to_bytes())
             .bump(bump)
             .name(args.name)

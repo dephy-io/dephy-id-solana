@@ -182,6 +182,22 @@
           "docs": [
             "The product mint account"
           ]
+        },
+        {
+          "name": "vendorMint",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The Vendor mint"
+          ]
+        },
+        {
+          "name": "vendorAtoken",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The atoken account for vendor"
+          ]
         }
       ],
       "args": [

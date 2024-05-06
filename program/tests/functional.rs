@@ -172,7 +172,16 @@ async fn test_create_product(
 ) {
     let seed = hash(product_seed);
 
-    let (mint_pubkey, mint_bump) = Pubkey::find_program_address(
+    let (vendor_mint_pubkey, _) =
+        Pubkey::find_program_address(&[b"DePHY VENDOR", &vendor.pubkey().to_bytes()], &program_id);
+
+    let vendor_atoken_pubkey = spl_associated_token_account::get_associated_token_address_with_program_id(
+        &vendor.pubkey(),
+        &vendor_mint_pubkey,
+        &spl_token_2022::id(),
+    );
+
+    let (product_mint_pubkey, mint_bump) = Pubkey::find_program_address(
         &[b"DePHY PRODUCT", &vendor.pubkey().to_bytes(), seed.as_ref()],
         &program_id,
     );
@@ -193,7 +202,9 @@ async fn test_create_product(
                 AccountMeta::new(spl_token_2022::id(), false),
                 AccountMeta::new(ctx.payer.pubkey(), true),
                 AccountMeta::new(vendor.pubkey(), true),
-                AccountMeta::new(mint_pubkey, false),
+                AccountMeta::new(product_mint_pubkey, false),
+                AccountMeta::new(vendor_mint_pubkey, false),
+                AccountMeta::new(vendor_atoken_pubkey, false),
             ],
         )],
         Some(&ctx.payer.pubkey()),
@@ -209,7 +220,7 @@ async fn test_create_product(
     // Mint account
     let mint_account = ctx
         .banks_client
-        .get_account(mint_pubkey)
+        .get_account(product_mint_pubkey)
         .await
         .expect("get_account")
         .expect("mint account not none");
@@ -400,3 +411,4 @@ async fn test_activate_device(
     let account_data = StateWithExtensions::<Account>::unpack(atoken_account.data()).unwrap();
     assert_eq!(account_data.base.amount, 1, "Token amount is 1");
 }
+

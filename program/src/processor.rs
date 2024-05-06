@@ -11,7 +11,7 @@ use solana_program::{
     sysvar::{instructions::get_instruction_relative, Sysvar},
 };
 use spl_token_2022::{
-    extension::{metadata_pointer, ExtensionType},
+    extension::{metadata_pointer, ExtensionType, StateWithExtensions},
     state::Mint,
 };
 use spl_token_metadata_interface::state::{Field, TokenMetadata};
@@ -345,7 +345,6 @@ fn create_product<'a>(
     // Guards
     assert_signer("vendor", ctx.accounts.vendor)?;
 
-    // TODO: check vendor token
     let mint_seeds: &[&[u8]] = &[
         b"DePHY PRODUCT",
         ctx.accounts.vendor.key.as_ref(),
@@ -354,6 +353,23 @@ fn create_product<'a>(
     ];
     let mint_pubkey = Pubkey::create_program_address(mint_seeds, program_id)?;
     assert_same_pubkeys("product_mint", ctx.accounts.product_mint, &mint_pubkey)?;
+
+    let (vendor_mint_pubkey, _) =
+        Pubkey::find_program_address(&[b"DePHY VENDOR", vendor_pubkey.as_ref()], program_id);
+    assert_same_pubkeys("vendor_mint", ctx.accounts.vendor_mint, &vendor_mint_pubkey)?;
+
+    {
+        let vendor_mint_data = ctx.accounts.vendor_mint.data.borrow();
+        let vendor_mint_state = StateWithExtensions::<Mint>::unpack(&vendor_mint_data)?;
+        assert!(vendor_mint_state.base.is_initialized);
+        assert!(vendor_mint_state.base.mint_authority.is_none());
+
+        let vendor_atoken_data = ctx.accounts.vendor_atoken.data.borrow();
+        let vendor_atoken_state = StateWithExtensions::<spl_token_2022::state::Account>::unpack(&vendor_atoken_data)?;
+        assert_eq!(vendor_atoken_state.base.amount, 1);
+        assert_eq!(vendor_atoken_state.base.owner, *vendor_pubkey);
+        assert_eq!(vendor_atoken_state.base.mint, vendor_mint_pubkey);
+    }
 
     let base_size = ExtensionType::try_calculate_account_len::<Mint>(&[
         ExtensionType::NonTransferable,
@@ -410,6 +426,7 @@ fn create_product<'a>(
         &spl_token_2022::instruction::initialize_mint2(
             &token_program_id,
             &mint_pubkey,
+            // TODO: use PDA as authority
             vendor_pubkey,
             Some(vendor_pubkey),
             0,
@@ -485,7 +502,13 @@ fn create_device<'a>(_program_id: &Pubkey, accounts: &'a [AccountInfo<'a>]) -> P
         &atoken_pubkey,
     )?;
 
-    // TODO: check product mint account state
+    // TODO: check account pubkeys
+
+    {
+        let product_mint_data = ctx.accounts.product_mint.data.borrow();
+        let product_mint_state = StateWithExtensions::<Mint>::unpack(&product_mint_data)?;
+        assert_eq!(product_mint_state.base.decimals, 0);
+    }
 
     // create atoken for device
     invoke(

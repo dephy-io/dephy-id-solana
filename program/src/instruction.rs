@@ -26,13 +26,14 @@ pub enum DephyInstruction {
     CreateVendor(CreateVendorArgs),
 
     /// Vendor register a Product
-    // TODO: verify Vendor
-    // TODO: alt authority
+    // TODO: PDA authority
     #[account(0, name="system_program", desc = "The system program")]
     #[account(1, name="token_program_2022", desc = "The SPL Token 2022 program")]
     #[account(2, writable, signer, name="payer", desc = "The account paying for the storage fees")]
     #[account(3, signer, name="vendor", desc = "The Vendor pubkey")]
     #[account(4, writable, name="product_mint", desc = "The product mint account")]
+    #[account(5, name="vendor_mint", desc = "The Vendor mint")]
+    #[account(6, name="vendor_atoken", desc = "The atoken account for vendor")]
     CreateProduct(CreateProductArgs),
 
     /// Vendor register a Device
