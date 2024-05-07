@@ -9,3 +9,4 @@ test-ledger
 dist
 bun.lockb
 *.sqlite
+tmp
