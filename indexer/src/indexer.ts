@@ -105,7 +105,7 @@ export class Indexer {
         for await (const notification of notifications) {
             const { context: { slot }, value: { signature, err } } = notification
             let saved_tx = await this.saveTx({ slot, signature, err })
-            this.processTx(saved_tx, signature)
+            const _ = this.processTx(saved_tx, signature);
         }
     }
 

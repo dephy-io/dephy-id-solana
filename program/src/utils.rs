@@ -23,8 +23,8 @@ pub fn create_account<'a>(
     signer_seeds: &[&[&[u8]]],
 ) -> ProgramResult {
     let rent = Rent::get()?;
-    let lamports: u64 = if let Some(size) = reserved_size {
-        rent.minimum_balance(size)
+    let lamports: u64 = if let Some(reserved_size) = reserved_size {
+        rent.minimum_balance(reserved_size)
     } else {
         rent.minimum_balance(size)
     };
