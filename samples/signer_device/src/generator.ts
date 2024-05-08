@@ -1,26 +1,24 @@
 import * as process from "node:process";
 import * as fs from "node:fs"
 import { parseArgs } from "node:util";
-import { hexToU8a, u8aToHex } from "@polkadot/util";
+import { u8aToHex } from "@polkadot/util";
+import { base58 } from '@scure/base';
 import * as ed25519 from "@noble/ed25519";
 import * as secp256k1 from "@noble/secp256k1";
+import type { KeyType, Wallet } from "./types";
 
 import { sha512 } from '@noble/hashes/sha512';
 ed25519.etc.sha512Sync = (...m) => sha512(ed25519.etc.concatBytes(...m));
 
-const supportedCryptoTypes = ["secp256k1", "ed25519"];
+const supportedKeyTypes = ["secp256k1", "ed25519"];
 
 try {
     const { values: cliArgs } = parseArgs({
         options: {
-            type: {
+            didKeyType: {
                 type: 'string',
                 short: 't',
                 default: 'ed25519',
-            },
-            privateKey: {
-                type: 'string',
-                short: 's',
             },
             vendorPublicKey: {
                 type: 'string',
@@ -51,45 +49,56 @@ try {
         console.error(`-v <product_public_key> is required and must be a valid Solana address.`);
         process.exit(1);
     }
-    if (!cliArgs.type || !supportedCryptoTypes.includes(cliArgs.type)) {
-        console.error(`Unsupported crypto type: ${cliArgs.type}, available: ${supportedCryptoTypes.join(", ")}`);
+    if (!cliArgs.didKeyType || !supportedKeyTypes.includes(cliArgs.didKeyType)) {
+        console.error(`Unsupported crypto type: ${cliArgs.didKeyType}, available: ${supportedKeyTypes.join(", ")}`);
         process.exit(1);
     }
 
-    let privateKey: Uint8Array;
-    if (cliArgs.privateKey) {
-        privateKey = hexToU8a(cliArgs.privateKey);
-    } else {
-        switch (cliArgs.type) {
+    const didPrivateKey = (function (keyType: string): Uint8Array {
+        switch (keyType) {
             case "ed25519":
-                privateKey = ed25519.utils.randomPrivateKey();
-                break;
+                return ed25519.utils.randomPrivateKey();
             case "secp256k1":
-                privateKey = secp256k1.utils.randomPrivateKey();
-                break;
+                return secp256k1.utils.randomPrivateKey();
             default:
-                // Shouldn't go here
-                process.exit(1);
+                throw new Error(`Unsupported key type: ${keyType}`);
         }
-    }
+    })(cliArgs.didKeyType);
+    const didPublicKey = (function (keyType: string, privateKey: Uint8Array): Uint8Array {
+        switch (keyType) {
+            case "ed25519":
+                return ed25519.getPublicKey(privateKey);
+            case "secp256k1":
+                return secp256k1.getPublicKey(privateKey);
+            default:
+                throw new Error(`Unsupported key type: ${keyType}`);
+        }
+    })(cliArgs.didKeyType, didPrivateKey);
 
-    let publicKey: Uint8Array;
-    switch (cliArgs.type) {
-        case "ed25519":
-            publicKey = ed25519.getPublicKey(privateKey);
-            break;
-        case "secp256k1":
-            publicKey = secp256k1.getPublicKey(privateKey);
-            break;
-        default:
-            // Shouldn't go here
-            process.exit(1);
-    }
+    const secp256k1PrivateKey = secp256k1.utils.randomPrivateKey();
+    const secp256k1PublicKey = secp256k1.getPublicKey(secp256k1PrivateKey);
+    const ed25519PrivateKey = ed25519.utils.randomPrivateKey();
+    const ed25519PublicKey = ed25519.getPublicKey(ed25519PrivateKey)
 
-    const wallet = {
-        type: cliArgs.type,
-        privateKey: u8aToHex(privateKey),
-        publicKey: u8aToHex(publicKey),
+    const wallet: Wallet = {
+        keys: {
+            did: {
+                keyType: <KeyType>cliArgs.didKeyType,
+                privateKey: u8aToHex(didPrivateKey),
+                publicKey: u8aToHex(didPublicKey),
+                bs58PublicKey: base58.encode(didPublicKey),
+            },
+            secp256k1: {
+                keyType: "secp256k1",
+                privateKey: u8aToHex(secp256k1PrivateKey),
+                publicKey: u8aToHex(secp256k1PublicKey),
+            },
+            ed25519: {
+                keyType: "ed25519",
+                privateKey: u8aToHex(ed25519PrivateKey),
+                publicKey: u8aToHex(ed25519PublicKey),
+            },
+        },
         extensions: {
             vendor: cliArgs.vendorPublicKey,
             product: cliArgs.productPublicKey,
