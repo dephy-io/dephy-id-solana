@@ -66,8 +66,11 @@ module default {
         multi devices := .<product[is Device];
     }
 
+    scalar type KeyType extending enum<Ed25519, Secp256k1>;
+
     type Device extending SolanaAccount, SplAccount, WithIx {
         required product: Product;
+        required key_type: KeyType;
 
         single did := .<device[is DID];
     }
