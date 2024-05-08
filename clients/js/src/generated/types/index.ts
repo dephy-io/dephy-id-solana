@@ -7,5 +7,5 @@
  */
 
 export * from './dephyData';
-export * from './deviceSignature';
 export * from './key';
+export * from './keyType';

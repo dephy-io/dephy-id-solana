@@ -259,7 +259,7 @@
         {
           "name": "device",
           "isMut": false,
-          "isSigner": true,
+          "isSigner": false,
           "docs": [
             "The Device pubkey"
           ]
@@ -281,7 +281,14 @@
           ]
         }
       ],
-      "args": [],
+      "args": [
+        {
+          "name": "createDeviceArgs",
+          "type": {
+            "defined": "CreateDeviceArgs"
+          }
+        }
+      ],
       "discriminant": {
         "type": "u8",
         "value": 3
@@ -333,7 +340,7 @@
         {
           "name": "device",
           "isMut": false,
-          "isSigner": true,
+          "isSigner": false,
           "docs": [
             "The Device pubkey"
           ]
@@ -520,6 +527,20 @@
       }
     },
     {
+      "name": "CreateDeviceArgs",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "keyType",
+            "type": {
+              "defined": "KeyType"
+            }
+          }
+        ]
+      }
+    },
+    {
       "name": "ActivateDeviceArgs",
       "type": {
         "kind": "struct",
@@ -529,9 +550,9 @@
             "type": "u8"
           },
           {
-            "name": "deviceSignature",
+            "name": "keyType",
             "type": {
-              "defined": "DeviceSignature"
+              "defined": "KeyType"
             }
           }
         ]
@@ -550,7 +571,7 @@
       }
     },
     {
-      "name": "DeviceSignature",
+      "name": "KeyType",
       "type": {
         "kind": "enum",
         "variants": [

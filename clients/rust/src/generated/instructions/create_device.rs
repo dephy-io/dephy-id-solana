@@ -5,6 +5,7 @@
 //! [https://github.com/metaplex-foundation/kinobi]
 //!
 
+use crate::generated::types::KeyType;
 use borsh::BorshDeserialize;
 use borsh::BorshSerialize;
 
@@ -29,12 +30,16 @@ pub struct CreateDevice {
 }
 
 impl CreateDevice {
-    pub fn instruction(&self) -> solana_program::instruction::Instruction {
-        self.instruction_with_remaining_accounts(&[])
+    pub fn instruction(
+        &self,
+        args: CreateDeviceInstructionArgs,
+    ) -> solana_program::instruction::Instruction {
+        self.instruction_with_remaining_accounts(args, &[])
     }
     #[allow(clippy::vec_init_then_push)]
     pub fn instruction_with_remaining_accounts(
         &self,
+        args: CreateDeviceInstructionArgs,
         remaining_accounts: &[solana_program::instruction::AccountMeta],
     ) -> solana_program::instruction::Instruction {
         let mut accounts = Vec::with_capacity(8 + remaining_accounts.len());
@@ -59,7 +64,7 @@ impl CreateDevice {
         ));
         accounts.push(solana_program::instruction::AccountMeta::new_readonly(
             self.device,
-            true,
+            false,
         ));
         accounts.push(solana_program::instruction::AccountMeta::new(
             self.product_mint,
@@ -70,7 +75,9 @@ impl CreateDevice {
             false,
         ));
         accounts.extend_from_slice(remaining_accounts);
-        let data = borsh::to_vec(&CreateDeviceInstructionData::new()).unwrap();
+        let mut data = borsh::to_vec(&CreateDeviceInstructionData::new()).unwrap();
+        let mut args = borsh::to_vec(&args).unwrap();
+        data.append(&mut args);
 
         solana_program::instruction::Instruction {
             program_id: crate::DEPHY_ID_ID,
@@ -91,6 +98,12 @@ impl CreateDeviceInstructionData {
     }
 }
 
+#[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+pub struct CreateDeviceInstructionArgs {
+    pub key_type: KeyType,
+}
+
 /// Instruction builder for `CreateDevice`.
 ///
 /// ### Accounts:
@@ -100,7 +113,7 @@ impl CreateDeviceInstructionData {
 ///   2. `[optional]` ata_program (default to `ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL`)
 ///   3. `[writable, signer]` payer
 ///   4. `[signer]` vendor
-///   5. `[signer]` device
+///   5. `[]` device
 ///   6. `[writable]` product_mint
 ///   7. `[writable]` product_atoken
 #[derive(Clone, Debug, Default)]
@@ -113,6 +126,7 @@ pub struct CreateDeviceBuilder {
     device: Option<solana_program::pubkey::Pubkey>,
     product_mint: Option<solana_program::pubkey::Pubkey>,
     product_atoken: Option<solana_program::pubkey::Pubkey>,
+    key_type: Option<KeyType>,
     __remaining_accounts: Vec<solana_program::instruction::AccountMeta>,
 }
 
@@ -173,6 +187,11 @@ impl CreateDeviceBuilder {
         self.product_atoken = Some(product_atoken);
         self
     }
+    #[inline(always)]
+    pub fn key_type(&mut self, key_type: KeyType) -> &mut Self {
+        self.key_type = Some(key_type);
+        self
+    }
     /// Add an aditional account to the instruction.
     #[inline(always)]
     pub fn add_remaining_account(
@@ -209,8 +228,11 @@ impl CreateDeviceBuilder {
             product_mint: self.product_mint.expect("product_mint is not set"),
             product_atoken: self.product_atoken.expect("product_atoken is not set"),
         };
+        let args = CreateDeviceInstructionArgs {
+            key_type: self.key_type.clone().expect("key_type is not set"),
+        };
 
-        accounts.instruction_with_remaining_accounts(&self.__remaining_accounts)
+        accounts.instruction_with_remaining_accounts(args, &self.__remaining_accounts)
     }
 }
 
@@ -254,12 +276,15 @@ pub struct CreateDeviceCpi<'a, 'b> {
     pub product_mint: &'b solana_program::account_info::AccountInfo<'a>,
     /// The Product atoken for Device
     pub product_atoken: &'b solana_program::account_info::AccountInfo<'a>,
+    /// The arguments for the instruction.
+    pub __args: CreateDeviceInstructionArgs,
 }
 
 impl<'a, 'b> CreateDeviceCpi<'a, 'b> {
     pub fn new(
         program: &'b solana_program::account_info::AccountInfo<'a>,
         accounts: CreateDeviceCpiAccounts<'a, 'b>,
+        args: CreateDeviceInstructionArgs,
     ) -> Self {
         Self {
             __program: program,
@@ -271,6 +296,7 @@ impl<'a, 'b> CreateDeviceCpi<'a, 'b> {
             device: accounts.device,
             product_mint: accounts.product_mint,
             product_atoken: accounts.product_atoken,
+            __args: args,
         }
     }
     #[inline(always)]
@@ -329,7 +355,7 @@ impl<'a, 'b> CreateDeviceCpi<'a, 'b> {
         ));
         accounts.push(solana_program::instruction::AccountMeta::new_readonly(
             *self.device.key,
-            true,
+            false,
         ));
         accounts.push(solana_program::instruction::AccountMeta::new(
             *self.product_mint.key,
@@ -346,7 +372,9 @@ impl<'a, 'b> CreateDeviceCpi<'a, 'b> {
                 is_writable: remaining_account.2,
             })
         });
-        let data = borsh::to_vec(&CreateDeviceInstructionData::new()).unwrap();
+        let mut data = borsh::to_vec(&CreateDeviceInstructionData::new()).unwrap();
+        let mut args = borsh::to_vec(&self.__args).unwrap();
+        data.append(&mut args);
 
         let instruction = solana_program::instruction::Instruction {
             program_id: crate::DEPHY_ID_ID,
@@ -384,7 +412,7 @@ impl<'a, 'b> CreateDeviceCpi<'a, 'b> {
 ///   2. `[]` ata_program
 ///   3. `[writable, signer]` payer
 ///   4. `[signer]` vendor
-///   5. `[signer]` device
+///   5. `[]` device
 ///   6. `[writable]` product_mint
 ///   7. `[writable]` product_atoken
 #[derive(Clone, Debug)]
@@ -404,6 +432,7 @@ impl<'a, 'b> CreateDeviceCpiBuilder<'a, 'b> {
             device: None,
             product_mint: None,
             product_atoken: None,
+            key_type: None,
             __remaining_accounts: Vec::new(),
         });
         Self { instruction }
@@ -477,6 +506,11 @@ impl<'a, 'b> CreateDeviceCpiBuilder<'a, 'b> {
         self.instruction.product_atoken = Some(product_atoken);
         self
     }
+    #[inline(always)]
+    pub fn key_type(&mut self, key_type: KeyType) -> &mut Self {
+        self.instruction.key_type = Some(key_type);
+        self
+    }
     /// Add an additional account to the instruction.
     #[inline(always)]
     pub fn add_remaining_account(
@@ -518,6 +552,13 @@ impl<'a, 'b> CreateDeviceCpiBuilder<'a, 'b> {
         &self,
         signers_seeds: &[&[&[u8]]],
     ) -> solana_program::entrypoint::ProgramResult {
+        let args = CreateDeviceInstructionArgs {
+            key_type: self
+                .instruction
+                .key_type
+                .clone()
+                .expect("key_type is not set"),
+        };
         let instruction = CreateDeviceCpi {
             __program: self.instruction.__program,
 
@@ -551,6 +592,7 @@ impl<'a, 'b> CreateDeviceCpiBuilder<'a, 'b> {
                 .instruction
                 .product_atoken
                 .expect("product_atoken is not set"),
+            __args: args,
         };
         instruction.invoke_signed_with_remaining_accounts(
             signers_seeds,
@@ -570,6 +612,7 @@ struct CreateDeviceCpiBuilderInstruction<'a, 'b> {
     device: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     product_mint: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     product_atoken: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    key_type: Option<KeyType>,
     /// Additional instruction accounts `(AccountInfo, is_writable, is_signer)`.
     __remaining_accounts: Vec<(
         &'b solana_program::account_info::AccountInfo<'a>,
