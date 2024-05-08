@@ -5,7 +5,7 @@
 //! [https://github.com/metaplex-foundation/kinobi]
 //!
 
-use crate::generated::types::DeviceSignature;
+use crate::generated::types::KeyType;
 use borsh::BorshDeserialize;
 use borsh::BorshSerialize;
 
@@ -72,7 +72,7 @@ impl ActivateDevice {
         ));
         accounts.push(solana_program::instruction::AccountMeta::new_readonly(
             self.device,
-            true,
+            false,
         ));
         accounts.push(solana_program::instruction::AccountMeta::new_readonly(
             self.vendor,
@@ -125,7 +125,7 @@ impl ActivateDeviceInstructionData {
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct ActivateDeviceInstructionArgs {
     pub bump: u8,
-    pub device_signature: DeviceSignature,
+    pub key_type: KeyType,
 }
 
 /// Instruction builder for `ActivateDevice`.
@@ -137,7 +137,7 @@ pub struct ActivateDeviceInstructionArgs {
 ///   2. `[optional]` ata_program (default to `ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL`)
 ///   3. `[]` instructions
 ///   4. `[writable, signer]` payer
-///   5. `[signer]` device
+///   5. `[]` device
 ///   6. `[]` vendor
 ///   7. `[]` product_mint
 ///   8. `[]` product_atoken
@@ -159,7 +159,7 @@ pub struct ActivateDeviceBuilder {
     did_mint: Option<solana_program::pubkey::Pubkey>,
     did_atoken: Option<solana_program::pubkey::Pubkey>,
     bump: Option<u8>,
-    device_signature: Option<DeviceSignature>,
+    key_type: Option<KeyType>,
     __remaining_accounts: Vec<solana_program::instruction::AccountMeta>,
 }
 
@@ -250,8 +250,8 @@ impl ActivateDeviceBuilder {
         self
     }
     #[inline(always)]
-    pub fn device_signature(&mut self, device_signature: DeviceSignature) -> &mut Self {
-        self.device_signature = Some(device_signature);
+    pub fn key_type(&mut self, key_type: KeyType) -> &mut Self {
+        self.key_type = Some(key_type);
         self
     }
     /// Add an aditional account to the instruction.
@@ -296,10 +296,7 @@ impl ActivateDeviceBuilder {
         };
         let args = ActivateDeviceInstructionArgs {
             bump: self.bump.clone().expect("bump is not set"),
-            device_signature: self
-                .device_signature
-                .clone()
-                .expect("device_signature is not set"),
+            key_type: self.key_type.clone().expect("key_type is not set"),
         };
 
         accounts.instruction_with_remaining_accounts(args, &self.__remaining_accounts)
@@ -445,7 +442,7 @@ impl<'a, 'b> ActivateDeviceCpi<'a, 'b> {
         ));
         accounts.push(solana_program::instruction::AccountMeta::new_readonly(
             *self.device.key,
-            true,
+            false,
         ));
         accounts.push(solana_program::instruction::AccountMeta::new_readonly(
             *self.vendor.key,
@@ -522,7 +519,7 @@ impl<'a, 'b> ActivateDeviceCpi<'a, 'b> {
 ///   2. `[]` ata_program
 ///   3. `[]` instructions
 ///   4. `[writable, signer]` payer
-///   5. `[signer]` device
+///   5. `[]` device
 ///   6. `[]` vendor
 ///   7. `[]` product_mint
 ///   8. `[]` product_atoken
@@ -551,7 +548,7 @@ impl<'a, 'b> ActivateDeviceCpiBuilder<'a, 'b> {
             did_mint: None,
             did_atoken: None,
             bump: None,
-            device_signature: None,
+            key_type: None,
             __remaining_accounts: Vec::new(),
         });
         Self { instruction }
@@ -664,8 +661,8 @@ impl<'a, 'b> ActivateDeviceCpiBuilder<'a, 'b> {
         self
     }
     #[inline(always)]
-    pub fn device_signature(&mut self, device_signature: DeviceSignature) -> &mut Self {
-        self.instruction.device_signature = Some(device_signature);
+    pub fn key_type(&mut self, key_type: KeyType) -> &mut Self {
+        self.instruction.key_type = Some(key_type);
         self
     }
     /// Add an additional account to the instruction.
@@ -711,11 +708,11 @@ impl<'a, 'b> ActivateDeviceCpiBuilder<'a, 'b> {
     ) -> solana_program::entrypoint::ProgramResult {
         let args = ActivateDeviceInstructionArgs {
             bump: self.instruction.bump.clone().expect("bump is not set"),
-            device_signature: self
+            key_type: self
                 .instruction
-                .device_signature
+                .key_type
                 .clone()
-                .expect("device_signature is not set"),
+                .expect("key_type is not set"),
         };
         let instruction = ActivateDeviceCpi {
             __program: self.instruction.__program,
@@ -786,7 +783,7 @@ struct ActivateDeviceCpiBuilderInstruction<'a, 'b> {
     did_mint: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     did_atoken: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     bump: Option<u8>,
-    device_signature: Option<DeviceSignature>,
+    key_type: Option<KeyType>,
     /// Additional instruction accounts `(AccountInfo, is_writable, is_signer)`.
     __remaining_accounts: Vec<(
         &'b solana_program::account_info::AccountInfo<'a>,

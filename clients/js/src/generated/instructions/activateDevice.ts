@@ -17,7 +17,6 @@ import {
   IInstructionWithAccounts,
   IInstructionWithData,
   ReadonlyAccount,
-  ReadonlySignerAccount,
   TransactionSigner,
   WritableAccount,
   WritableSignerAccount,
@@ -31,10 +30,10 @@ import {
 import { DEPHY_ID_PROGRAM_ADDRESS } from '../programs';
 import { ResolvedAccount, getAccountMetaFactory } from '../shared';
 import {
-  DeviceSignature,
-  DeviceSignatureArgs,
-  getDeviceSignatureDecoder,
-  getDeviceSignatureEncoder,
+  KeyType,
+  KeyTypeArgs,
+  getKeyTypeDecoder,
+  getKeyTypeEncoder,
 } from '../types';
 
 export type ActivateDeviceInstruction<
@@ -77,8 +76,7 @@ export type ActivateDeviceInstruction<
             IAccountSignerMeta<TAccountPayer>
         : TAccountPayer,
       TAccountDevice extends string
-        ? ReadonlySignerAccount<TAccountDevice> &
-            IAccountSignerMeta<TAccountDevice>
+        ? ReadonlyAccount<TAccountDevice>
         : TAccountDevice,
       TAccountVendor extends string
         ? ReadonlyAccount<TAccountVendor>
@@ -105,12 +103,12 @@ export type ActivateDeviceInstruction<
 export type ActivateDeviceInstructionData = {
   discriminator: number;
   bump: number;
-  deviceSignature: DeviceSignature;
+  keyType: KeyType;
 };
 
 export type ActivateDeviceInstructionDataArgs = {
   bump: number;
-  deviceSignature: DeviceSignatureArgs;
+  keyType: KeyTypeArgs;
 };
 
 export function getActivateDeviceInstructionDataEncoder(): Encoder<ActivateDeviceInstructionDataArgs> {
@@ -118,7 +116,7 @@ export function getActivateDeviceInstructionDataEncoder(): Encoder<ActivateDevic
     getStructEncoder([
       ['discriminator', getU8Encoder()],
       ['bump', getU8Encoder()],
-      ['deviceSignature', getDeviceSignatureEncoder()],
+      ['keyType', getKeyTypeEncoder()],
     ]),
     (value) => ({ ...value, discriminator: 4 })
   );
@@ -128,7 +126,7 @@ export function getActivateDeviceInstructionDataDecoder(): Decoder<ActivateDevic
   return getStructDecoder([
     ['discriminator', getU8Decoder()],
     ['bump', getU8Decoder()],
-    ['deviceSignature', getDeviceSignatureDecoder()],
+    ['keyType', getKeyTypeDecoder()],
   ]);
 }
 
@@ -167,7 +165,7 @@ export type ActivateDeviceInput<
   /** The account paying for the storage fees */
   payer: TransactionSigner<TAccountPayer>;
   /** The Device pubkey */
-  device: TransactionSigner<TAccountDevice>;
+  device: Address<TAccountDevice>;
   /** Vendor of the Device */
   vendor: Address<TAccountVendor>;
   /** Product of the Device */
@@ -181,7 +179,7 @@ export type ActivateDeviceInput<
   /** The NFT atoken account */
   didAtoken: Address<TAccountDidAtoken>;
   bump: ActivateDeviceInstructionDataArgs['bump'];
-  deviceSignature: ActivateDeviceInstructionDataArgs['deviceSignature'];
+  keyType: ActivateDeviceInstructionDataArgs['keyType'];
 };
 
 export function getActivateDeviceInstruction<

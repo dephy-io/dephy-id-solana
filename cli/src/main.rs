@@ -1,23 +1,16 @@
 use std::{error::Error, time::Duration};
 
-use clap::{Args, Parser, Subcommand};
+use clap::{Args, Parser, Subcommand, ValueEnum};
 use dephy_io_dephy_id_client::{
     instructions::{
         ActivateDeviceBuilder, CreateDephyBuilder, CreateDeviceBuilder, CreateProductBuilder,
         CreateVendorBuilder,
     },
-    types::DeviceSignature,
+    types,
 };
 use solana_client::rpc_client::RpcClient;
 use solana_sdk::{
-    commitment_config::{CommitmentConfig, CommitmentLevel},
-    ed25519_instruction::new_ed25519_instruction,
-    hash,
-    pubkey::Pubkey,
-    signature::Keypair,
-    signer::{EncodableKey, Signer},
-    sysvar::instructions,
-    transaction::Transaction,
+    commitment_config::{CommitmentConfig, CommitmentLevel}, ed25519_instruction::new_ed25519_instruction, hash, keccak, pubkey::Pubkey, secp256k1_instruction::new_secp256k1_instruction, signature::Keypair, signer::{EncodableKey, Signer}, sysvar::instructions, transaction::Transaction
 };
 
 #[derive(Debug, Parser)]
@@ -84,6 +77,21 @@ struct CreateProductCliArgs {
     common: CommonArgs,
 }
 
+#[derive(Debug, Clone, ValueEnum)]
+enum KeyType {
+    Ed25519,
+    Secp256k1,
+}
+
+impl Into<types::KeyType> for KeyType {
+    fn into(self) -> types::KeyType {
+        match self {
+            KeyType::Ed25519 => types::KeyType::Ed25519,
+            KeyType::Secp256k1 => types::KeyType::Secp256k1,
+        }
+    }
+}
+
 #[derive(Debug, Args)]
 struct CreateDeviceCliArgs {
     #[arg(long = "vendor")]
@@ -92,6 +100,8 @@ struct CreateDeviceCliArgs {
     device_keypair: String,
     #[arg(long = "product")]
     product_pubkey: Pubkey,
+    #[arg(value_enum, long, default_value_t = KeyType::Ed25519)]
+    key_type: KeyType,
     #[command(flatten)]
     common: CommonArgs,
 }
@@ -106,6 +116,8 @@ struct ActivateDeviceCliArgs {
     vendor_pubkey: Pubkey,
     #[arg(long = "product")]
     product_pubkey: Pubkey,
+    #[arg(value_enum, long, default_value_t = KeyType::Ed25519)]
+    key_type: KeyType,
     #[command(flatten)]
     common: CommonArgs,
 }
@@ -278,11 +290,12 @@ fn create_product(args: CreateProductCliArgs) {
     let (vendor_mint_pubkey, _) =
         Pubkey::find_program_address(&[b"DePHY VENDOR", &vendor.pubkey().to_bytes()], &program_id);
 
-    let vendor_atoken_pubkey = spl_associated_token_account::get_associated_token_address_with_program_id(
-        &vendor.pubkey(),
-        &vendor_mint_pubkey,
-        &spl_token_2022::id(),
-    );
+    let vendor_atoken_pubkey =
+        spl_associated_token_account::get_associated_token_address_with_program_id(
+            &vendor.pubkey(),
+            &vendor_mint_pubkey,
+            &spl_token_2022::id(),
+        );
 
     let latest_block = client.get_latest_blockhash().unwrap();
     let transaction = Transaction::new_signed_with_payer(
@@ -316,6 +329,18 @@ fn create_product(args: CreateProductCliArgs) {
     };
 }
 
+fn get_device_pubkey(device: &Keypair, key_type: KeyType) -> Pubkey {
+    match key_type {
+        KeyType::Ed25519 => device.pubkey(),
+        KeyType::Secp256k1 => {
+            let privkey = libsecp256k1::SecretKey::parse(device.secret().as_bytes()).unwrap();
+            let pubkey = libsecp256k1::PublicKey::from_secret_key(&privkey);
+            let hash = keccak::hash(&pubkey.serialize()[1..]);
+            Pubkey::new_from_array(keccak::hash(&hash.as_ref()[12..]).to_bytes())
+        }
+    }
+}
+
 fn create_device(args: CreateDeviceCliArgs) {
     let client = get_client(&args.common.url);
     let token_program_id = spl_token_2022::ID;
@@ -324,9 +349,10 @@ fn create_device(args: CreateDeviceCliArgs) {
     let device = read_key(&args.device_keypair);
     let payer = read_key_or(args.common.payer, &args.vendor_keypair);
 
+    let device_pubkey = get_device_pubkey(&device, args.key_type.clone());
     let product_atoken_pubkey =
         spl_associated_token_account::get_associated_token_address_with_program_id(
-            &device.pubkey(),
+            &device_pubkey,
             &args.product_pubkey,
             &token_program_id,
         );
@@ -337,12 +363,13 @@ fn create_device(args: CreateDeviceCliArgs) {
             .token_program2022(token_program_id)
             .payer(payer.pubkey())
             .vendor(vendor.pubkey())
-            .device(device.pubkey())
+            .device(device_pubkey)
             .product_mint(args.product_pubkey)
             .product_atoken(product_atoken_pubkey)
+            .key_type(args.key_type.into())
             .instruction()],
         Some(&payer.pubkey()),
-        &[&vendor, &device, &payer],
+        &[&vendor, &payer],
         latest_block,
     );
 
@@ -370,9 +397,10 @@ fn activate_device(args: ActivateDeviceCliArgs) {
     let user = read_key(&args.user_keypair);
     let payer = read_key_or(args.common.payer, &args.user_keypair);
 
+    let device_pubkey = get_device_pubkey(&device, args.key_type.clone());
     let product_atoken_pubkey =
         spl_associated_token_account::get_associated_token_address_with_program_id(
-            &device.pubkey(),
+            &device_pubkey,
             &args.product_pubkey,
             &token_program_id,
         );
@@ -380,7 +408,7 @@ fn activate_device(args: ActivateDeviceCliArgs) {
     let (did_mint_pubkey, bump) = Pubkey::find_program_address(
         &[
             b"DePHY DID",
-            device.pubkey().as_ref(),
+            device_pubkey.as_ref(),
             user.pubkey().as_ref(),
         ],
         &program_id,
@@ -399,21 +427,33 @@ fn activate_device(args: ActivateDeviceCliArgs) {
             commitment: CommitmentLevel::Finalized,
         })
         .unwrap();
-    let device_ed25519_keypair = ed25519_dalek::Keypair::from_bytes(&device.to_bytes()).unwrap();
     let message = [
+        b"DEPHY_ID",
         product_atoken_pubkey.as_ref(),
         user.pubkey().as_ref(),
         &slot.to_le_bytes(),
     ]
     .concat();
+
+    let verify_signature_ix = match args.key_type {
+        KeyType::Ed25519 => {
+            let device_ed25519_keypair = ed25519_dalek::Keypair::from_bytes(&device.to_bytes()).unwrap();
+            new_ed25519_instruction(&device_ed25519_keypair, &message)
+        }
+        KeyType::Secp256k1 => {
+            let device_secp256k1_priv_key = libsecp256k1::SecretKey::parse(device.secret().as_bytes()).unwrap();
+            new_secp256k1_instruction(&device_secp256k1_priv_key, &message)
+        }
+    };
+
     let transaction = Transaction::new_signed_with_payer(
         &[
-            new_ed25519_instruction(&device_ed25519_keypair, &message),
+            verify_signature_ix,
             ActivateDeviceBuilder::new()
                 .token_program2022(token_program_id)
                 .instructions(instructions_id)
                 .payer(payer.pubkey())
-                .device(device.pubkey())
+                .device(device_pubkey)
                 .vendor(args.vendor_pubkey)
                 .product_mint(args.product_pubkey)
                 .product_atoken(product_atoken_pubkey)
@@ -421,11 +461,11 @@ fn activate_device(args: ActivateDeviceCliArgs) {
                 .did_mint(did_mint_pubkey)
                 .did_atoken(did_atoken_pubkey)
                 .bump(bump)
-                .device_signature(DeviceSignature::Ed25519)
+                .key_type(args.key_type.into())
                 .instruction(),
         ],
         Some(&payer.pubkey()),
-        &[&user, &device, &payer],
+        &[&user, &payer],
         latest_block,
     );
 
@@ -435,7 +475,7 @@ fn activate_device(args: ActivateDeviceCliArgs) {
             println!(
                 "User {} activated Device {}, Token: {}",
                 user.pubkey(),
-                device.pubkey(),
+                device_pubkey,
                 did_mint_pubkey
             );
         }
@@ -444,3 +484,4 @@ fn activate_device(args: ActivateDeviceCliArgs) {
         }
     };
 }
+

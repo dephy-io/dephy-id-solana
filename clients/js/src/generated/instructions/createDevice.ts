@@ -30,6 +30,12 @@ import {
 } from '@solana/web3.js';
 import { DEPHY_ID_PROGRAM_ADDRESS } from '../programs';
 import { ResolvedAccount, getAccountMetaFactory } from '../shared';
+import {
+  KeyType,
+  KeyTypeArgs,
+  getKeyTypeDecoder,
+  getKeyTypeEncoder,
+} from '../types';
 
 export type CreateDeviceInstruction<
   TProgram extends string = typeof DEPHY_ID_PROGRAM_ADDRESS,
@@ -68,8 +74,7 @@ export type CreateDeviceInstruction<
             IAccountSignerMeta<TAccountVendor>
         : TAccountVendor,
       TAccountDevice extends string
-        ? ReadonlySignerAccount<TAccountDevice> &
-            IAccountSignerMeta<TAccountDevice>
+        ? ReadonlyAccount<TAccountDevice>
         : TAccountDevice,
       TAccountProductMint extends string
         ? WritableAccount<TAccountProductMint>
@@ -81,19 +86,28 @@ export type CreateDeviceInstruction<
     ]
   >;
 
-export type CreateDeviceInstructionData = { discriminator: number };
+export type CreateDeviceInstructionData = {
+  discriminator: number;
+  keyType: KeyType;
+};
 
-export type CreateDeviceInstructionDataArgs = {};
+export type CreateDeviceInstructionDataArgs = { keyType: KeyTypeArgs };
 
 export function getCreateDeviceInstructionDataEncoder(): Encoder<CreateDeviceInstructionDataArgs> {
   return transformEncoder(
-    getStructEncoder([['discriminator', getU8Encoder()]]),
+    getStructEncoder([
+      ['discriminator', getU8Encoder()],
+      ['keyType', getKeyTypeEncoder()],
+    ]),
     (value) => ({ ...value, discriminator: 3 })
   );
 }
 
 export function getCreateDeviceInstructionDataDecoder(): Decoder<CreateDeviceInstructionData> {
-  return getStructDecoder([['discriminator', getU8Decoder()]]);
+  return getStructDecoder([
+    ['discriminator', getU8Decoder()],
+    ['keyType', getKeyTypeDecoder()],
+  ]);
 }
 
 export function getCreateDeviceInstructionDataCodec(): Codec<
@@ -127,11 +141,12 @@ export type CreateDeviceInput<
   /** The Vendor pubkey */
   vendor: TransactionSigner<TAccountVendor>;
   /** The Device pubkey */
-  device: TransactionSigner<TAccountDevice>;
+  device: Address<TAccountDevice>;
   /** The Product mint account */
   productMint: Address<TAccountProductMint>;
   /** The Product atoken for Device */
   productAtoken: Address<TAccountProductAtoken>;
+  keyType: CreateDeviceInstructionDataArgs['keyType'];
 };
 
 export function getCreateDeviceInstruction<
@@ -187,6 +202,9 @@ export function getCreateDeviceInstruction<
     ResolvedAccount
   >;
 
+  // Original args.
+  const args = { ...input };
+
   // Resolve default values.
   if (!accounts.systemProgram.value) {
     accounts.systemProgram.value =
@@ -210,7 +228,9 @@ export function getCreateDeviceInstruction<
       getAccountMeta(accounts.productAtoken),
     ],
     programAddress,
-    data: getCreateDeviceInstructionDataEncoder().encode({}),
+    data: getCreateDeviceInstructionDataEncoder().encode(
+      args as CreateDeviceInstructionDataArgs
+    ),
   } as CreateDeviceInstruction<
     typeof DEPHY_ID_PROGRAM_ADDRESS,
     TAccountSystemProgram,
