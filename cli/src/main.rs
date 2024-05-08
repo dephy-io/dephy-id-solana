@@ -1,6 +1,6 @@
 use std::{error::Error, time::Duration};
 
-use clap::{Args, Parser, Subcommand};
+use clap::{Args, Parser, Subcommand, ValueEnum};
 use dephy_io_dephy_id_client::{
     instructions::{
         ActivateDeviceBuilder, CreateDephyBuilder, CreateDeviceBuilder, CreateProductBuilder,
@@ -10,14 +10,7 @@ use dephy_io_dephy_id_client::{
 };
 use solana_client::rpc_client::RpcClient;
 use solana_sdk::{
-    commitment_config::{CommitmentConfig, CommitmentLevel},
-    ed25519_instruction::new_ed25519_instruction,
-    hash,
-    pubkey::Pubkey,
-    signature::Keypair,
-    signer::{EncodableKey, Signer},
-    sysvar::instructions,
-    transaction::Transaction,
+    commitment_config::{CommitmentConfig, CommitmentLevel}, ed25519_instruction::new_ed25519_instruction, hash, pubkey::Pubkey, secp256k1_instruction::new_secp256k1_instruction, signature::Keypair, signer::{EncodableKey, Signer}, sysvar::instructions, transaction::Transaction
 };
 
 #[derive(Debug, Parser)]
@@ -96,6 +89,12 @@ struct CreateDeviceCliArgs {
     common: CommonArgs,
 }
 
+#[derive(Debug, Clone, ValueEnum)]
+enum KeyType {
+    Ed25519,
+    Secp256k1,
+}
+
 #[derive(Debug, Args)]
 struct ActivateDeviceCliArgs {
     #[arg(long = "device")]
@@ -106,6 +105,8 @@ struct ActivateDeviceCliArgs {
     vendor_pubkey: Pubkey,
     #[arg(long = "product")]
     product_pubkey: Pubkey,
+    #[arg(value_enum, long, default_value_t = KeyType::Ed25519)]
+    key_type: KeyType,
     #[command(flatten)]
     common: CommonArgs,
 }
@@ -399,16 +400,30 @@ fn activate_device(args: ActivateDeviceCliArgs) {
             commitment: CommitmentLevel::Finalized,
         })
         .unwrap();
-    let device_ed25519_keypair = ed25519_dalek::Keypair::from_bytes(&device.to_bytes()).unwrap();
     let message = [
+        b"DEPHY_ID",
         product_atoken_pubkey.as_ref(),
         user.pubkey().as_ref(),
         &slot.to_le_bytes(),
     ]
     .concat();
+
+    let verify_signature_ix = match args.key_type {
+        KeyType::Ed25519 => {
+            let device_ed25519_keypair = ed25519_dalek::Keypair::from_bytes(&device.to_bytes()).unwrap();
+            new_ed25519_instruction(&device_ed25519_keypair, &message)
+        },
+        KeyType::Secp256k1 => {
+            let privkey = libsecp256k1::SecretKey::parse(device.secret().as_bytes()).unwrap();
+            new_secp256k1_instruction(&privkey, &message)
+        },
+    };
+
+    println!("data: {:?}", verify_signature_ix.data);
+
     let transaction = Transaction::new_signed_with_payer(
         &[
-            new_ed25519_instruction(&device_ed25519_keypair, &message),
+            verify_signature_ix,
             ActivateDeviceBuilder::new()
                 .token_program2022(token_program_id)
                 .instructions(instructions_id)

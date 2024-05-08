@@ -2,8 +2,8 @@
 
 use dephy_io_dephy_id::{
     instruction::{
-        ActivateDeviceArgs, CreateDephyArgs, CreateProductArgs, CreateVendorArgs, DephyInstruction,
-        DeviceSignature::Ed25519,
+        ActivateDeviceArgs, CreateDephyArgs, CreateDeviceArgs, CreateProductArgs, CreateVendorArgs,
+        DephyInstruction, KeyType,
     },
     state::DephyAccount,
 };
@@ -14,6 +14,8 @@ use solana_sdk::{
     ed25519_instruction::new_ed25519_instruction,
     hash::hash,
     instruction::{AccountMeta, Instruction},
+    keccak,
+    secp256k1_instruction::new_secp256k1_instruction,
     signature::Keypair,
     signer::Signer,
     system_program, sysvar,
@@ -37,6 +39,7 @@ async fn test_dephy() {
     let admin = Keypair::new();
     let vendor = Keypair::new();
     let device1 = Keypair::new();
+    let device2 = Keypair::new();
     let user1 = Keypair::new();
 
     // Create DePHY account
@@ -74,9 +77,49 @@ async fn test_dephy() {
 
     test_create_product(program_id, &mut ctx, &vendor, b"Product1").await;
 
-    test_create_device(program_id, &mut ctx, &vendor, &device1, b"Product1").await;
+    test_create_device(
+        program_id,
+        &mut ctx,
+        &vendor,
+        &device1,
+        b"Product1",
+        KeyType::Ed25519,
+    )
+    .await;
 
-    test_activate_device(program_id, &mut ctx, &vendor, b"Product1", &device1, &user1).await;
+    test_activate_device(
+        program_id,
+        &mut ctx,
+        &vendor,
+        b"Product1",
+        &device1,
+        &user1,
+        KeyType::Ed25519,
+        1_000,
+    )
+    .await;
+
+    test_create_device(
+        program_id,
+        &mut ctx,
+        &vendor,
+        &device2,
+        b"Product1",
+        KeyType::Secp256k1,
+    )
+    .await;
+
+    test_activate_device(
+        program_id,
+        &mut ctx,
+        &vendor,
+        b"Product1",
+        &device2,
+        &user1,
+        KeyType::Secp256k1,
+        2_000,
+    )
+    .await;
 }
 
 async fn test_create_vendor(
@@ -175,11 +218,12 @@ async fn test_create_product(
     let (vendor_mint_pubkey, _) =
         Pubkey::find_program_address(&[b"DePHY VENDOR", &vendor.pubkey().to_bytes()], &program_id);
 
-    let vendor_atoken_pubkey = spl_associated_token_account::get_associated_token_address_with_program_id(
-        &vendor.pubkey(),
-        &vendor_mint_pubkey,
-        &spl_token_2022::id(),
-    );
+    let vendor_atoken_pubkey =
+        spl_associated_token_account::get_associated_token_address_with_program_id(
+            &vendor.pubkey(),
+            &vendor_mint_pubkey,
+            &spl_token_2022::id(),
+        );
 
     let (product_mint_pubkey, mint_bump) = Pubkey::find_program_address(
         &[b"DePHY PRODUCT", &vendor.pubkey().to_bytes(), seed.as_ref()],
@@ -238,12 +282,25 @@ async fn test_create_product(
     assert_eq!(mint_metadata.name, "Example Product 1", "metadata name");
 }
 
+fn get_device_pubkey(device: &Keypair, key_type: KeyType) -> Pubkey {
+    match key_type {
+        KeyType::Ed25519 => device.pubkey(),
+        KeyType::Secp256k1 => {
+            let privkey = libsecp256k1::SecretKey::parse(device.secret().as_bytes()).unwrap();
+            let pubkey = libsecp256k1::PublicKey::from_secret_key(&privkey);
+            let hash = keccak::hash(&pubkey.serialize()[1..]);
+            Pubkey::new_from_array(keccak::hash(&hash.as_ref()[12..]).to_bytes())
+        }
+    }
+}
+
 async fn test_create_device(
     program_id: Pubkey,
     ctx: &mut ProgramTestContext,
     vendor: &Keypair,
     device: &Keypair,
     product_seed: &[u8],
+    key_type: KeyType,
 ) {
     let seed = hash(product_seed);
 
@@ -252,8 +309,9 @@ async fn test_create_device(
         &program_id,
     );
 
+    let device_pubkey = get_device_pubkey(device, key_type.clone());
     let atoken_pubkey = spl_associated_token_account::get_associated_token_address_with_program_id(
-        &device.pubkey(),
+        &device_pubkey,
         &product_mint_pubkey,
         &spl_token_2022::id(),
     );
@@ -261,14 +319,14 @@ async fn test_create_device(
     let mut transaction = Transaction::new_with_payer(
         &[Instruction::new_with_borsh(
             program_id,
-            &DephyInstruction::CreateDevice(),
+            &DephyInstruction::CreateDevice(CreateDeviceArgs { key_type }),
             vec![
                 AccountMeta::new(system_program::id(), false),
                 AccountMeta::new(spl_token_2022::id(), false),
                 AccountMeta::new(spl_associated_token_account::id(), false),
                 AccountMeta::new(ctx.payer.pubkey(), true),
                 AccountMeta::new(vendor.pubkey(), true),
-                AccountMeta::new(device.pubkey(), true),
+                AccountMeta::new(device_pubkey, false),
                 AccountMeta::new(product_mint_pubkey, false),
                 AccountMeta::new(atoken_pubkey, false),
             ],
@@ -277,7 +335,7 @@ async fn test_create_device(
     );
 
     let recent_blockhash = ctx.banks_client.get_latest_blockhash().await.unwrap();
-    transaction.sign(&[&ctx.payer, &vendor, &device], recent_blockhash);
+    transaction.sign(&[&ctx.payer, &vendor], recent_blockhash);
     ctx.banks_client
         .process_transaction(transaction)
         .await
@@ -300,28 +358,30 @@ async fn test_activate_device(
     product_seed: &[u8],
     device: &Keypair,
     user: &Keypair,
+    key_type: KeyType,
+    slot: u64,
 ) {
-    let (mint_pubkey, mint_bump) = Pubkey::find_program_address(
-        &[
-            b"DePHY DID",
-            &device.pubkey().to_bytes(),
-            &user.pubkey().to_bytes(),
-        ],
-        &program_id,
-    );
+    ctx.warp_to_slot(slot).unwrap();
 
     let (product_mint_pubkey, _) = Pubkey::find_program_address(
         &[
             b"DePHY PRODUCT",
-            &vendor.pubkey().to_bytes(),
+            vendor.pubkey().as_ref(),
             product_seed.as_ref(),
         ],
         &program_id,
     );
 
+    let device_pubkey = get_device_pubkey(device, key_type.clone());
+
+    let (mint_pubkey, mint_bump) = Pubkey::find_program_address(
+        &[b"DePHY DID", device_pubkey.as_ref(), user.pubkey().as_ref()],
+        &program_id,
+    );
+
     let product_atoken_pubkey =
         spl_associated_token_account::get_associated_token_address_with_program_id(
-            &device.pubkey(),
+            &device_pubkey,
             &product_mint_pubkey,
             &spl_token_2022::id(),
         );
@@ -336,7 +396,7 @@ async fn test_activate_device(
         program_id,
         &DephyInstruction::ActivateDevice(ActivateDeviceArgs {
             bump: mint_bump,
-            device_signature: Ed25519,
+            key_type: key_type.clone(),
         }),
         vec![
             // #[account(0, name="system_program", desc = "The system program")]
@@ -350,7 +410,7 @@ async fn test_activate_device(
             // #[account(4, writable, signer, name="payer", desc = "The account paying for the storage fees")]
             AccountMeta::new(ctx.payer.pubkey(), true),
             // #[account(5, signer, name="device", desc = "The Device pubkey")]
-            AccountMeta::new(device.pubkey(), true),
+            AccountMeta::new(device_pubkey, false),
             // #[account(6, name="vendor", desc = "Vendor of the Device")]
             AccountMeta::new(vendor.pubkey(), false),
             // #[account(7, name="product_mint", desc = "Product of the Device")]
@@ -370,33 +430,38 @@ async fn test_activate_device(
         Transaction::new_with_payer(&[activate_device_ix.clone()], Some(&ctx.payer.pubkey()));
 
     let recent_blockhash = ctx.banks_client.get_latest_blockhash().await.unwrap();
-    transaction.sign(&[&ctx.payer, &device, &user], recent_blockhash);
+    transaction.sign(&[&ctx.payer, &user], recent_blockhash);
     ctx.banks_client
         .process_transaction(transaction)
         .await
         .expect_err("should fail");
 
-    let slot: u64 = 1_000_000_000;
-    let device_ed25519_keypair = ed25519_dalek::Keypair::from_bytes(&device.to_bytes()).unwrap();
-    // let device_secp256k1_priv_key = libsecp256k1::SecretKey::parse(device.secret().as_bytes()).unwrap();
     let message = [
+        b"DEPHY_ID",
         product_atoken_pubkey.as_ref(),
         user.pubkey().as_ref(),
         &slot.to_le_bytes(),
     ]
     .concat();
-    let mut transaction = Transaction::new_with_payer(
-        &[
-            // new_secp256k1_instruction(&device_secp256k1_priv_key, &message),
-            new_ed25519_instruction(&device_ed25519_keypair, &message),
-            activate_device_ix,
-        ],
-        Some(&ctx.payer.pubkey()),
-    );
 
-    ctx.warp_to_slot(slot + 100).unwrap();
-    let recent_blockhash = ctx.banks_client.get_latest_blockhash().await.unwrap();
-    transaction.sign(&[&ctx.payer, &device, &user], recent_blockhash);
+    let sign_ix = match key_type {
+        KeyType::Ed25519 => {
+            let device_ed25519_keypair =
+                ed25519_dalek::Keypair::from_bytes(&device.to_bytes()).unwrap();
+            new_ed25519_instruction(&device_ed25519_keypair, &message)
+        }
+        KeyType::Secp256k1 => {
+            let device_secp256k1_priv_key =
+                libsecp256k1::SecretKey::parse(device.secret().as_bytes()).unwrap();
+            new_secp256k1_instruction(&device_secp256k1_priv_key, &message)
+        }
+    };
+
+    let mut transaction =
+        Transaction::new_with_payer(&[sign_ix, activate_device_ix], Some(&ctx.payer.pubkey()));
+
+    ctx.warp_forward_force_reward_interval_end().unwrap();
+    transaction.sign(&[&ctx.payer, &user], ctx.last_blockhash);
     ctx.banks_client
         .process_transaction(transaction)
         .await
@@ -411,4 +476,3 @@ async fn test_activate_device(
     let account_data = StateWithExtensions::<Account>::unpack(atoken_account.data()).unwrap();
     assert_eq!(account_data.base.amount, 1, "Token amount is 1");
 }
-

@@ -1,5 +1,6 @@
 use borsh::{BorshDeserialize, BorshSerialize};
 use shank::{ShankContext, ShankInstruction};
+use solana_program::{keccak, pubkey::Pubkey};
 
 use crate::error::DephyError;
 
@@ -43,10 +44,10 @@ pub enum DephyInstruction {
     #[account(2, name="ata_program", desc = "The associated token program")]
     #[account(3, writable, signer, name="payer", desc = "The account paying for the storage fees")]
     #[account(4, signer, name="vendor", desc = "The Vendor pubkey")]
-    #[account(5, signer, name="device", desc = "The Device pubkey")]
+    #[account(5, name="device", desc = "The Device pubkey")]
     #[account(6, writable, name="product_mint", desc = "The Product mint account")]
     #[account(7, writable, name="product_atoken", desc = "The Product atoken for Device")]
-    CreateDevice(),
+    CreateDevice(CreateDeviceArgs),
 
     /// User activate a Device
     #[account(0, name="system_program", desc = "The system program")]
@@ -54,7 +55,7 @@ pub enum DephyInstruction {
     #[account(2, name="ata_program", desc = "The associated token program")]
     #[account(3, name="instructions", desc = "The Instructions sysvar")]
     #[account(4, writable, signer, name="payer", desc = "The account paying for the storage fees")]
-    #[account(5, signer, name="device", desc = "The Device pubkey")]
+    #[account(5, name="device", desc = "The Device pubkey")]
     #[account(6, name="vendor", desc = "Vendor of the Device")]
     #[account(7, name="product_mint", desc = "Product of the Device")]
     #[account(8, name="product_atoken", desc = "The Product atoken for Device")]
@@ -92,14 +93,18 @@ pub struct CreateProductArgs {
 }
 
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
-pub enum DeviceSignature {
+pub enum KeyType {
     Ed25519,
     Secp256k1,
 }
 
-impl DeviceSignature {
+impl KeyType {
+    const DEPHY_PREFIX: [u8; 8] = *b"DEPHY_ID";
     const ED25519_HEADER: [u8; 16] = [
-        1, 0, 48, 0, 255, 255, 16, 0, 255, 255, 112, 0, 72, 0, 255, 255,
+        1, 0, 48, 0, 255, 255, 16, 0, 255, 255, 112, 0, 80, 0, 255, 255,
+    ];
+    const SECP256K1_HEADER: [u8; 12] = [
+        1, 32, 0, 0, 12, 0, 0, 97, 0, 80, 0, 0
     ];
 
     pub fn decode(
@@ -107,16 +112,39 @@ impl DeviceSignature {
         data: &[u8],
     ) -> Result<([u8; 32], [u8; 72]), DephyError> {
         match self {
-            DeviceSignature::Ed25519 => {
-                assert!(data.len() == 184);
-                assert_eq!(data[0..16], Self::ED25519_HEADER);
+            KeyType::Ed25519 => {
+                if data.len() != 192 {
+                    return Err(DephyError::DeserializationError);
+                }
+                if data[0..16] != Self::ED25519_HEADER {
+                    return Err(DephyError::DeserializationError);
+                }
+                if data[112..120] != Self::DEPHY_PREFIX {
+                    return Err(DephyError::DeserializationError);
+                }
+
                 Ok((
                     data[16..48].try_into().unwrap(),
-                    data[112..184].try_into().unwrap(),
+                    data[120..192].try_into().unwrap(),
                 ))
             }
-            DeviceSignature::Secp256k1 => {
-                Err(DephyError::DeserializationError)
+            KeyType::Secp256k1 => {
+                if data.len() != 177 {
+                    return Err(DephyError::DeserializationError);
+                }
+                if data[0..12] != Self::SECP256K1_HEADER {
+                    return Err(DephyError::DeserializationError);
+                }
+                if data[97..105] != Self::DEPHY_PREFIX {
+                    return Err(DephyError::DeserializationError);
+                }
+
+                let pubkey = Pubkey::new_from_array(keccak::hash(&data[12..32]).to_bytes());
+
+                Ok((
+                    pubkey.to_bytes(),
+                    data[105..177].try_into().unwrap(),
+                ))
             }
         }
     }
@@ -124,7 +152,13 @@ impl DeviceSignature {
 
 #[repr(C)]
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
+pub struct CreateDeviceArgs {
+    pub key_type: KeyType,
+}
+
+#[repr(C)]
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
 pub struct ActivateDeviceArgs {
     pub bump: u8,
-    pub device_signature: DeviceSignature,
+    pub key_type: KeyType,
 }

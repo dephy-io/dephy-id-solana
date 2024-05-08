@@ -25,8 +25,8 @@ use crate::{
             ActivateDeviceAccounts, CreateDephyAccounts, CreateDeviceAccounts,
             CreateProductAccounts, CreateVendorAccounts,
         },
-        ActivateDeviceArgs, CreateDephyArgs, CreateProductArgs, CreateVendorArgs, DephyInstruction,
-        DeviceSignature,
+        ActivateDeviceArgs, CreateDephyArgs, CreateDeviceArgs, CreateProductArgs, CreateVendorArgs,
+        DephyInstruction, KeyType,
     },
     state::{DephyAccount, DephyData, Key},
     utils::create_account,
@@ -52,9 +52,9 @@ pub fn process_instruction<'a>(
             msg!("Instruction: Create Product");
             create_product(program_id, accounts, args)
         }
-        DephyInstruction::CreateDevice() => {
+        DephyInstruction::CreateDevice(args) => {
             msg!("Instruction: Create Device");
-            create_device(program_id, accounts)
+            create_device(program_id, accounts, args)
         }
         DephyInstruction::ActivateDevice(args) => {
             msg!("Instruction: Activate Device");
@@ -365,7 +365,8 @@ fn create_product<'a>(
         assert!(vendor_mint_state.base.mint_authority.is_none());
 
         let vendor_atoken_data = ctx.accounts.vendor_atoken.data.borrow();
-        let vendor_atoken_state = StateWithExtensions::<spl_token_2022::state::Account>::unpack(&vendor_atoken_data)?;
+        let vendor_atoken_state =
+            StateWithExtensions::<spl_token_2022::state::Account>::unpack(&vendor_atoken_data)?;
         assert_eq!(vendor_atoken_state.base.amount, 1);
         assert_eq!(vendor_atoken_state.base.owner, *vendor_pubkey);
         assert_eq!(vendor_atoken_state.base.mint, vendor_mint_pubkey);
@@ -475,7 +476,11 @@ fn create_product<'a>(
     Ok(())
 }
 
-fn create_device<'a>(_program_id: &Pubkey, accounts: &'a [AccountInfo<'a>]) -> ProgramResult {
+fn create_device<'a>(
+    _program_id: &Pubkey,
+    accounts: &'a [AccountInfo<'a>],
+    _args: CreateDeviceArgs,
+) -> ProgramResult {
     // Accounts
     let ctx = CreateDeviceAccounts::context(accounts)?;
     let token_program_id = spl_token_2022::id();
@@ -492,10 +497,11 @@ fn create_device<'a>(_program_id: &Pubkey, accounts: &'a [AccountInfo<'a>]) -> P
     )?;
 
     let atoken_pubkey = spl_associated_token_account::get_associated_token_address_with_program_id(
-        device_pubkey,
+        &device_pubkey,
         &mint_pubkey,
         &token_program_id,
     );
+
     assert_same_pubkeys(
         "atoken_account",
         ctx.accounts.product_atoken,
@@ -503,7 +509,6 @@ fn create_device<'a>(_program_id: &Pubkey, accounts: &'a [AccountInfo<'a>]) -> P
     )?;
 
     // TODO: check account pubkeys
-
     {
         let product_mint_data = ctx.accounts.product_mint.data.borrow();
         let product_mint_state = StateWithExtensions::<Mint>::unpack(&product_mint_data)?;
@@ -514,7 +519,7 @@ fn create_device<'a>(_program_id: &Pubkey, accounts: &'a [AccountInfo<'a>]) -> P
     invoke(
         &spl_associated_token_account::instruction::create_associated_token_account(
             payer_pubkey,
-            device_pubkey,
+            &device_pubkey,
             &mint_pubkey,
             &token_program_id,
         ),
@@ -575,28 +580,27 @@ fn activate_device<'a>(
 
     // ed25519 or secp256k1 program should be called to verify signature
     let sign_ix = get_instruction_relative(-1, ctx.accounts.instructions)?;
-    match args.device_signature {
-        DeviceSignature::Ed25519 => {
+    let (key, message) = match args.key_type {
+        KeyType::Ed25519 => {
             if sign_ix.program_id != solana_program::ed25519_program::id() {
                 return Err(ProgramError::IncorrectProgramId);
             }
-            let (key, message) = args.device_signature.decode(&sign_ix.data)?;
-            assert_eq!(key, device_pubkey.to_bytes());
-            assert_eq!(message[0..32], product_atoken_pubkey.to_bytes());
-            assert_eq!(message[32..64], user_pubkey.to_bytes());
-            let clock = Clock::get()?;
-            let slot = u64::from_le_bytes(message[64..72].try_into().unwrap());
-            assert!(clock.slot >= slot);
-            assert!(clock.slot < slot + 500);
+            args.key_type.decode(&sign_ix.data)?
         }
-        DeviceSignature::Secp256k1 => {
-            // TODO: secp256k1
+        KeyType::Secp256k1 => {
             if sign_ix.program_id != solana_program::secp256k1_program::id() {
                 return Err(ProgramError::IncorrectProgramId);
             }
-            return Err(ProgramError::InvalidArgument);
+            args.key_type.decode(&sign_ix.data)?
         }
-    }
+    };
+    assert_eq!(key, device_pubkey.to_bytes());
+    assert_eq!(message[0..32], product_atoken_pubkey.to_bytes());
+    assert_eq!(message[32..64], user_pubkey.to_bytes());
+    let clock = Clock::get()?;
+    let slot = u64::from_le_bytes(message[64..72].try_into().unwrap());
+    assert!(clock.slot >= slot);
+    assert!(clock.slot < slot + 500);
 
     // TODO: verify Device/Product/Vendor
 

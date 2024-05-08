@@ -29,5 +29,5 @@ solana-program-test = "~1.18"
 solana-sdk = "~1.18"
 tokio = "^1.37"
 ed25519-dalek = { workspace = true }
-# libsecp256k1 = { workspace = true }
+libsecp256k1 = { workspace = true }
 
