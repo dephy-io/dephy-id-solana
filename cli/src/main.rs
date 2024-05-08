@@ -96,10 +96,10 @@ impl Into<types::KeyType> for KeyType {
 struct CreateDeviceCliArgs {
     #[arg(long = "vendor")]
     vendor_keypair: String,
-    #[arg(long = "device")]
-    device_keypair: String,
     #[arg(long = "product")]
     product_pubkey: Pubkey,
+    #[arg(long = "device")]
+    device_pubkey: Pubkey,
     #[arg(value_enum, long, default_value_t = KeyType::Ed25519)]
     key_type: KeyType,
     #[command(flatten)]
@@ -346,13 +346,11 @@ fn create_device(args: CreateDeviceCliArgs) {
     let token_program_id = spl_token_2022::ID;
 
     let vendor = read_key(&args.vendor_keypair);
-    let device = read_key(&args.device_keypair);
     let payer = read_key_or(args.common.payer, &args.vendor_keypair);
 
-    let device_pubkey = get_device_pubkey(&device, args.key_type.clone());
     let product_atoken_pubkey =
         spl_associated_token_account::get_associated_token_address_with_program_id(
-            &device_pubkey,
+            &args.device_pubkey,
             &args.product_pubkey,
             &token_program_id,
         );
@@ -363,8 +361,8 @@ fn create_device(args: CreateDeviceCliArgs) {
             .token_program2022(token_program_id)
             .payer(payer.pubkey())
             .vendor(vendor.pubkey())
-            .device(device_pubkey)
             .product_mint(args.product_pubkey)
+            .device(args.device_pubkey)
             .product_atoken(product_atoken_pubkey)
             .key_type(args.key_type.into())
             .instruction()],
