@@ -59,7 +59,8 @@ This template should help get you started developing Solana programs. Let's walk
 3. Create Device
 
         # the PRODUCT_PUBKEY is from "Create Product" step's command output
-        cargo run create-device --vendor keys/VENDOR1.json --device keys/DEVICE1.json --product <PRODUCT_PUBKEY>
+        # the DEVICE_PUBKEY can get by `solana address -k ./keys/DEVICE1.json`
+        cargo run create-device --vendor keys/VENDOR1.json --product <PRODUCT_PUBKEY> --device <DEVICE_PUBKEY>
 
 4. Activate Device
 
