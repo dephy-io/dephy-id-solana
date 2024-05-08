@@ -17,6 +17,13 @@ This template should help get you started developing Solana programs. Let's walk
         bun install
         bun generate:edgeql
 
+3. (optional) upgrade
+
+        cd indexer
+        edgedb migration apply
+        bun generate:edgeql
+        cp -r ../clients/js/src/generated ./src
+
 ## Local setup
 
 1. Compile program
