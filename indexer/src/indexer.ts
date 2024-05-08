@@ -20,6 +20,7 @@ import e from "../dbschema/edgeql-js"
 import {
     DephyAccount,
     DephyIdInstruction,
+    KeyType,
     ParsedActivateDeviceInstruction, ParsedCreateDephyInstruction, ParsedCreateDeviceInstruction,
     ParsedCreateProductInstruction, ParsedCreateVendorInstruction,
     fetchDephyAccount,
@@ -129,7 +130,11 @@ export class Indexer {
         let unprocessed_txs = await e.select(e.Transaction, tx => ({
             id: true,
             signature: true,
-            filter: e.op('not', tx.processed)
+            filter: e.op('not', tx.processed),
+            order_by: {
+                expression: tx.slot,
+                direction: e.ASC,
+            }
         })).run(this.db)
 
         for (const tx of unprocessed_txs) {
@@ -275,6 +280,7 @@ export class Indexer {
                 },
                 "@ix_index": e.int16(meta.index),
             })),
+            key_type: e.cast(e.KeyType, e.str(KeyType[create_device.data.keyType])),
         })
     }
 
