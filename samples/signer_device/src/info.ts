@@ -1,8 +1,6 @@
 import * as process from "node:process";
 import * as fs from "node:fs"
 import { parseArgs } from "node:util";
-import { u8aToHex } from "@polkadot/util";
-import {Device, type KeyType} from "./types";
 
 try {
     const { values: cliArgs } = parseArgs({

@@ -1,7 +1,7 @@
 import * as secp256k1 from '@noble/secp256k1';
 import * as ed25519 from '@noble/ed25519';
 import { keccak256 } from "ethereum-cryptography/keccak.js";
-import { u8aToU8a, hexToU8a } from "@polkadot/util";
+import { u8aToU8a } from "@polkadot/util";
 
 import { sha512 } from '@noble/hashes/sha512';
 ed25519.etc.sha512Sync = (...m) => sha512(ed25519.etc.concatBytes(...m));
