@@ -10,7 +10,15 @@ use dephy_io_dephy_id_client::{
 };
 use solana_client::rpc_client::RpcClient;
 use solana_sdk::{
-    commitment_config::{CommitmentConfig, CommitmentLevel}, ed25519_instruction::new_ed25519_instruction, hash, keccak, pubkey::Pubkey, secp256k1_instruction::new_secp256k1_instruction, signature::Keypair, signer::{EncodableKey, Signer}, sysvar::instructions, transaction::Transaction
+    commitment_config::{CommitmentConfig, CommitmentLevel},
+    ed25519_instruction::new_ed25519_instruction,
+    hash, keccak,
+    pubkey::Pubkey,
+    secp256k1_instruction::new_secp256k1_instruction,
+    signature::Keypair,
+    signer::{EncodableKey, Signer},
+    sysvar::instructions,
+    transaction::Transaction,
 };
 
 #[derive(Debug, Parser)]
@@ -27,6 +35,7 @@ enum Commands {
     CreateProduct(CreateProductCliArgs),
     CreateDevice(CreateDeviceCliArgs),
     ActivateDevice(ActivateDeviceCliArgs),
+    GenerateMessage(GenerateMessageCliArgs),
 }
 
 #[derive(Debug, Args)]
@@ -96,10 +105,10 @@ impl Into<types::KeyType> for KeyType {
 struct CreateDeviceCliArgs {
     #[arg(long = "vendor")]
     vendor_keypair: String,
-    #[arg(long = "device")]
-    device_keypair: String,
     #[arg(long = "product")]
     product_pubkey: Pubkey,
+    #[arg(long = "device")]
+    device_pubkey: Pubkey,
     #[arg(value_enum, long, default_value_t = KeyType::Ed25519)]
     key_type: KeyType,
     #[command(flatten)]
@@ -122,6 +131,20 @@ struct ActivateDeviceCliArgs {
     common: CommonArgs,
 }
 
+#[derive(Debug, Args)]
+struct GenerateMessageCliArgs {
+    #[arg(long = "user")]
+    user_pubkey: Pubkey,
+    #[arg(long = "product")]
+    product_pubkey: Pubkey,
+    #[arg(long = "device")]
+    device_pubkey: Pubkey,
+    #[arg(value_enum, long, default_value_t = KeyType::Ed25519)]
+    key_type: KeyType,
+    #[command(flatten)]
+    common: CommonArgs,
+}
+
 fn parse_key_val<T, U>(s: &str) -> Result<(T, U), Box<dyn Error + Send + Sync + 'static>>
 where
     T: std::str::FromStr,
@@ -138,13 +161,12 @@ where
 fn main() {
     let args = Cli::parse();
 
-    println!("{:?}", args);
-
     match args.command {
         Commands::CreateDephy(args) => create_dephy(args),
         Commands::CreateVendor(args) => create_vendor(args),
         Commands::CreateProduct(args) => create_product(args),
         Commands::CreateDevice(args) => create_device(args),
+        Commands::GenerateMessage(args) => generate_message(args),
         Commands::ActivateDevice(args) => activate_device(args),
     }
 }
@@ -346,13 +368,11 @@ fn create_device(args: CreateDeviceCliArgs) {
     let token_program_id = spl_token_2022::ID;
 
     let vendor = read_key(&args.vendor_keypair);
-    let device = read_key(&args.device_keypair);
     let payer = read_key_or(args.common.payer, &args.vendor_keypair);
 
-    let device_pubkey = get_device_pubkey(&device, args.key_type.clone());
     let product_atoken_pubkey =
         spl_associated_token_account::get_associated_token_address_with_program_id(
-            &device_pubkey,
+            &args.device_pubkey,
             &args.product_pubkey,
             &token_program_id,
         );
@@ -363,8 +383,8 @@ fn create_device(args: CreateDeviceCliArgs) {
             .token_program2022(token_program_id)
             .payer(payer.pubkey())
             .vendor(vendor.pubkey())
-            .device(device_pubkey)
             .product_mint(args.product_pubkey)
+            .device(args.device_pubkey)
             .product_atoken(product_atoken_pubkey)
             .key_type(args.key_type.into())
             .instruction()],
@@ -406,11 +426,7 @@ fn activate_device(args: ActivateDeviceCliArgs) {
         );
 
     let (did_mint_pubkey, bump) = Pubkey::find_program_address(
-        &[
-            b"DePHY DID",
-            device_pubkey.as_ref(),
-            user.pubkey().as_ref(),
-        ],
+        &[b"DePHY DID", device_pubkey.as_ref(), user.pubkey().as_ref()],
         &program_id,
     );
 
@@ -421,7 +437,6 @@ fn activate_device(args: ActivateDeviceCliArgs) {
             &token_program_id,
         );
 
-    let latest_block = client.get_latest_blockhash().unwrap();
     let slot: u64 = client
         .get_slot_with_commitment(CommitmentConfig {
             commitment: CommitmentLevel::Finalized,
@@ -435,13 +450,16 @@ fn activate_device(args: ActivateDeviceCliArgs) {
     ]
     .concat();
 
+    let latest_block = client.get_latest_blockhash().unwrap();
     let verify_signature_ix = match args.key_type {
         KeyType::Ed25519 => {
-            let device_ed25519_keypair = ed25519_dalek::Keypair::from_bytes(&device.to_bytes()).unwrap();
+            let device_ed25519_keypair =
+                ed25519_dalek::Keypair::from_bytes(&device.to_bytes()).unwrap();
             new_ed25519_instruction(&device_ed25519_keypair, &message)
         }
         KeyType::Secp256k1 => {
-            let device_secp256k1_priv_key = libsecp256k1::SecretKey::parse(device.secret().as_bytes()).unwrap();
+            let device_secp256k1_priv_key =
+                libsecp256k1::SecretKey::parse(device.secret().as_bytes()).unwrap();
             new_secp256k1_instruction(&device_secp256k1_priv_key, &message)
         }
     };
@@ -483,5 +501,33 @@ fn activate_device(args: ActivateDeviceCliArgs) {
             eprintln!("Error: {:?}", err);
         }
     };
+}
+
+fn generate_message(args: GenerateMessageCliArgs) {
+    let client = get_client(&args.common.url);
+    let token_program_id = spl_token_2022::ID;
+
+    let product_atoken_pubkey =
+        spl_associated_token_account::get_associated_token_address_with_program_id(
+            &args.device_pubkey,
+            &args.product_pubkey,
+            &token_program_id,
+        );
+
+    let slot: u64 = client
+        .get_slot_with_commitment(CommitmentConfig {
+            commitment: CommitmentLevel::Finalized,
+        })
+        .unwrap();
+    let message = [
+        b"DEPHY_ID",
+        product_atoken_pubkey.as_ref(),
+        args.user_pubkey.as_ref(),
+        &slot.to_le_bytes(),
+    ].concat();
+
+    let msg = message.iter().map(|b| format!("{:0x?}", b)).collect::<Vec<_>>().join("");
+    println!("0x{}", msg);
+
 }
 
