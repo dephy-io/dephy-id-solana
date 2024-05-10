@@ -133,12 +133,12 @@ struct ActivateDeviceCliArgs {
 
 #[derive(Debug, Args)]
 struct GenerateMessageCliArgs {
-    #[arg(long = "device")]
-    device_keypair: String,
     #[arg(long = "user")]
-    user_keypair: String,
+    user_pubkey: Pubkey,
     #[arg(long = "product")]
     product_pubkey: Pubkey,
+    #[arg(long = "device")]
+    device_pubkey: Pubkey,
     #[arg(value_enum, long, default_value_t = KeyType::Ed25519)]
     key_type: KeyType,
     #[command(flatten)]
@@ -505,14 +505,11 @@ fn activate_device(args: ActivateDeviceCliArgs) {
 
 fn generate_message(args: GenerateMessageCliArgs) {
     let client = get_client(&args.common.url);
-    let device = read_key(&args.device_keypair);
-    let user = read_key(&args.user_keypair);
     let token_program_id = spl_token_2022::ID;
 
-    let device_pubkey = get_device_pubkey(&device, args.key_type.clone());
     let product_atoken_pubkey =
         spl_associated_token_account::get_associated_token_address_with_program_id(
-            &device_pubkey,
+            &args.device_pubkey,
             &args.product_pubkey,
             &token_program_id,
         );
@@ -525,7 +522,7 @@ fn generate_message(args: GenerateMessageCliArgs) {
     let message = [
         b"DEPHY_ID",
         product_atoken_pubkey.as_ref(),
-        user.pubkey().as_ref(),
+        args.user_pubkey.as_ref(),
         &slot.to_le_bytes(),
     ].concat();
 

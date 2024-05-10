@@ -1,8 +1,6 @@
 import * as process from "node:process";
 import * as fs from "node:fs"
 import { parseArgs } from "node:util";
-import { u8aToHex } from "@polkadot/util";
-import { Device } from "./device";
 
 try {
     const { values: cliArgs } = parseArgs({
@@ -21,17 +19,22 @@ try {
     }
 
     const walletJSON = JSON.parse(fs.readFileSync(cliArgs.wallet, "utf8"));
-    console.info(`Public key: ${walletJSON.publicKey}`);
-
-    const device = new Device(walletJSON.type, walletJSON.privateKey, walletJSON.extensions);
-    if (u8aToHex(device.publicKey) != walletJSON.publicKey) {
-        console.error(`Public key assertion failed, wallet may corrupt.`);
-        process.exit(1)
-    }
-
     const output = {
-        type: walletJSON.type,
-        publicKey: walletJSON.publicKey,
+        address: walletJSON.keys.did.bs58PublicKey,
+        keys: {
+            did: {
+                keyType: walletJSON.keys.did.keyType,
+                publicKey: walletJSON.keys.did.publicKey,
+            },
+            secp256k1: {
+                keyType: walletJSON.keys.secp256k1.keyType,
+                publicKey: walletJSON.keys.secp256k1.publicKey,
+            },
+            ed25519: {
+                keyType: walletJSON.keys.ed25519.keyType,
+                publicKey: walletJSON.keys.ed25519.publicKey,
+            },
+        },
         extensions: walletJSON.extensions,
     };
     console.log(JSON.stringify(output));
