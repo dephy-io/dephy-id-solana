@@ -1,5 +1,5 @@
 import { Address, Base58EncodedBytes, getBase58Encoder } from "@solana/web3.js";
-import { KWIL_PROGRAM_ADDRESS, KwilInstruction, identifyKwilInstruction } from "../../../../examples/kwil/clients/js/src/generated";
+import { KWIL_PROGRAM_ADDRESS, KwilInstruction, identifyKwilInstruction } from "./generated";
 
 type PartiallyDecodedTransactionInstruction = {
     accounts: readonly Address[];
