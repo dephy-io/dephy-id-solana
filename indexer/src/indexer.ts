@@ -1,13 +1,13 @@
 import assert from "assert/strict"
+import fs from "fs"
+import path from "path"
 import { RpcGraphQL, createRpcGraphQL } from "@solana/rpc-graphql"
 import {
     Account,
     Address,
+    Base58EncodedBytes,
     Commitment,
     IAccountMeta,
-    IInstruction,
-    IInstructionWithAccounts,
-    IInstructionWithData,
     Rpc, RpcSubscriptions, Signature, SolanaRpcApiMainnet, SolanaRpcSubscriptionsApi,
     address,
     assertAccountDecoded,
@@ -35,11 +35,33 @@ interface Config {
     rpc_url?: string
     pubsub_url?: string
     database_url?: string
+    plugins_dir?: string
 }
 
 interface IxMeta {
     tx: string
     index: number
+}
+
+type PartiallyDecodedTransactionInstruction = {
+    accounts: readonly Address[];
+    data: Base58EncodedBytes;
+    programId: Address;
+}
+
+type ParsedTransactionInstruction = {
+    parsed: {
+        info?: object;
+        type: string;
+    };
+    program: string;
+    programId: Address;
+}
+
+interface IPlugin {
+    initialize: () => Promise<any>
+    matchIx: (ix: PartiallyDecodedTransactionInstruction | ParsedTransactionInstruction) => boolean
+    processIx: (ix: PartiallyDecodedTransactionInstruction | ParsedTransactionInstruction, meta: IxMeta) => Promise<any>
 }
 
 export class Indexer {
@@ -50,17 +72,30 @@ export class Indexer {
     database_url: string
     db!: Client
     dephy!: Account<DephyAccount, string>
+    plugins: IPlugin[] = []
 
     constructor({
         rpc_url,
         pubsub_url,
         database_url,
+        plugins_dir,
     }: Config) {
         this.rpc = createSolanaRpc(rpc_url!)
         this.subscriptions = createSolanaRpcSubscriptions(pubsub_url!)
         this.rpcGraphQL = createRpcGraphQL(this.rpc)
         this.database_url = database_url!
         this.abortController = new AbortController()
+
+        let plugins_path = path.resolve(plugins_dir!)
+        let dirs = fs.readdirSync(plugins_path, {withFileTypes: true})
+        console.log('loading plugins from', plugins_path)
+        let self = this
+        dirs.forEach(async (dir) => {
+            const plugin = await import(path.join(plugins_path, dir.name))
+            console.log('init plugin', dir.name)
+            await plugin.initialize()
+            self.plugins.push(plugin)
+        })
     }
 
     public async ensureConnected() {
@@ -308,30 +343,36 @@ export class Indexer {
         // TODO: fetch DID metadata
     }
 
-    async processDephyIx(db_tx: Executor, ix: IInstruction & IInstructionWithAccounts<IAccountMeta[]> & IInstructionWithData<Uint8Array>, meta: IxMeta) {
-        switch (identifyDephyIdInstruction({ data: ix.data! })) {
+    async processDephyIx(db_tx: Executor, ix: PartiallyDecodedTransactionInstruction, meta: IxMeta) {
+        let dephy_ix = {
+            accounts: ix.accounts.map(address => ({address, role: 0})),
+            data: Uint8Array.from(getBase58Encoder().encode(ix.data)),
+            programAddress: ix.programId,
+        }
+
+        switch (identifyDephyIdInstruction(dephy_ix)) {
             case DephyIdInstruction.CreateDephy:
-                let create_dephy = parseCreateDephyInstruction(ix)
+                let create_dephy = parseCreateDephyInstruction(dephy_ix)
                 await this.handleCreateDephy(create_dephy, meta).run(db_tx)
                 break
 
             case DephyIdInstruction.CreateVendor:
-                let create_vendor = parseCreateVendorInstruction(ix)
+                let create_vendor = parseCreateVendorInstruction(dephy_ix)
                 await this.handleCreateVendor(create_vendor, meta).run(db_tx)
                 break
 
             case DephyIdInstruction.CreateProduct:
-                let create_product = parseCreateProductInstruction(ix)
+                let create_product = parseCreateProductInstruction(dephy_ix)
                 await this.handleCreateProduct(create_product, meta).run(db_tx)
                 break
 
             case DephyIdInstruction.CreateDevice:
-                let create_device = parseCreateDeviceInstruction(ix)
+                let create_device = parseCreateDeviceInstruction(dephy_ix)
                 await this.handleCreateDevice(create_device, meta).run(db_tx)
                 break
 
             case DephyIdInstruction.ActivateDevice:
-                let activate_device = parseActivateDeviceInstruction(ix)
+                let activate_device = parseActivateDeviceInstruction(dephy_ix)
                 await this.handleActivateDevice(activate_device, meta).run(db_tx)
                 break
 
@@ -353,18 +394,22 @@ export class Indexer {
         await this.db.transaction(async db_tx => {
             let i = 0
             for (const ix of tx.transaction.message.instructions) {
-                if (tx.meta && !tx.meta.err && 'data' in ix) {
+                if (tx.meta && !tx.meta.err) {
                     switch (ix.programId) {
                         case this.dephy.programAddress:
-                            await this.processDephyIx(db_tx, {
-                                accounts: ix.accounts.map(address => ({address, role: 0})),
-                                data: Uint8Array.from(getBase58Encoder().encode(ix.data)),
-                                programAddress: ix.programId,
-                            }, {tx: signature, index: i})
+                            if ('data' in ix) {
+                                await this.processDephyIx(db_tx, ix, {tx: signature, index: i})
+                            }
                             break
 
                         default:
                             break
+                    }
+
+                    for (const plugin of this.plugins) {
+                        if (plugin.matchIx(ix)) {
+                            await plugin.processIx(ix, {tx: signature, index: i})
+                        }
                     }
                 }
                 i += 1

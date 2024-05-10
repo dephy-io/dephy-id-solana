@@ -1,0 +1,304 @@
+{
+  "version": "0.0.0",
+  "name": "dephy_kwil_example",
+  "instructions": [
+    {
+      "name": "CreateKwil",
+      "accounts": [
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The system program"
+          ]
+        },
+        {
+          "name": "dephyProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The DePHY program"
+          ]
+        },
+        {
+          "name": "payer",
+          "isMut": true,
+          "isSigner": true,
+          "docs": [
+            "The account paying for the storage fees"
+          ]
+        },
+        {
+          "name": "authority",
+          "isMut": false,
+          "isSigner": true,
+          "docs": [
+            "The Kwil authority"
+          ]
+        },
+        {
+          "name": "didAtoken",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The DID atoken account"
+          ]
+        },
+        {
+          "name": "kwilAccount",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "The Kwil account"
+          ]
+        }
+      ],
+      "args": [
+        {
+          "name": "createKwilArgs",
+          "type": {
+            "defined": "CreateKwilArgs"
+          }
+        }
+      ],
+      "discriminant": {
+        "type": "u8",
+        "value": 0
+      }
+    },
+    {
+      "name": "CreateAcl",
+      "accounts": [
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The system program"
+          ]
+        },
+        {
+          "name": "tokenProgram2022",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The SPL Token 2022 program"
+          ]
+        },
+        {
+          "name": "dephyProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The DePHY program"
+          ]
+        },
+        {
+          "name": "payer",
+          "isMut": true,
+          "isSigner": true,
+          "docs": [
+            "The account paying for the storage fees"
+          ]
+        },
+        {
+          "name": "authority",
+          "isMut": false,
+          "isSigner": true,
+          "docs": [
+            "The Kwil authority"
+          ]
+        },
+        {
+          "name": "device",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The Device pubkey"
+          ]
+        },
+        {
+          "name": "kwilAccount",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "The Kwil account"
+          ]
+        }
+      ],
+      "args": [
+        {
+          "name": "createAclArgs",
+          "type": {
+            "defined": "CreateAclArgs"
+          }
+        }
+      ],
+      "discriminant": {
+        "type": "u8",
+        "value": 1
+      }
+    }
+  ],
+  "accounts": [
+    {
+      "name": "KwilAccount",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "key",
+            "type": {
+              "defined": "Key"
+            }
+          },
+          {
+            "name": "authority",
+            "type": "publicKey"
+          },
+          {
+            "name": "data",
+            "type": {
+              "defined": "KwilData"
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "types": [
+    {
+      "name": "CreateKwilArgs",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "CreateAclArgs",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "readLevel",
+            "type": "u8"
+          },
+          {
+            "name": "writeLevel",
+            "type": "u8"
+          },
+          {
+            "name": "subject",
+            "type": "string"
+          },
+          {
+            "name": "target",
+            "type": "string"
+          }
+        ]
+      }
+    },
+    {
+      "name": "KwilData",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "bump",
+            "type": "u8"
+          },
+          {
+            "name": "hash",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "Key",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Uninitialized"
+          },
+          {
+            "name": "DephyKwilAccount"
+          }
+        ]
+      }
+    }
+  ],
+  "errors": [
+    {
+      "code": 0,
+      "name": "DeserializationError",
+      "msg": "Error deserializing an account"
+    },
+    {
+      "code": 1,
+      "name": "SerializationError",
+      "msg": "Error serializing an account"
+    },
+    {
+      "code": 2,
+      "name": "InvalidProgramOwner",
+      "msg": "Invalid program owner. This likely mean the provided account does not exist"
+    },
+    {
+      "code": 3,
+      "name": "InvalidPda",
+      "msg": "Invalid PDA derivation"
+    },
+    {
+      "code": 4,
+      "name": "ExpectedEmptyAccount",
+      "msg": "Expected empty account"
+    },
+    {
+      "code": 5,
+      "name": "ExpectedNonEmptyAccount",
+      "msg": "Expected non empty account"
+    },
+    {
+      "code": 6,
+      "name": "ExpectedSignerAccount",
+      "msg": "Expected signer account"
+    },
+    {
+      "code": 7,
+      "name": "ExpectedWritableAccount",
+      "msg": "Expected writable account"
+    },
+    {
+      "code": 8,
+      "name": "AccountMismatch",
+      "msg": "Account mismatch"
+    },
+    {
+      "code": 9,
+      "name": "InvalidAccountKey",
+      "msg": "Invalid account key"
+    },
+    {
+      "code": 10,
+      "name": "NumericalOverflow",
+      "msg": "Numerical overflow"
+    }
+  ],
+  "metadata": {
+    "origin": "shank",
+    "address": "7TPUtQM5UNdMSEPEgGEY5HpLJZhK9tbK4SG4wmTcSkKn"
+  }
+}

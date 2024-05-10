@@ -1,6 +1,6 @@
 [workspace]
 resolver = "2"
-members = ["program", "clients/rust", "cli"]
+members = ["program", "clients/rust", "cli", "examples/kwil"]
 
 
 [patch.crates-io.curve25519-dalek]

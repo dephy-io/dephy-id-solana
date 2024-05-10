@@ -14,7 +14,7 @@ A fake device to sign messages.
 `bun generate <-v VENDOR_ADDRESS> [-t secp256k1|ed25519] [-o FILE_PATH] [-f]`
 - `-v` required, the vendor's Solana address, e.g. `4CBgnTunRPYccMR7HcjvNQWchLMB2fTMXGah1L7bfnUR`
 - `-p` required, the product's Solana address, e.g. `4aLcbu6QdKdWbPAfoQEzTQi3U5Ksd2T5t9Y9vsjW73K7`
-- `-t` optional, the crypto type, default: `ed25519`
+- `-t` optional, the did crypto key type, default: `ed25519`
 - `-o` optional, the save path, default: `./tmp/default.json`
 - `-f` optional, overwrite exist file
 
@@ -25,15 +25,17 @@ A fake device to sign messages.
 
 ### Sign a message
 
-`bun sign <-m MESSAGE> [-w FILE_PATH]`
+`bun sign <-m MESSAGE> [-k did|secp256k1|ed25519] [-w FILE_PATH]`
 - `-m` required, the message for signing
   - Starts with `0x` will treat as a hex string, otherwise plain text
+- `-k` optional, which key should use to sign, default: `did`
 - `-w` optional, the wallet file path, default: `./tmp/default.json`
 
 ### Verify a message
 
-`bun sign <-m MESSAGE> <-s SIGNATURE>`
+`bun verify <-m MESSAGE> <-s SIGNATURE> [-k did|secp256k1|ed25519] [-w FILE_PATH]`
 - `-m` required, the message for signing
     - Starts with `0x` will treat as a hex string, otherwise plain text
 - `-s` required, the signature, must be a hex string
+- `-k` optional, which key should use to verify, default: `did`
 - `-w` optional, the wallet file path, default: `./tmp/default.json`
