@@ -172,7 +172,7 @@ fn main() {
 }
 
 fn get_client(url: &String) -> RpcClient {
-    let timeout = Duration::from_secs(1);
+    let timeout = Duration::from_secs(10);
     let commitment_config = CommitmentConfig::processed();
     let confirm_transaction_initial_timeout = Duration::from_secs(10);
     let client = RpcClient::new_with_timeouts_and_commitment(
