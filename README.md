@@ -6,73 +6,113 @@ This template should help get you started developing Solana programs. Let's walk
 
 1. [Install edgedb](https://docs.edgedb.com/get-started/quickstart#installation)
 
-        brew tap edgedb/tap
-        brew install edgedb-cli
+   ```sh
+   brew tap edgedb/tap
+   brew install edgedb-cli
+   ```
 
 2. setup local edgedb
 
-        cd indexer
-        edgedb project init --server-instance dephy-indexer --non-interactive
+   ```sh
+   cd indexer
+   edgedb project init --server-instance dephy-indexer --non-interactive
 
-        bun install
-        bun generate:edgeql
+   bun install
+   bun generate:edgeql
+   ```
 
-3. (optional) upgrade
+3. public graphql endpoint
 
-        cd indexer
-        edgedb migration apply
-        bun generate:edgeql
-        cp -r ../clients/js/src/generated ./src
+   ```sh
+   edgedb -I dephy-indexer
+   ```
+
+   ```
+   configure instance insert cfg::Auth {
+       priority := -1,
+       method := (insert cfg::Trust { transports := "SIMPLE_HTTP" }),
+   };
+   ```
+
+4. (optional) upgrade
+
+   ```sh
+   cd indexer
+   edgedb migration apply
+   bun generate:edgeql
+   cp -r ../clients/js/src/generated ./src
+   ```
+
 
 ## Local setup
 
 1. Compile program
 
-        cargo-build-sbf --tools-version v1.41
+   ```sh
+   cargo-build-sbf --tools-version v1.41
+   ```
 
 2. Run validator
 
-        solana-test-validator
+   ```sh
+   solana-test-validator
+   ```
 
 3. Prepare keys
 
-        ./PoC/00.generate_keys.sh
+   ```sh
+   ./PoC/00.generate_keys.sh
+   ```
 
 4. Deploy program
 
-        solana -u l program deploy target/deploy/dephy_io_dephy_id.so --program-id ./program/keypair.json
+   ```sh
+   solana -u l program deploy target/deploy/dephy_io_dephy_id.so --program-id ./program/keypair.json
+   ```
 
 5. Init DePHY
 
-        cargo run create-dephy --admin keys/DePHY.json
+   ```sh
+   cargo run create-dephy --admin keys/DePHY.json
+   ```
 
 6. Run Indexer
 
-        cd indexer
-        cp -r ../clients/js/src/generated ./src
-        bun dephy-indexer
-        edgedb ui  # go to the GraphQL editor
+   ```sh
+   cd indexer
+   cp -r ../clients/js/src/generated ./src
+   bun dephy-indexer
+   edgedb ui  # go to the GraphQL editor
+   ```
 
 ## Cli steps
 
 1. Create Vendor
 
-        cargo run create-vendor --admin keys/DePHY.json --vendor $(solana address -k keys/VENDOR1.json) 'Example Vendor' 'DV1' 'https://example.com' -m desc="An example Vendor"
+   ```sh
+   cargo run create-vendor --admin keys/DePHY.json --vendor $(solana address -k keys/VENDOR1.json) 'Example Vendor' 'DV1' 'https://example.com' -m desc="An example Vendor"
+   ```
 
 2. Create Product
 
-        cargo run create-product --vendor keys/VENDOR1.json 'Product 1' 'V1P1' 'https://example.com' -m desc="First Product by Example Vendor"
+   ```sh
+   cargo run create-product --vendor keys/VENDOR1.json 'Product 1' 'V1P1' 'https://example.com' -m desc="First Product by Example Vendor"
+   ```
 
 3. Create Device
 
-        # the PRODUCT_PUBKEY is from "Create Product" step's command output
-        # the DEVICE_PUBKEY can get by `solana address -k ./keys/DEVICE1.json`
-        cargo run create-device --vendor keys/VENDOR1.json --product <PRODUCT_PUBKEY> --device <DEVICE_PUBKEY>
+   ```sh
+   # the PRODUCT_PUBKEY is from "Create Product" step's command output
+   # the DEVICE_PUBKEY can get by `solana address -k ./keys/DEVICE1.json`
+   cargo run create-device --vendor keys/VENDOR1.json --product <PRODUCT_PUBKEY> --device <DEVICE_PUBKEY>
+   ```
 
 4. Activate Device
 
-        # the VENDOR_PUBKEY is from "Create Vendor" step's command output
-        cargo run activate-device --device keys/DEVICE1.json --user keys/USER1.json --vendor <VENDOR_PUBKEY> --product <PRODUCT_PUBKEY>
+   ```sh
+   # the VENDOR_PUBKEY is from "Create Vendor" step's command output
+   cargo run activate-device --device keys/DEVICE1.json --user keys/USER1.json --vendor <VENDOR_PUBKEY> --product <PRODUCT_PUBKEY>
+   ```
 
 
 ## Managing programs
