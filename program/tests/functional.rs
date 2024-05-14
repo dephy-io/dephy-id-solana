@@ -73,7 +73,7 @@ async fn test_dephy() {
         .expect("DePHY account not none");
     assert_eq!(allocated_account.data.len(), DephyAccount::LEN);
 
-    test_create_vendor(program_id, &mut ctx, dephy_pubkey, &admin, &vendor).await;
+    test_create_vendor(program_id, &mut ctx, dephy_pubkey, &vendor).await;
 
     test_create_product(program_id, &mut ctx, &vendor, b"Product1").await;
 
@@ -126,7 +126,6 @@ async fn test_create_vendor(
     program_id: Pubkey,
     ctx: &mut ProgramTestContext,
     dephy: Pubkey,
-    admin: &Keypair,
     vendor: &Keypair,
 ) {
     let (mint_pubkey, bump) =
@@ -153,9 +152,8 @@ async fn test_create_vendor(
                 AccountMeta::new(spl_token_2022::id(), false),
                 AccountMeta::new(spl_associated_token_account::id(), false),
                 AccountMeta::new(ctx.payer.pubkey(), true),
-                AccountMeta::new(admin.pubkey(), true),
                 AccountMeta::new(dephy, false),
-                AccountMeta::new(vendor.pubkey(), false),
+                AccountMeta::new(vendor.pubkey(), true),
                 AccountMeta::new(mint_pubkey, false),
                 AccountMeta::new(atoken_pubkey, false),
             ],
@@ -164,7 +162,7 @@ async fn test_create_vendor(
     );
 
     let recent_blockhash = ctx.banks_client.get_latest_blockhash().await.unwrap();
-    transaction.sign(&[&ctx.payer, &admin], recent_blockhash);
+    transaction.sign(&[&ctx.payer, vendor], recent_blockhash);
     ctx.banks_client
         .process_transaction(transaction)
         .await
