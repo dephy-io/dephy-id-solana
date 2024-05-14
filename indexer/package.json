@@ -4,8 +4,9 @@
     "dephy-indexer": "bun run --preload ./env.ts ./main.ts"
   },
   "dependencies": {
-    "@solana/web3.js": "^2.0.0-preview.3",
+    "@noble/hashes": "^1.4.0",
     "@solana/rpc-graphql": "^2.0.0-preview.3",
+    "@solana/web3.js": "^2.0.0-preview.3",
     "edgedb": "^1.5.3"
   },
   "devDependencies": {

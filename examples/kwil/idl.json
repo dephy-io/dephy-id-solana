@@ -38,14 +38,6 @@
           ]
         },
         {
-          "name": "didAtoken",
-          "isMut": false,
-          "isSigner": false,
-          "docs": [
-            "The DID atoken account"
-          ]
-        },
-        {
           "name": "kwilAccount",
           "isMut": true,
           "isSigner": false,
@@ -68,7 +60,7 @@
       }
     },
     {
-      "name": "CreateAcl",
+      "name": "UpdateAcl",
       "accounts": [
         {
           "name": "systemProgram",
@@ -76,14 +68,6 @@
           "isSigner": false,
           "docs": [
             "The system program"
-          ]
-        },
-        {
-          "name": "tokenProgram2022",
-          "isMut": false,
-          "isSigner": false,
-          "docs": [
-            "The SPL Token 2022 program"
           ]
         },
         {
@@ -111,6 +95,30 @@
           ]
         },
         {
+          "name": "kwilAccount",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The Kwil account"
+          ]
+        },
+        {
+          "name": "vendor",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "Vendor of the Device"
+          ]
+        },
+        {
+          "name": "productMint",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "Product of the Device"
+          ]
+        },
+        {
           "name": "device",
           "isMut": false,
           "isSigner": false,
@@ -119,19 +127,51 @@
           ]
         },
         {
-          "name": "kwilAccount",
+          "name": "productAtoken",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The Product atoken for Device"
+          ]
+        },
+        {
+          "name": "user",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The Device Owner pubkey"
+          ]
+        },
+        {
+          "name": "didMint",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The NFT mint account"
+          ]
+        },
+        {
+          "name": "didAtoken",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The NFT atoken account"
+          ]
+        },
+        {
+          "name": "kwilAclAccount",
           "isMut": true,
           "isSigner": false,
           "docs": [
-            "The Kwil account"
+            "The Kwil ACL account"
           ]
         }
       ],
       "args": [
         {
-          "name": "createAclArgs",
+          "name": "updateAclArgs",
           "type": {
-            "defined": "CreateAclArgs"
+            "defined": "UpdateAclArgs"
           }
         }
       ],
@@ -165,6 +205,30 @@
           }
         ]
       }
+    },
+    {
+      "name": "KwilAclAccount",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "key",
+            "type": {
+              "defined": "Key"
+            }
+          },
+          {
+            "name": "authority",
+            "type": "publicKey"
+          },
+          {
+            "name": "data",
+            "type": {
+              "defined": "KwilAclData"
+            }
+          }
+        ]
+      }
     }
   ],
   "types": [
@@ -176,15 +240,28 @@
           {
             "name": "bump",
             "type": "u8"
+          },
+          {
+            "name": "kwilSigner",
+            "type": {
+              "array": [
+                "u8",
+                20
+              ]
+            }
           }
         ]
       }
     },
     {
-      "name": "CreateAclArgs",
+      "name": "UpdateAclArgs",
       "type": {
         "kind": "struct",
         "fields": [
+          {
+            "name": "bump",
+            "type": "u8"
+          },
           {
             "name": "readLevel",
             "type": "u8"
@@ -195,7 +272,12 @@
           },
           {
             "name": "subject",
-            "type": "string"
+            "type": {
+              "array": [
+                "u8",
+                20
+              ]
+            }
           },
           {
             "name": "target",
@@ -214,7 +296,45 @@
             "type": "u8"
           },
           {
-            "name": "hash",
+            "name": "kwilSigner",
+            "type": {
+              "array": [
+                "u8",
+                20
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "KwilAclData",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "bump",
+            "type": "u8"
+          },
+          {
+            "name": "readLevel",
+            "type": "u8"
+          },
+          {
+            "name": "writeLevel",
+            "type": "u8"
+          },
+          {
+            "name": "subject",
+            "type": {
+              "array": [
+                "u8",
+                20
+              ]
+            }
+          },
+          {
+            "name": "targetHash",
             "type": {
               "array": [
                 "u8",
@@ -234,7 +354,10 @@
             "name": "Uninitialized"
           },
           {
-            "name": "DephyKwilAccount"
+            "name": "KwilAccount"
+          },
+          {
+            "name": "KwilAclAccount"
           }
         ]
       }
