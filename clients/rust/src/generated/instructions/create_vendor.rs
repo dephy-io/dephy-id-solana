@@ -18,8 +18,6 @@ pub struct CreateVendor {
     pub ata_program: solana_program::pubkey::Pubkey,
     /// The account paying for the storage fees
     pub payer: solana_program::pubkey::Pubkey,
-    /// The DePHY authority
-    pub authority: solana_program::pubkey::Pubkey,
     /// The DePHY account
     pub dephy: solana_program::pubkey::Pubkey,
     /// The Vendor pubkey
@@ -43,7 +41,7 @@ impl CreateVendor {
         args: CreateVendorInstructionArgs,
         remaining_accounts: &[solana_program::instruction::AccountMeta],
     ) -> solana_program::instruction::Instruction {
-        let mut accounts = Vec::with_capacity(9 + remaining_accounts.len());
+        let mut accounts = Vec::with_capacity(8 + remaining_accounts.len());
         accounts.push(solana_program::instruction::AccountMeta::new_readonly(
             self.system_program,
             false,
@@ -60,15 +58,11 @@ impl CreateVendor {
             self.payer, true,
         ));
         accounts.push(solana_program::instruction::AccountMeta::new_readonly(
-            self.authority,
-            true,
-        ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
             self.dephy, false,
         ));
         accounts.push(solana_program::instruction::AccountMeta::new_readonly(
             self.vendor,
-            false,
+            true,
         ));
         accounts.push(solana_program::instruction::AccountMeta::new(
             self.vendor_mint,
@@ -120,18 +114,16 @@ pub struct CreateVendorInstructionArgs {
 ///   1. `[]` token_program2022
 ///   2. `[optional]` ata_program (default to `ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL`)
 ///   3. `[writable, signer]` payer
-///   4. `[signer]` authority
-///   5. `[]` dephy
-///   6. `[]` vendor
-///   7. `[writable]` vendor_mint
-///   8. `[writable]` vendor_atoken
+///   4. `[]` dephy
+///   5. `[signer]` vendor
+///   6. `[writable]` vendor_mint
+///   7. `[writable]` vendor_atoken
 #[derive(Clone, Debug, Default)]
 pub struct CreateVendorBuilder {
     system_program: Option<solana_program::pubkey::Pubkey>,
     token_program2022: Option<solana_program::pubkey::Pubkey>,
     ata_program: Option<solana_program::pubkey::Pubkey>,
     payer: Option<solana_program::pubkey::Pubkey>,
-    authority: Option<solana_program::pubkey::Pubkey>,
     dephy: Option<solana_program::pubkey::Pubkey>,
     vendor: Option<solana_program::pubkey::Pubkey>,
     vendor_mint: Option<solana_program::pubkey::Pubkey>,
@@ -175,12 +167,6 @@ impl CreateVendorBuilder {
     #[inline(always)]
     pub fn payer(&mut self, payer: solana_program::pubkey::Pubkey) -> &mut Self {
         self.payer = Some(payer);
-        self
-    }
-    /// The DePHY authority
-    #[inline(always)]
-    pub fn authority(&mut self, authority: solana_program::pubkey::Pubkey) -> &mut Self {
-        self.authority = Some(authority);
         self
     }
     /// The DePHY account
@@ -263,7 +249,6 @@ impl CreateVendorBuilder {
                 "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
             )),
             payer: self.payer.expect("payer is not set"),
-            authority: self.authority.expect("authority is not set"),
             dephy: self.dephy.expect("dephy is not set"),
             vendor: self.vendor.expect("vendor is not set"),
             vendor_mint: self.vendor_mint.expect("vendor_mint is not set"),
@@ -294,8 +279,6 @@ pub struct CreateVendorCpiAccounts<'a, 'b> {
     pub ata_program: &'b solana_program::account_info::AccountInfo<'a>,
     /// The account paying for the storage fees
     pub payer: &'b solana_program::account_info::AccountInfo<'a>,
-    /// The DePHY authority
-    pub authority: &'b solana_program::account_info::AccountInfo<'a>,
     /// The DePHY account
     pub dephy: &'b solana_program::account_info::AccountInfo<'a>,
     /// The Vendor pubkey
@@ -318,8 +301,6 @@ pub struct CreateVendorCpi<'a, 'b> {
     pub ata_program: &'b solana_program::account_info::AccountInfo<'a>,
     /// The account paying for the storage fees
     pub payer: &'b solana_program::account_info::AccountInfo<'a>,
-    /// The DePHY authority
-    pub authority: &'b solana_program::account_info::AccountInfo<'a>,
     /// The DePHY account
     pub dephy: &'b solana_program::account_info::AccountInfo<'a>,
     /// The Vendor pubkey
@@ -344,7 +325,6 @@ impl<'a, 'b> CreateVendorCpi<'a, 'b> {
             token_program2022: accounts.token_program2022,
             ata_program: accounts.ata_program,
             payer: accounts.payer,
-            authority: accounts.authority,
             dephy: accounts.dephy,
             vendor: accounts.vendor,
             vendor_mint: accounts.vendor_mint,
@@ -385,7 +365,7 @@ impl<'a, 'b> CreateVendorCpi<'a, 'b> {
             bool,
         )],
     ) -> solana_program::entrypoint::ProgramResult {
-        let mut accounts = Vec::with_capacity(9 + remaining_accounts.len());
+        let mut accounts = Vec::with_capacity(8 + remaining_accounts.len());
         accounts.push(solana_program::instruction::AccountMeta::new_readonly(
             *self.system_program.key,
             false,
@@ -403,16 +383,12 @@ impl<'a, 'b> CreateVendorCpi<'a, 'b> {
             true,
         ));
         accounts.push(solana_program::instruction::AccountMeta::new_readonly(
-            *self.authority.key,
-            true,
-        ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
             *self.dephy.key,
             false,
         ));
         accounts.push(solana_program::instruction::AccountMeta::new_readonly(
             *self.vendor.key,
-            false,
+            true,
         ));
         accounts.push(solana_program::instruction::AccountMeta::new(
             *self.vendor_mint.key,
@@ -438,13 +414,12 @@ impl<'a, 'b> CreateVendorCpi<'a, 'b> {
             accounts,
             data,
         };
-        let mut account_infos = Vec::with_capacity(9 + 1 + remaining_accounts.len());
+        let mut account_infos = Vec::with_capacity(8 + 1 + remaining_accounts.len());
         account_infos.push(self.__program.clone());
         account_infos.push(self.system_program.clone());
         account_infos.push(self.token_program2022.clone());
         account_infos.push(self.ata_program.clone());
         account_infos.push(self.payer.clone());
-        account_infos.push(self.authority.clone());
         account_infos.push(self.dephy.clone());
         account_infos.push(self.vendor.clone());
         account_infos.push(self.vendor_mint.clone());
@@ -469,11 +444,10 @@ impl<'a, 'b> CreateVendorCpi<'a, 'b> {
 ///   1. `[]` token_program2022
 ///   2. `[]` ata_program
 ///   3. `[writable, signer]` payer
-///   4. `[signer]` authority
-///   5. `[]` dephy
-///   6. `[]` vendor
-///   7. `[writable]` vendor_mint
-///   8. `[writable]` vendor_atoken
+///   4. `[]` dephy
+///   5. `[signer]` vendor
+///   6. `[writable]` vendor_mint
+///   7. `[writable]` vendor_atoken
 #[derive(Clone, Debug)]
 pub struct CreateVendorCpiBuilder<'a, 'b> {
     instruction: Box<CreateVendorCpiBuilderInstruction<'a, 'b>>,
@@ -487,7 +461,6 @@ impl<'a, 'b> CreateVendorCpiBuilder<'a, 'b> {
             token_program2022: None,
             ata_program: None,
             payer: None,
-            authority: None,
             dephy: None,
             vendor: None,
             vendor_mint: None,
@@ -532,15 +505,6 @@ impl<'a, 'b> CreateVendorCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn payer(&mut self, payer: &'b solana_program::account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.payer = Some(payer);
-        self
-    }
-    /// The DePHY authority
-    #[inline(always)]
-    pub fn authority(
-        &mut self,
-        authority: &'b solana_program::account_info::AccountInfo<'a>,
-    ) -> &mut Self {
-        self.instruction.authority = Some(authority);
         self
     }
     /// The DePHY account
@@ -673,8 +637,6 @@ impl<'a, 'b> CreateVendorCpiBuilder<'a, 'b> {
 
             payer: self.instruction.payer.expect("payer is not set"),
 
-            authority: self.instruction.authority.expect("authority is not set"),
-
             dephy: self.instruction.dephy.expect("dephy is not set"),
 
             vendor: self.instruction.vendor.expect("vendor is not set"),
@@ -704,7 +666,6 @@ struct CreateVendorCpiBuilderInstruction<'a, 'b> {
     token_program2022: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     ata_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     payer: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    authority: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     dephy: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     vendor: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     vendor_mint: Option<&'b solana_program::account_info::AccountInfo<'a>>,

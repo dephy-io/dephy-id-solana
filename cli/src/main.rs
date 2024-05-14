@@ -60,10 +60,8 @@ struct CreateDephyCliArgs {
 
 #[derive(Debug, Args)]
 struct CreateVendorCliArgs {
-    #[arg(long = "admin")]
-    admin_keypair: String,
     #[arg(long = "vendor")]
-    vendor_pubkey: Pubkey,
+    vendor_keypair: String,
     name: String,
     symbol: String,
     uri: String,
@@ -240,8 +238,8 @@ fn create_vendor(args: CreateVendorCliArgs) {
         .unwrap_or(dephy_io_dephy_id_client::ID);
     let token_program_id = spl_token_2022::ID;
 
-    let admin = read_key(&args.admin_keypair);
-    let payer = read_key_or(args.common.payer, &args.admin_keypair);
+    let vendor = read_key(&args.vendor_keypair);
+    let payer = read_key_or(args.common.payer, &args.vendor_keypair);
 
     let dephy_pubkey = if let Some(dephy_pubkey) = args.common.dephy_pubkey {
         dephy_pubkey
@@ -251,11 +249,11 @@ fn create_vendor(args: CreateVendorCliArgs) {
     };
 
     let (vendor_mint_pubkey, bump) =
-        Pubkey::find_program_address(&[b"DePHY VENDOR", args.vendor_pubkey.as_ref()], &program_id);
+        Pubkey::find_program_address(&[b"DePHY VENDOR", vendor.pubkey().as_ref()], &program_id);
 
     let vendor_atoken_pubkey =
         spl_associated_token_account::get_associated_token_address_with_program_id(
-            &args.vendor_pubkey,
+            &vendor.pubkey(),
             &vendor_mint_pubkey,
             &token_program_id,
         );
@@ -265,9 +263,8 @@ fn create_vendor(args: CreateVendorCliArgs) {
         &[CreateVendorBuilder::new()
             .token_program2022(token_program_id)
             .payer(payer.pubkey())
-            .authority(admin.pubkey())
             .dephy(dephy_pubkey)
-            .vendor(args.vendor_pubkey)
+            .vendor(vendor.pubkey())
             .vendor_mint(vendor_mint_pubkey)
             .vendor_atoken(vendor_atoken_pubkey)
             .bump(bump)
@@ -277,7 +274,7 @@ fn create_vendor(args: CreateVendorCliArgs) {
             .additional_metadata(args.additional_metadata)
             .instruction()],
         Some(&payer.pubkey()),
-        &[&admin, &payer],
+        &[&vendor, &payer],
         latest_block,
     );
 

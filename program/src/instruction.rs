@@ -19,11 +19,10 @@ pub enum DephyInstruction {
     #[account(1, name="token_program_2022", desc = "The token 2022 program")]
     #[account(2, name="ata_program", desc = "The associated token program")]
     #[account(3, writable, signer, name="payer", desc = "The account paying for the storage fees")]
-    #[account(4, signer, name="authority", desc = "The DePHY authority")]
-    #[account(5, name="dephy", desc = "The DePHY account")]
-    #[account(6, name="vendor", desc = "The Vendor pubkey")]
-    #[account(7, writable, name="vendor_mint", desc = "The Vendor mint")]
-    #[account(8, writable, name="vendor_atoken", desc = "The atoken account for vendor")]
+    #[account(4, name="dephy", desc = "The DePHY account")]
+    #[account(5, signer, name="vendor", desc = "The Vendor pubkey")]
+    #[account(6, writable, name="vendor_mint", desc = "The Vendor mint")]
+    #[account(7, writable, name="vendor_atoken", desc = "The atoken account for vendor")]
     CreateVendor(CreateVendorArgs),
 
     /// Vendor register a Product
