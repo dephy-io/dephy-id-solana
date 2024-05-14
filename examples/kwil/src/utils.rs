@@ -18,16 +18,11 @@ pub fn create_account<'a>(
     funding_account: &AccountInfo<'a>,
     system_program: &AccountInfo<'a>,
     size: usize,
-    reserved_size: Option<usize>,
     owner: &Pubkey,
     signer_seeds: &[&[&[u8]]],
 ) -> ProgramResult {
     let rent = Rent::get()?;
-    let lamports: u64 = if let Some(reserved_size) = reserved_size {
-        rent.minimum_balance(reserved_size)
-    } else {
-        rent.minimum_balance(size)
-    };
+    let lamports: u64 = rent.minimum_balance(size);
 
     invoke_signed(
         &system_instruction::create_account(
