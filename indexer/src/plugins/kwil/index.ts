@@ -83,6 +83,9 @@ export async function initialize() {
         chainId: "kwil-chain-tmp",
         unconfirmedNonce: true,
     });
+
+    let ping = await kwil.ping()
+    console.log('kwil connect', ping)
 }
 
 export function matchIx(ix: PartiallyDecodedTransactionInstruction | ParsedTransactionInstruction) {

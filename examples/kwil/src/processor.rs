@@ -24,7 +24,7 @@ pub fn process_instruction<'a>(
 
     match instruction {
         KwilExampleInstruction::CreateKwil(args) => create_kwil(program_id, accounts, args),
-        KwilExampleInstruction::UpdateAcl(args) => create_acl(program_id, accounts, args),
+        KwilExampleInstruction::UpdateAcl(args) => update_acl(program_id, accounts, args),
     }
 }
 
@@ -71,7 +71,7 @@ fn create_kwil<'a>(
     kwil_account.save(ctx.accounts.kwil_account)
 }
 
-fn create_acl<'a>(
+fn update_acl<'a>(
     program_id: &Pubkey,
     accounts: &'a [AccountInfo<'a>],
     args: UpdateAclArgs,

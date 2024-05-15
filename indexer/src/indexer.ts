@@ -179,12 +179,6 @@ export class Indexer {
         console.log('all missing txs filled')
     }
 
-    getTransaction(tx_signature: Signature, commitment: Commitment) {
-        return this.rpc.getTransaction(tx_signature, {
-            commitment,
-        }).send()
-    }
-
     getTransactions(program_address: Address, beforeTx?: Signature) {
         return this.rpc.getSignaturesForAddress(program_address, {
             before: beforeTx,
@@ -204,8 +198,12 @@ export class Indexer {
     }
 
     getTx(tx_signature: string, commitment: Commitment = 'confirmed') {
-        return this.rpc.getTransaction(signature(tx_signature), { commitment, encoding: 'jsonParsed' })
-            .send()
+        return this.rpc.getTransaction(signature(tx_signature), {
+            commitment,
+            maxSupportedTransactionVersion: 0,
+            encoding: 'jsonParsed',
+        })
+        .send()
     }
 
     saveTx({ slot, signature, err }: { slot: bigint, signature: string, err: any }) {

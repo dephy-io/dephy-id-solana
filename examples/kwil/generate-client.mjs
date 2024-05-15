@@ -33,6 +33,31 @@ kinobi.update(
         ),
       ],
     },
+    kwilAclAccount: {
+      seeds: [
+        k.constantPdaSeedNodeFromString("utf8", "KWIL ACL"),
+        k.variablePdaSeedNode(
+          "kwil_account",
+          k.publicKeyTypeNode(),
+          "The Kwil account"
+        ),
+        k.variablePdaSeedNode(
+          "did_pubkey",
+          k.publicKeyTypeNode(),
+          "The DID atoken pubkey"
+        ),
+        k.variablePdaSeedNode(
+          "subject",
+          k.bytesTypeNode(),
+          'The caller address'
+        ),
+        k.variablePdaSeedNode(
+          "target_hash",
+          k.bytesTypeNode(),
+          "sha256 hash of target"
+        ),
+      ]
+    }
   })
 );
 
