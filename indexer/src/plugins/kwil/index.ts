@@ -1,6 +1,8 @@
 import { Address, Base58EncodedBytes, getBase16Decoder, getBase58Encoder } from "@solana/web3.js";
 import { KWIL_PROGRAM_ADDRESS, KwilInstruction, identifyKwilInstruction, parseCreateKwilInstruction, parseUpdateAclInstruction } from "./generated";
 import { keccak_256 } from "@noble/hashes/sha3";
+import { WebKwil, KwilSigner, Utils as KwilUtils } from '@kwilteam/kwil-js';
+import { Wallet } from "ethers";
 
 type PartiallyDecodedTransactionInstruction = {
     accounts: readonly Address[];
@@ -21,6 +23,12 @@ interface IxMeta {
     tx: string
     index: number
 }
+
+const dbOwnerAddress = "0x5BaD959d0AA3DFA44131F61E39192E475c3fBF29"
+const dbName = "playground"
+const dbid = KwilUtils.generateDBID(dbOwnerAddress, dbName);
+let dbOwnerKwilSigner: KwilSigner;
+let kwil: WebKwil;
 
 function to_checksum_address(address_bytes: Uint8Array) {
     const decoder = getBase16Decoder()
@@ -49,9 +57,31 @@ async function load_eth_address(account_pubkey: Address): Promise<string> {
 }
 
 async function createACL(kwil_account: Address, subject: Uint8Array, target: string, read_level: number, write_level: number) {
+    // dbOwnerKwilSigner.identifier == await load_eth_address(kwil_account)
+    return await kwil.execute({
+        dbid,
+        action: "create_acl",
+        inputs: [
+            {
+                $subject: to_checksum_address(subject),
+                $target: target,
+                $read_level: read_level,
+                $write_level: write_level,
+            }
+        ]
+    }, dbOwnerKwilSigner);
 }
 
 export async function initialize() {
+    const dbOwnerEthPrivateKey = "c71d41fa79464fa467aee3f56436b366baa2e738d07808b6cbf1219f43152a61";
+    const dbOwnerEthSigner = new Wallet(dbOwnerEthPrivateKey);
+    const dbOwnerEthAddress = await dbOwnerEthSigner.getAddress();
+    dbOwnerKwilSigner = new KwilSigner(dbOwnerEthSigner, dbOwnerEthAddress);
+
+    kwil = new WebKwil({
+        kwilProvider: "http://localhost:8080",
+        chainId: "kwil-chain-tmp",
+    });
 }
 
 export function matchIx(ix: PartiallyDecodedTransactionInstruction | ParsedTransactionInstruction) {
