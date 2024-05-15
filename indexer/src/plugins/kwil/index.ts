@@ -69,7 +69,7 @@ async function createACL(kwil_account: Address, subject: Uint8Array, target: str
                 $write_level: write_level,
             }
         ]
-    }, dbOwnerKwilSigner);
+    }, dbOwnerKwilSigner, true);
 }
 
 export async function initialize() {
@@ -81,6 +81,7 @@ export async function initialize() {
     kwil = new WebKwil({
         kwilProvider: "http://localhost:8080",
         chainId: "kwil-chain-tmp",
+        unconfirmedNonce: true,
     });
 }
 
