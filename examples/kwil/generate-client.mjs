@@ -15,6 +15,27 @@ kinobi.update(
   })
 );
 
+// Update accounts.
+kinobi.update(
+  k.updateAccountsVisitor({
+    kwilAccount: {
+      seeds: [
+        k.constantPdaSeedNodeFromString("utf8", "KWIL"),
+        k.variablePdaSeedNode(
+          "authority",
+          k.publicKeyTypeNode(),
+          "The authority of the counter account"
+        ),
+        k.variablePdaSeedNode(
+          'kwil_signer',
+          k.bytesTypeNode(),
+          'Kwil ETH address'
+        ),
+      ],
+    },
+  })
+);
+
 // Render JavaScript.
 const indexerPlugin = path.join(__dirname, "..", "..", "indexer", "src", "plugins");
 kinobi.accept(
