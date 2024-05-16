@@ -3,7 +3,7 @@
   "name": "dephy_kwil_example",
   "instructions": [
     {
-      "name": "CreateKwil",
+      "name": "Publish",
       "accounts": [
         {
           "name": "systemProgram",
@@ -30,76 +30,19 @@
           ]
         },
         {
-          "name": "authority",
+          "name": "owner",
           "isMut": false,
           "isSigner": true,
           "docs": [
-            "The Kwil authority"
+            "The DID owner"
           ]
         },
         {
-          "name": "kwilAccount",
+          "name": "publisher",
           "isMut": true,
           "isSigner": false,
           "docs": [
-            "The Kwil account"
-          ]
-        }
-      ],
-      "args": [
-        {
-          "name": "createKwilArgs",
-          "type": {
-            "defined": "CreateKwilArgs"
-          }
-        }
-      ],
-      "discriminant": {
-        "type": "u8",
-        "value": 0
-      }
-    },
-    {
-      "name": "UpdateAcl",
-      "accounts": [
-        {
-          "name": "systemProgram",
-          "isMut": false,
-          "isSigner": false,
-          "docs": [
-            "The system program"
-          ]
-        },
-        {
-          "name": "dephyProgram",
-          "isMut": false,
-          "isSigner": false,
-          "docs": [
-            "The DePHY program"
-          ]
-        },
-        {
-          "name": "payer",
-          "isMut": true,
-          "isSigner": true,
-          "docs": [
-            "The account paying for the storage fees"
-          ]
-        },
-        {
-          "name": "authority",
-          "isMut": false,
-          "isSigner": true,
-          "docs": [
-            "The Kwil authority"
-          ]
-        },
-        {
-          "name": "kwilAccount",
-          "isMut": false,
-          "isSigner": false,
-          "docs": [
-            "The Kwil account"
+            "The Publisher account"
           ]
         },
         {
@@ -157,21 +100,62 @@
           "docs": [
             "The NFT atoken account"
           ]
+        }
+      ],
+      "args": [
+        {
+          "name": "publishArgs",
+          "type": {
+            "defined": "PublishArgs"
+          }
+        }
+      ],
+      "discriminant": {
+        "type": "u8",
+        "value": 0
+      }
+    },
+    {
+      "name": "Link",
+      "accounts": [
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The system program"
+          ]
         },
         {
-          "name": "kwilAclAccount",
+          "name": "payer",
+          "isMut": true,
+          "isSigner": true,
+          "docs": [
+            "The account paying for the storage fees"
+          ]
+        },
+        {
+          "name": "user",
+          "isMut": false,
+          "isSigner": true,
+          "docs": [
+            "The Registed user"
+          ]
+        },
+        {
+          "name": "linked",
           "isMut": true,
           "isSigner": false,
           "docs": [
-            "The Kwil ACL account"
+            "The Linked account"
           ]
         }
       ],
       "args": [
         {
-          "name": "updateAclArgs",
+          "name": "linkArgs",
           "type": {
-            "defined": "UpdateAclArgs"
+            "defined": "LinkArgs"
           }
         }
       ],
@@ -179,11 +163,76 @@
         "type": "u8",
         "value": 1
       }
+    },
+    {
+      "name": "Subscribe",
+      "accounts": [
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The system program"
+          ]
+        },
+        {
+          "name": "payer",
+          "isMut": true,
+          "isSigner": true,
+          "docs": [
+            "The account paying for the storage fees"
+          ]
+        },
+        {
+          "name": "user",
+          "isMut": false,
+          "isSigner": true,
+          "docs": [
+            "The Registed user"
+          ]
+        },
+        {
+          "name": "publisher",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The Publisher account"
+          ]
+        },
+        {
+          "name": "linked",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The Linked account"
+          ]
+        },
+        {
+          "name": "subscriber",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "The Subscriber account"
+          ]
+        }
+      ],
+      "args": [
+        {
+          "name": "subscribeArgs",
+          "type": {
+            "defined": "SubscribeArgs"
+          }
+        }
+      ],
+      "discriminant": {
+        "type": "u8",
+        "value": 2
+      }
     }
   ],
   "accounts": [
     {
-      "name": "KwilAccount",
+      "name": "PublisherAccount",
       "type": {
         "kind": "struct",
         "fields": [
@@ -200,14 +249,14 @@
           {
             "name": "data",
             "type": {
-              "defined": "KwilData"
+              "defined": "PublisherData"
             }
           }
         ]
       }
     },
     {
-      "name": "KwilAclAccount",
+      "name": "LinkedAccount",
       "type": {
         "kind": "struct",
         "fields": [
@@ -224,7 +273,31 @@
           {
             "name": "data",
             "type": {
-              "defined": "KwilAclData"
+              "defined": "LinkedData"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "SubscriberAccount",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "key",
+            "type": {
+              "defined": "Key"
+            }
+          },
+          {
+            "name": "authority",
+            "type": "publicKey"
+          },
+          {
+            "name": "data",
+            "type": {
+              "defined": "SubscriberData"
             }
           }
         ]
@@ -233,7 +306,7 @@
   ],
   "types": [
     {
-      "name": "CreateKwilArgs",
+      "name": "PublishArgs",
       "type": {
         "kind": "struct",
         "fields": [
@@ -242,7 +315,7 @@
             "type": "u8"
           },
           {
-            "name": "kwilSigner",
+            "name": "ethAddress",
             "type": {
               "array": [
                 "u8",
@@ -254,7 +327,7 @@
       }
     },
     {
-      "name": "UpdateAclArgs",
+      "name": "LinkArgs",
       "type": {
         "kind": "struct",
         "fields": [
@@ -263,40 +336,7 @@
             "type": "u8"
           },
           {
-            "name": "readLevel",
-            "type": "u8"
-          },
-          {
-            "name": "writeLevel",
-            "type": "u8"
-          },
-          {
-            "name": "subject",
-            "type": {
-              "array": [
-                "u8",
-                20
-              ]
-            }
-          },
-          {
-            "name": "target",
-            "type": "string"
-          }
-        ]
-      }
-    },
-    {
-      "name": "KwilData",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "bump",
-            "type": "u8"
-          },
-          {
-            "name": "kwilSigner",
+            "name": "ethAddress",
             "type": {
               "array": [
                 "u8",
@@ -308,7 +348,19 @@
       }
     },
     {
-      "name": "KwilAclData",
+      "name": "SubscribeArgs",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "PublisherData",
       "type": {
         "kind": "struct",
         "fields": [
@@ -317,30 +369,54 @@
             "type": "u8"
           },
           {
-            "name": "readLevel",
-            "type": "u8"
-          },
-          {
-            "name": "writeLevel",
-            "type": "u8"
-          },
-          {
-            "name": "subject",
+            "name": "ethAddress",
             "type": {
               "array": [
                 "u8",
                 20
               ]
             }
+          }
+        ]
+      }
+    },
+    {
+      "name": "LinkedData",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "bump",
+            "type": "u8"
           },
           {
-            "name": "targetHash",
+            "name": "ethAddress",
             "type": {
               "array": [
                 "u8",
-                32
+                20
               ]
             }
+          }
+        ]
+      }
+    },
+    {
+      "name": "SubscriberData",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "bump",
+            "type": "u8"
+          },
+          {
+            "name": "publisher",
+            "type": "publicKey"
+          },
+          {
+            "name": "linked",
+            "type": "publicKey"
           }
         ]
       }
@@ -354,10 +430,13 @@
             "name": "Uninitialized"
           },
           {
-            "name": "KwilAccount"
+            "name": "PublisherAccount"
           },
           {
-            "name": "KwilAclAccount"
+            "name": "LinkedAccount"
+          },
+          {
+            "name": "SubscriberAccount"
           }
         ]
       }

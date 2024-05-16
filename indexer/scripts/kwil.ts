@@ -2,22 +2,20 @@ import fs from "fs";
 import os from "os";
 import path from 'path';
 import { parseArgs } from "util";
-import { KWIL_PROGRAM_ADDRESS, findKwilAccountPda, getCreateKwilInstruction, getUpdateAclInstruction } from "../src/plugins/kwil/generated";
+import { KWIL_PROGRAM_ADDRESS, findPublisherAccountPda, findLinkedAccountPda, findSubscriberAccountPda,
+    getPublishInstruction, getLinkInstruction, getSubscribeInstruction
+} from "../src/plugins/kwil/generated";
 import {
-    IInstruction,
-    KeyPairSigner, Rpc, RpcSubscriptions, SolanaRpcApiMainnet, SolanaRpcSubscriptionsApi,
+    IInstruction, KeyPairSigner, Rpc, RpcSubscriptions, SolanaRpcApiMainnet, SolanaRpcSubscriptionsApi,
     address, appendTransactionMessageInstructions,
-    createKeyPairSignerFromBytes, createSolanaRpc, createSolanaRpcSubscriptions, createTransactionMessage, getSignatureFromTransaction, pipe,
-    sendAndConfirmTransactionFactory,
-    setTransactionMessageFeePayerSigner, setTransactionMessageLifetimeUsingBlockhash,
-    signTransactionMessageWithSigners
+    createKeyPairSignerFromBytes, createSolanaRpc, createSolanaRpcSubscriptions, createTransactionMessage,
+    getSignatureFromTransaction, pipe, sendAndConfirmTransactionFactory,
+    setTransactionMessageFeePayerSigner, setTransactionMessageLifetimeUsingBlockhash, signTransactionMessageWithSigners
 } from "@solana/web3.js";
 import { DEPHY_ID_PROGRAM_ADDRESS } from "../src/generated";
-import { sha256 } from "@noble/hashes/sha256";
 import { ethers } from "ethers";
 import { createClient } from "edgedb";
 import { getDID } from "../dbschema/queries/getDID.query";
-import { findKwilAclAccountPda } from "../src/plugins/kwil/generated/pdas/kwilAclAccount";
 
 
 let rpc: Rpc<SolanaRpcApiMainnet>
@@ -49,30 +47,16 @@ try {
                 type: 'string',
                 default: DEPHY_ID_PROGRAM_ADDRESS,
             },
-            authority_keypair: {
+            keypair: {
                 type: 'string',
                 short: 'k',
                 default: path.join(os.homedir(), '.config/solana/id.json'),
             },
-            kwil_signer: {
-                type: 'string'
-            },
             did_atoken: {
                 type: 'string'
             },
-            target: {
+            eth_address: {
                 type: 'string'
-            },
-            subject: {
-                type: 'string'
-            },
-            read: {
-                type: 'boolean',
-                default: false,
-            },
-            write: {
-                type: 'boolean',
-                default: false,
             },
         },
         allowPositionals: true,
@@ -82,8 +66,8 @@ try {
     rpcSubscriptions = createSolanaRpcSubscriptions(args.pubsub_url!)
 
     const td = new TextDecoder()
-    const authority = await pipe(
-        args.authority_keypair!,
+    const payer = await pipe(
+        args.keypair!,
         path.resolve,
         fs.readFileSync,
         (b: Buffer) => td.decode(b),
@@ -91,15 +75,19 @@ try {
         a => Uint8Array.from(a),
         createKeyPairSignerFromBytes
     )
-    console.log('authority', authority.address)
+    console.log('payer', payer.address)
 
     switch (action) {
-        case 'create-kwil':
-            await createKwil(args, authority)
+        case 'publish':
+            await publish(args, payer)
             break;
 
-        case 'update-acl':
-            await updateACL(args, authority)
+        case 'link':
+            await link(args, payer)
+            break;
+
+        case 'subscribe':
+            await subscribe(args, payer)
             break;
 
         default:
@@ -134,86 +122,65 @@ async function sendTransaction(instructions: IInstruction[], payer: KeyPairSigne
     return signature
 }
 
-interface CreateKwilArgs {
-    dephy_program_id?: string;
-    kwil_program_id?: string;
-    kwil_signer?: string;
+interface LinkArgs {
+    kwil_program_id?: string,
+    eth_address?: string,
 }
 
-async function createKwil(args: CreateKwilArgs, authority: KeyPairSigner) {
-    const kwilSigner = ethers.getBytes(ethers.getAddress(args.kwil_signer!))
+async function link(args: LinkArgs, payer: KeyPairSigner) {
+    const ethAddress = ethers.getBytes(ethers.getAddress(args.eth_address!))
 
-    const [kwilAccount, bump] = await findKwilAccountPda({
-        authority: authority.address,
-        kwilSigner,
+    const [linked, bump] = await findLinkedAccountPda({
+        user: payer.address,
+        ethAddress
     }, {
         programAddress: address(args.kwil_program_id!)
     })
 
     const instructions = [
-        getCreateKwilInstruction({
-            dephyProgram: address(args.dephy_program_id!),
-            payer: authority,
-            authority,
-            kwilAccount,
+        getLinkInstruction({
             bump,
-            kwilSigner: Array.from(kwilSigner),
+            payer,
+            user: payer,
+            linked,
+            ethAddress: Array.from(ethAddress)
         })
     ]
 
-    const signature = await sendTransaction(instructions, authority)
-    console.log('Create Kwil', signature)
+    const signature = await sendTransaction(instructions, payer)
+    console.log('Link', signature)
 }
 
 
-interface UpdateAclArgs {
+interface PublishArgs {
     dephy_program_id?: string;
     kwil_program_id?: string;
-    kwil_signer?: string;
+    eth_address?: string;
     database_url?: string;
-    subject?: string;
     did_atoken?: string;
-    target?: string;
-    read?: boolean;
-    write?: boolean;
 }
 
-async function updateACL(args: UpdateAclArgs, authority: KeyPairSigner) {
+async function publish(args: PublishArgs, payer: KeyPairSigner) {
     let db = await createClient(args.database_url)
         .ensureConnected();
 
     const did = await getDID(db, {
         did_atoken: args.did_atoken!
     })
-    console.log('did', did);
+    console.log('DID', did);
 
-    const kwilSigner = ethers.getBytes(ethers.getAddress(args.kwil_signer!))
-    const [kwilAccount, _bump] = await findKwilAccountPda({
-        authority: authority.address,
-        kwilSigner,
+    const eth_address = ethers.getBytes(ethers.getAddress(args.eth_address!))
+    const [publisher, bump] = await findPublisherAccountPda({
+        didAtoken: address(did!.token_account),
     }, {
         programAddress: address(args.kwil_program_id!)
     })
-    console.log('kwilAccount', kwilAccount);
-
-    const subject = ethers.getBytes(ethers.getAddress(args.subject!))
-    const targetHash = sha256(args.target!);
-    const [kwilAclAccount, bump] = await findKwilAclAccountPda({
-        kwilAccount,
-        didPubkey: address(did!.token_account),
-        subject,
-        targetHash,
-    }, {
-        programAddress: address(args.kwil_program_id!)
-    })
-    console.log('kwilAclAccount', kwilAclAccount);
 
     const instructions = [
-        getUpdateAclInstruction({
+        getPublishInstruction({
             dephyProgram: address(args.dephy_program_id!),
-            payer: authority,
-            authority,
-            kwilAccount,
+            payer,
+            owner: payer,
             vendor: address(did!.device.product.vendor.pubkey),
             productMint: address(did!.device.product.mint_account),
             device: address(did!.device.pubkey),
@@ -221,16 +188,43 @@ async function updateACL(args: UpdateAclArgs, authority: KeyPairSigner) {
             user: address(did!.user.pubkey),
             didMint: address(did!.mint_account),
             didAtoken: address(did!.token_account),
-            kwilAclAccount,
             bump,
-            readLevel: Number(args.read!),
-            writeLevel: Number(args.write!),
-            subject: Array.from(subject),
-            target: args.target!,
+            publisher,
+            ethAddress: Array.from(eth_address),
         })
     ]
 
-    const signature = await sendTransaction(instructions, authority)
-    console.log('Update ACL', signature)
+    const signature = await sendTransaction(instructions, payer)
+    console.log('Publish', signature)
+}
+
+interface SubscribeArgs {
+    kwil_program_id?: string;
+    publisher?: string;
+    linked?: string;
+}
+
+async function subscribe(args: SubscribeArgs, payer: KeyPairSigner) {
+    const publisher = address(args.publisher!)
+    const linked = address(args.linked!)
+    const [subscriber, bump] = await findSubscriberAccountPda({
+        publisher,
+        linked,
+    }, {
+        programAddress: address(args.kwil_program_id!)
+    })
+
+    const instructions = [
+        getSubscribeInstruction({
+            payer,
+            user: payer,
+            publisher,
+            linked,
+            subscriber,
+            bump,
+        })
+    ]
+    const signature = await sendTransaction(instructions, payer)
+    console.log('Subscribe', signature)
 }
 

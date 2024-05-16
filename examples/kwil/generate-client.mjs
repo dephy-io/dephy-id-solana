@@ -18,46 +18,46 @@ kinobi.update(
 // Update accounts.
 kinobi.update(
   k.updateAccountsVisitor({
-    kwilAccount: {
+    publisherAccount: {
       seeds: [
-        k.constantPdaSeedNodeFromString("utf8", "KWIL"),
+        k.constantPdaSeedNodeFromString("utf8", "PUBLISHER"),
         k.variablePdaSeedNode(
-          "authority",
+          "did_atoken",
           k.publicKeyTypeNode(),
-          "The authority of the counter account"
-        ),
-        k.variablePdaSeedNode(
-          'kwil_signer',
-          k.bytesTypeNode(),
-          'Kwil ETH address'
+          "The DID of publisher"
         ),
       ],
     },
-    kwilAclAccount: {
+    linkedAccount: {
       seeds: [
-        k.constantPdaSeedNodeFromString("utf8", "KWIL ACL"),
+        k.constantPdaSeedNodeFromString("utf8", "LINKED"),
         k.variablePdaSeedNode(
-          "kwil_account",
+          "user",
           k.publicKeyTypeNode(),
-          "The Kwil account"
+          "The user pubkey"
         ),
         k.variablePdaSeedNode(
-          "did_pubkey",
-          k.publicKeyTypeNode(),
-          "The DID atoken pubkey"
-        ),
-        k.variablePdaSeedNode(
-          "subject",
+          "eth_address",
           k.bytesTypeNode(),
-          'The caller address'
-        ),
-        k.variablePdaSeedNode(
-          "target_hash",
-          k.bytesTypeNode(),
-          "sha256 hash of target"
+          "ETH address"
         ),
       ]
-    }
+    },
+    subscriberAccount: {
+      seeds: [
+        k.constantPdaSeedNodeFromString("utf8", "SUBSCRIBER"),
+        k.variablePdaSeedNode(
+          "publisher",
+          k.publicKeyTypeNode(),
+          "The publisher account"
+        ),
+        k.variablePdaSeedNode(
+          "linked",
+          k.publicKeyTypeNode(),
+          "The linked account"
+        ),
+      ]
+    },
   })
 );
 
