@@ -480,15 +480,6 @@
         "kind": "struct",
         "fields": [
           {
-            "name": "seed",
-            "type": {
-              "array": [
-                "u8",
-                32
-              ]
-            }
-          },
-          {
             "name": "bump",
             "type": "u8"
           },

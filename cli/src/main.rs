@@ -488,10 +488,11 @@ fn activate_device(args: ActivateDeviceCliArgs) {
         Ok(sig) => {
             println!("Success: {:?}", sig);
             println!(
-                "User {} activated Device {}, Token: {}",
+                "User {} activated Device {}, Mint: {}, AToken: {}",
                 user.pubkey(),
                 device_pubkey,
-                did_mint_pubkey
+                did_mint_pubkey,
+                did_atoken_pubkey,
             );
         }
         Err(err) => {

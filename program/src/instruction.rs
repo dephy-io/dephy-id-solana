@@ -83,7 +83,6 @@ pub struct CreateVendorArgs {
 #[repr(C)]
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
 pub struct CreateProductArgs {
-    pub seed: [u8; 32],
     pub bump: u8,
     pub name: String,
     pub symbol: String,

@@ -35,6 +35,14 @@ kinobi.accept(
   )
 );
 
+const indexer = path.join(__dirname, '..', 'indexer')
+kinobi.accept(
+  k.renderJavaScriptExperimentalVisitor(
+    path.join(indexer, "src", "generated"),
+    { prettier: require(path.join(jsClient, ".prettierrc.json")) }
+  )
+);
+
 // Render Rust.
 const rustClient = path.join(__dirname, "..", "clients", "rust");
 kinobi.accept(

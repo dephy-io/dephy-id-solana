@@ -119,8 +119,9 @@ fn process_subscribe<'a>(
     let subscriber_pubkey = Pubkey::create_program_address(seeds, program_id)?;
     assert_same_pubkeys("subscriber", ctx.accounts.subscriber, &subscriber_pubkey)?;
 
-    // TODO: checked linked account
-    // TODO: checked publisher account
+    let linked_account = LinkedAccount::load(ctx.accounts.linked)?;
+    assert_same_pubkeys("Linked Account", ctx.accounts.user, &linked_account.authority)?;
+    let _publisher_account = PublisherAccount::load(ctx.accounts.publisher)?;
 
     create_account(
         ctx.accounts.subscriber,

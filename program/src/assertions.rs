@@ -45,6 +45,27 @@ pub fn assert_pda(
     Ok(())
 }
 
+/// Assert the derivation of the seeds against the given account and return the bump seed.
+pub fn assert_pda_without_bump(
+    account_name: &str,
+    account: &AccountInfo,
+    program_id: &Pubkey,
+    seeds: &[&[u8]],
+) -> ProgramResult {
+    let (key, _bump) = Pubkey::find_program_address(seeds, program_id);
+
+    if *account.key != key {
+        msg!(
+            "Account \"{}\" [{}] is an invalid PDA. Expected the following valid PDA [{}]",
+            account_name,
+            account.key,
+            key,
+        );
+        return Err(DephyError::InvalidPda.into());
+    }
+    Ok(())
+}
+
 /// Assert that the given account is empty.
 pub fn assert_empty(account_name: &str, account: &AccountInfo) -> ProgramResult {
     if !account.data_is_empty() {

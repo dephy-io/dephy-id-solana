@@ -21,14 +21,14 @@ pub enum KwilExampleInstruction {
 
     #[account(0, name="system_program", desc = "The system program")]
     #[account(1, writable, signer, name="payer", desc = "The account paying for the storage fees")]
-    #[account(2, signer, name="user", desc = "The Registed user")]
+    #[account(2, signer, name="user", desc = "The Registered user")]
     #[account(3, writable, name="linked", desc = "The Linked account")]
     Link(LinkArgs),
     // Unlink
 
     #[account(0, name="system_program", desc = "The system program")]
     #[account(1, writable, signer, name="payer", desc = "The account paying for the storage fees")]
-    #[account(2, signer, name="user", desc = "The Registed user")]
+    #[account(2, signer, name="user", desc = "The Registered user")]
     #[account(3, name="publisher", desc = "The Publisher account")]
     #[account(4, name="linked", desc = "The Linked account")]
     #[account(5, writable, name="subscriber", desc = "The Subscriber account")]
