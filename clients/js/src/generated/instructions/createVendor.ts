@@ -51,7 +51,6 @@ export type CreateVendorInstruction<
     | string
     | IAccountMeta<string> = 'ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL',
   TAccountPayer extends string | IAccountMeta<string> = string,
-  TAccountAuthority extends string | IAccountMeta<string> = string,
   TAccountDephy extends string | IAccountMeta<string> = string,
   TAccountVendor extends string | IAccountMeta<string> = string,
   TAccountVendorMint extends string | IAccountMeta<string> = string,
@@ -74,15 +73,12 @@ export type CreateVendorInstruction<
         ? WritableSignerAccount<TAccountPayer> &
             IAccountSignerMeta<TAccountPayer>
         : TAccountPayer,
-      TAccountAuthority extends string
-        ? ReadonlySignerAccount<TAccountAuthority> &
-            IAccountSignerMeta<TAccountAuthority>
-        : TAccountAuthority,
       TAccountDephy extends string
         ? ReadonlyAccount<TAccountDephy>
         : TAccountDephy,
       TAccountVendor extends string
-        ? ReadonlyAccount<TAccountVendor>
+        ? ReadonlySignerAccount<TAccountVendor> &
+            IAccountSignerMeta<TAccountVendor>
         : TAccountVendor,
       TAccountVendorMint extends string
         ? WritableAccount<TAccountVendorMint>
@@ -167,7 +163,6 @@ export type CreateVendorInput<
   TAccountTokenProgram2022 extends string = string,
   TAccountAtaProgram extends string = string,
   TAccountPayer extends string = string,
-  TAccountAuthority extends string = string,
   TAccountDephy extends string = string,
   TAccountVendor extends string = string,
   TAccountVendorMint extends string = string,
@@ -181,12 +176,10 @@ export type CreateVendorInput<
   ataProgram?: Address<TAccountAtaProgram>;
   /** The account paying for the storage fees */
   payer: TransactionSigner<TAccountPayer>;
-  /** The DePHY authority */
-  authority: TransactionSigner<TAccountAuthority>;
   /** The DePHY account */
   dephy: Address<TAccountDephy>;
   /** The Vendor pubkey */
-  vendor: Address<TAccountVendor>;
+  vendor: TransactionSigner<TAccountVendor>;
   /** The Vendor mint */
   vendorMint: Address<TAccountVendorMint>;
   /** The atoken account for vendor */
@@ -203,7 +196,6 @@ export function getCreateVendorInstruction<
   TAccountTokenProgram2022 extends string,
   TAccountAtaProgram extends string,
   TAccountPayer extends string,
-  TAccountAuthority extends string,
   TAccountDephy extends string,
   TAccountVendor extends string,
   TAccountVendorMint extends string,
@@ -214,7 +206,6 @@ export function getCreateVendorInstruction<
     TAccountTokenProgram2022,
     TAccountAtaProgram,
     TAccountPayer,
-    TAccountAuthority,
     TAccountDephy,
     TAccountVendor,
     TAccountVendorMint,
@@ -226,7 +217,6 @@ export function getCreateVendorInstruction<
   TAccountTokenProgram2022,
   TAccountAtaProgram,
   TAccountPayer,
-  TAccountAuthority,
   TAccountDephy,
   TAccountVendor,
   TAccountVendorMint,
@@ -244,7 +234,6 @@ export function getCreateVendorInstruction<
     },
     ataProgram: { value: input.ataProgram ?? null, isWritable: false },
     payer: { value: input.payer ?? null, isWritable: true },
-    authority: { value: input.authority ?? null, isWritable: false },
     dephy: { value: input.dephy ?? null, isWritable: false },
     vendor: { value: input.vendor ?? null, isWritable: false },
     vendorMint: { value: input.vendorMint ?? null, isWritable: true },
@@ -275,7 +264,6 @@ export function getCreateVendorInstruction<
       getAccountMeta(accounts.tokenProgram2022),
       getAccountMeta(accounts.ataProgram),
       getAccountMeta(accounts.payer),
-      getAccountMeta(accounts.authority),
       getAccountMeta(accounts.dephy),
       getAccountMeta(accounts.vendor),
       getAccountMeta(accounts.vendorMint),
@@ -291,7 +279,6 @@ export function getCreateVendorInstruction<
     TAccountTokenProgram2022,
     TAccountAtaProgram,
     TAccountPayer,
-    TAccountAuthority,
     TAccountDephy,
     TAccountVendor,
     TAccountVendorMint,
@@ -315,16 +302,14 @@ export type ParsedCreateVendorInstruction<
     ataProgram: TAccountMetas[2];
     /** The account paying for the storage fees */
     payer: TAccountMetas[3];
-    /** The DePHY authority */
-    authority: TAccountMetas[4];
     /** The DePHY account */
-    dephy: TAccountMetas[5];
+    dephy: TAccountMetas[4];
     /** The Vendor pubkey */
-    vendor: TAccountMetas[6];
+    vendor: TAccountMetas[5];
     /** The Vendor mint */
-    vendorMint: TAccountMetas[7];
+    vendorMint: TAccountMetas[6];
     /** The atoken account for vendor */
-    vendorAtoken: TAccountMetas[8];
+    vendorAtoken: TAccountMetas[7];
   };
   data: CreateVendorInstructionData;
 };
@@ -337,7 +322,7 @@ export function parseCreateVendorInstruction<
     IInstructionWithAccounts<TAccountMetas> &
     IInstructionWithData<Uint8Array>
 ): ParsedCreateVendorInstruction<TProgram, TAccountMetas> {
-  if (instruction.accounts.length < 9) {
+  if (instruction.accounts.length < 8) {
     // TODO: Coded error.
     throw new Error('Not enough accounts');
   }
@@ -354,7 +339,6 @@ export function parseCreateVendorInstruction<
       tokenProgram2022: getNextAccount(),
       ataProgram: getNextAccount(),
       payer: getNextAccount(),
-      authority: getNextAccount(),
       dephy: getNextAccount(),
       vendor: getNextAccount(),
       vendorMint: getNextAccount(),

@@ -115,21 +115,11 @@ fn create_vendor<'a>(
     let token_program_id = spl_token_2022::id();
     let payer_pubkey = ctx.accounts.payer.key;
     let vendor_pubkey = ctx.accounts.vendor.key;
-    let authority_pubkey = ctx.accounts.authority.key;
-
-    let dephy_account = DephyAccount::load(ctx.accounts.dephy)?;
 
     // Guards
     assert_program_owner("Dephy owner", ctx.accounts.dephy, program_id)?;
     let (dephy_pubkey, _bump) = Pubkey::find_program_address(&[b"DePHY"], program_id);
     assert_same_pubkeys("dephy", ctx.accounts.dephy, &dephy_pubkey)?;
-
-    assert_same_pubkeys(
-        "authority",
-        ctx.accounts.authority,
-        &dephy_account.authority,
-    )?;
-    assert_signer("authority", ctx.accounts.authority)?;
 
     assert_same_pubkeys(
         "system_program",
@@ -200,7 +190,7 @@ fn create_vendor<'a>(
         &metadata_pointer::instruction::initialize(
             &token_program_id,
             &mint_pubkey,
-            Some(*authority_pubkey),
+            Some(*vendor_pubkey),
             Some(mint_pubkey),
         )?,
         &[
@@ -214,8 +204,8 @@ fn create_vendor<'a>(
         &spl_token_2022::instruction::initialize_mint2(
             &token_program_id,
             &mint_pubkey,
-            authority_pubkey,
-            Some(authority_pubkey),
+            vendor_pubkey,
+            Some(vendor_pubkey),
             0,
         )?,
         &[
@@ -230,9 +220,9 @@ fn create_vendor<'a>(
         &spl_token_metadata_interface::instruction::initialize(
             &token_program_id,
             &mint_pubkey,
-            authority_pubkey,
+            vendor_pubkey,
             &mint_pubkey,
-            authority_pubkey,
+            vendor_pubkey,
             metadata.name,
             metadata.symbol,
             metadata.uri,
@@ -241,11 +231,11 @@ fn create_vendor<'a>(
             // [w] Metadata
             ctx.accounts.vendor_mint.clone(),
             // [] Update authority
-            ctx.accounts.authority.clone(),
+            ctx.accounts.vendor.clone(),
             // [] Mint
             ctx.accounts.vendor_mint.clone(),
             // [s] Mint authority
-            ctx.accounts.authority.clone(),
+            ctx.accounts.vendor.clone(),
         ],
     )?;
 
@@ -254,7 +244,7 @@ fn create_vendor<'a>(
             &spl_token_metadata_interface::instruction::update_field(
                 &token_program_id,
                 &mint_pubkey,
-                authority_pubkey,
+                vendor_pubkey,
                 Field::Key(field),
                 value,
             ),
@@ -262,7 +252,7 @@ fn create_vendor<'a>(
                 // 0. `[w]` Metadata account
                 ctx.accounts.vendor_mint.clone(),
                 // 1. `[s]` Update authority
-                ctx.accounts.authority.clone(),
+                ctx.accounts.vendor.clone(),
             ],
         )?;
     }
@@ -297,8 +287,8 @@ fn create_vendor<'a>(
             &token_program_id,
             &mint_pubkey,
             &atoken_pubkey,
-            authority_pubkey,
-            &[authority_pubkey],
+            vendor_pubkey,
+            &[vendor_pubkey],
             1,
         )?,
         &[
@@ -307,7 +297,7 @@ fn create_vendor<'a>(
             // [writable] The account to mint tokens to.
             ctx.accounts.vendor_atoken.clone(),
             // [signer] The mint's minting authority.
-            ctx.accounts.authority.clone(),
+            ctx.accounts.vendor.clone(),
         ],
     )?;
 
@@ -318,14 +308,14 @@ fn create_vendor<'a>(
             &mint_pubkey,
             None,
             spl_token_2022::instruction::AuthorityType::MintTokens,
-            authority_pubkey,
-            &[authority_pubkey],
+            vendor_pubkey,
+            &[vendor_pubkey],
         )?,
         &[
             // [writable] The mint or account to change the authority of.
             ctx.accounts.vendor_mint.clone(),
             // [signer] The current authority of the mint or account.
-            ctx.accounts.authority.clone(),
+            ctx.accounts.vendor.clone(),
         ],
     )?;
 
