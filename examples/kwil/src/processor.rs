@@ -1,17 +1,13 @@
 use borsh::BorshDeserialize;
 use solana_program::{
-    account_info::AccountInfo,
-    entrypoint::ProgramResult,
-    hash, pubkey::Pubkey,
+    account_info::AccountInfo, entrypoint::ProgramResult, program_error::ProgramError,
+    pubkey::Pubkey,
 };
 
 use crate::{
     assertions::assert_same_pubkeys,
-    error::KwilError,
-    instruction::{
-        accounts::{CreateKwilAccounts, UpdateAclAccounts}, CreateKwilArgs, KwilExampleInstruction, UpdateAclArgs
-    },
-    state::{Key, KwilAccount, KwilAclAccount, KwilAclData, KwilData},
+    instruction::{accounts::{LinkAccounts, PublishAccounts, SubscribeAccounts}, KwilExampleInstruction, PublishArgs},
+    state::{Key, LinkedAccount, LinkedData, PublisherAccount, PublisherData, SubscriberAccount, SubscriberData},
     utils::create_account,
 };
 
@@ -20,123 +16,130 @@ pub fn process_instruction<'a>(
     accounts: &'a [AccountInfo<'a>],
     instruction_data: &[u8],
 ) -> ProgramResult {
-    let instruction: KwilExampleInstruction = KwilExampleInstruction::try_from_slice(instruction_data)?;
+    let instruction: KwilExampleInstruction =
+        KwilExampleInstruction::try_from_slice(instruction_data)?;
 
     match instruction {
-        KwilExampleInstruction::CreateKwil(args) => create_kwil(program_id, accounts, args),
-        KwilExampleInstruction::UpdateAcl(args) => update_acl(program_id, accounts, args),
+        KwilExampleInstruction::Publish(args) => process_publish(program_id, accounts, args),
+        KwilExampleInstruction::Link(args) => process_link(program_id, accounts, args),
+        KwilExampleInstruction::Subscribe(args) => process_subscribe(program_id, accounts, args),
     }
 }
 
-fn create_kwil<'a>(
+fn process_publish<'a>(
     program_id: &Pubkey,
     accounts: &'a [AccountInfo<'a>],
-    args: CreateKwilArgs,
-) -> ProgramResult {
-    // Accounts
-    let ctx = CreateKwilAccounts::context(accounts)?;
-    let authority = ctx.accounts.authority.key;
+    args: PublishArgs,
+) -> Result<(), ProgramError> {
+    let ctx = PublishAccounts::context(accounts)?;
+    let did_atoken = ctx.accounts.did_atoken.key;
+    let owner = ctx.accounts.owner.key;
 
-    assert_same_pubkeys(
-        "dephy",
-        ctx.accounts.dephy_program,
-        &dephy_io_dephy_id_client::ID,
-    )?;
+    let seeds: &[&[u8]] = &[b"PUBLISHER", did_atoken.as_ref(), &[args.bump]];
+    let publisher_pubkey = Pubkey::create_program_address(seeds, program_id)?;
+    assert_same_pubkeys("publisher", ctx.accounts.publisher, &publisher_pubkey)?;
 
-    // Create KwilAccount
-    let seeds: &[&[u8]] = &[
-        b"KWIL",
-        authority.as_ref(),
-        args.kwil_signer.as_ref(),
-        &[args.bump],
-    ];
     create_account(
-        ctx.accounts.kwil_account,
+        ctx.accounts.publisher,
         ctx.accounts.payer,
         ctx.accounts.system_program,
-        KwilAccount::LEN,
+        PublisherAccount::LEN,
         program_id,
         &[seeds],
     )?;
 
-    let kwil_account = KwilAccount {
-        key: Key::KwilAccount,
-        authority: *authority,
-        data: KwilData {
+    let publisher_account = PublisherAccount {
+        key: Key::PublisherAccount,
+        authority: *owner,
+        data: PublisherData {
             bump: args.bump,
-            kwil_signer: args.kwil_signer,
+            eth_address: args.eth_address,
         },
     };
 
-    kwil_account.save(ctx.accounts.kwil_account)
+    publisher_account.save(ctx.accounts.publisher)
 }
 
-fn update_acl<'a>(
+
+fn process_link<'a>(
     program_id: &Pubkey,
     accounts: &'a [AccountInfo<'a>],
-    args: UpdateAclArgs,
-) -> ProgramResult {
-    // Accounts
-    let ctx = UpdateAclAccounts::context(accounts)?;
+    args: crate::instruction::LinkArgs,
+) -> Result<(), ProgramError> {
+    let ctx = LinkAccounts::context(accounts)?;
+    let user_pubkey = ctx.accounts.user.key;
 
-    if ctx.accounts.kwil_account.owner != program_id {
-        return Err(KwilError::InvalidProgramOwner.into());
-    }
-
-    let kwil_account_pubkey = ctx.accounts.kwil_account.key;
-    let did_pubkey = ctx.accounts.did_atoken.key;
-
-    // TODO: verify PDAs
-
-    let kwil_account = KwilAccount::load(ctx.accounts.kwil_account)?;
-    assert_same_pubkeys("authority", ctx.accounts.authority, &kwil_account.authority)?;
-
-    let target_hash = hash::hash(args.target.as_ref()).to_bytes();
     let seeds: &[&[u8]] = &[
-        b"KWIL ACL",
-        kwil_account_pubkey.as_ref(),
-        did_pubkey.as_ref(),
-        args.subject.as_ref(),
-        target_hash.as_ref(),
-        &[args.bump],
+        b"LINKED",
+        user_pubkey.as_ref(),
+        &args.eth_address,
+        &[args.bump]
     ];
+    let linked_pubkey = Pubkey::create_program_address(seeds, program_id)?;
+    assert_same_pubkeys("linked", ctx.accounts.linked, &linked_pubkey)?;
 
-    if ctx.accounts.kwil_acl_account.data_is_empty() {
-        create_account(
-            ctx.accounts.kwil_acl_account,
-            ctx.accounts.payer,
-            ctx.accounts.system_program,
-            KwilAclAccount::LEN,
-            program_id,
-            &[seeds],
-        )?;
+    create_account(
+        ctx.accounts.linked,
+        ctx.accounts.payer,
+        ctx.accounts.system_program,
+        LinkedAccount::LEN,
+        program_id,
+        &[seeds],
+    )?;
 
-        let kwil_acl_account = KwilAclAccount {
-            key: Key::KwilAclAccount,
-            authority: kwil_account.authority,
-            data: KwilAclData {
-                bump: args.bump,
-                read_level: args.read_level,
-                write_level: args.write_level,
-                subject: args.subject,
-                target_hash,
-            },
-        };
-
-        kwil_acl_account.save(ctx.accounts.kwil_acl_account)?;
-    } else {
-        let kwil_acl_pubkey = Pubkey::create_program_address(seeds, program_id)?;
-        assert_same_pubkeys("kwil acl", ctx.accounts.kwil_acl_account, &kwil_acl_pubkey)?;
-
-        let mut kwil_acl_account = KwilAclAccount::load(ctx.accounts.kwil_acl_account)?;
-        kwil_acl_account.data.read_level = args.read_level;
-        kwil_acl_account.data.write_level = args.write_level;
-        kwil_acl_account.data.subject = args.subject;
-        kwil_acl_account.data.target_hash = target_hash;
-
-        kwil_acl_account.save(ctx.accounts.kwil_acl_account)?;
+    let linked_account = LinkedAccount {
+        key: Key::LinkedAccount,
+        authority: *user_pubkey,
+        data: LinkedData {
+            bump: args.bump,
+            eth_address: args.eth_address,
+        }
     };
 
-    Ok(())
+    linked_account.save(ctx.accounts.linked)
 }
 
+
+fn process_subscribe<'a>(
+    program_id: &Pubkey,
+    accounts: &'a [AccountInfo<'a>],
+    args: crate::instruction::SubscribeArgs,
+) -> Result<(), ProgramError> {
+    let ctx = SubscribeAccounts::context(accounts)?;
+    let user_pubkey = ctx.accounts.user.key;
+    let publisher_pubkey = ctx.accounts.publisher.key;
+    let linked_pubkey = ctx.accounts.linked.key;
+
+    let seeds: &[&[u8]] = &[
+        b"SUBSCRIBER",
+        publisher_pubkey.as_ref(),
+        linked_pubkey.as_ref(),
+        &[args.bump]
+    ];
+    let subscriber_pubkey = Pubkey::create_program_address(seeds, program_id)?;
+    assert_same_pubkeys("subscriber", ctx.accounts.subscriber, &subscriber_pubkey)?;
+
+    // TODO: checked linked account
+    // TODO: checked publisher account
+
+    create_account(
+        ctx.accounts.subscriber,
+        ctx.accounts.payer,
+        ctx.accounts.system_program,
+        SubscriberAccount::LEN,
+        program_id,
+        &[seeds],
+    )?;
+
+    let subscriber_account = SubscriberAccount {
+        key: Key::LinkedAccount,
+        authority: *user_pubkey,
+        data: SubscriberData {
+            bump: args.bump,
+            publisher: *publisher_pubkey,
+            linked: *linked_pubkey,
+        }
+    };
+
+    subscriber_account.save(ctx.accounts.subscriber)
+}
