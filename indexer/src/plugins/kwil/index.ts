@@ -72,9 +72,10 @@ export async function initialize() {
     dbOwnerKwilSigner = new KwilSigner(dbOwnerEthSigner, dbOwnerEthAddress);
 
     kwil = new WebKwil({
-        kwilProvider: "http://localhost:8080",
+        kwilProvider: "http://127.0.0.1:8080",
         chainId: "kwil-chain-tmp",
         unconfirmedNonce: true,
+        timeout: 10000,
     });
 
     let ping = await kwil.ping()

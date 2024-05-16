@@ -90,7 +90,7 @@ This template should help get you started developing Solana programs. Let's walk
 1. Create Vendor
 
    ```sh
-   cargo run create-vendor --admin keys/DePHY.json --vendor $(solana address -k keys/VENDOR1.json) 'Example Vendor' 'DV1' 'https://example.com' -m desc="An example Vendor"
+   cargo run create-vendor --vendor keys/VENDOR1.json 'Example Vendor' 'DV1' 'https://example.com' -m desc="An example Vendor"
    ```
 
 2. Create Product
