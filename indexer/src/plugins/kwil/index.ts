@@ -1,5 +1,10 @@
-import { Address, Base58EncodedBytes, getBase16Decoder, getBase58Encoder } from "@solana/web3.js";
-import { KWIL_PROGRAM_ADDRESS, KwilInstruction, identifyKwilInstruction, parseCreateKwilInstruction, parseUpdateAclInstruction } from "./generated";
+import { Address, Base58EncodedBytes, Rpc, SolanaRpcApiMainnet, getBase16Decoder, getBase58Encoder } from "@solana/web3.js";
+import { KWIL_PROGRAM_ADDRESS,
+    parsePublishInstruction, parseLinkInstruction, parseSubscribeInstruction,
+    fetchLinkedAccount,
+    identifyKwilInstruction,
+    KwilInstruction
+} from "./generated";
 import { keccak_256 } from "@noble/hashes/sha3";
 import { WebKwil, KwilSigner, Utils as KwilUtils } from '@kwilteam/kwil-js';
 import { Wallet } from "ethers";
@@ -45,19 +50,7 @@ function to_checksum_address(address_bytes: Uint8Array) {
     return result
 }
 
-// TODO: persist
-let address_mapping: {[key in Address]: string} = {}
-
-async function save_eth_address(account_pubkey: Address, eth_address: Uint8Array) {
-    address_mapping[account_pubkey] = to_checksum_address(eth_address)
-}
-
-async function load_eth_address(account_pubkey: Address): Promise<string> {
-    return address_mapping[account_pubkey]
-}
-
-async function createACL(kwil_account: Address, subject: Uint8Array, target: string, read_level: number, write_level: number) {
-    // dbOwnerKwilSigner.identifier == await load_eth_address(kwil_account)
+async function createACL(subject: Uint8Array, target: string, read_level: number, write_level: number) {
     return await kwil.execute({
         dbid,
         action: "create_acl",
@@ -69,7 +62,7 @@ async function createACL(kwil_account: Address, subject: Uint8Array, target: str
                 $write_level: write_level,
             }
         ]
-    }, dbOwnerKwilSigner, true);
+    }, dbOwnerKwilSigner, true)
 }
 
 export async function initialize() {
@@ -92,29 +85,33 @@ export function matchIx(ix: PartiallyDecodedTransactionInstruction | ParsedTrans
     return ix.programId == KWIL_PROGRAM_ADDRESS
 }
 
-export async function processIx(ix: PartiallyDecodedTransactionInstruction, meta: IxMeta) {
+export async function processIx(rpc: Rpc<SolanaRpcApiMainnet>, ix: PartiallyDecodedTransactionInstruction, meta: IxMeta) {
     const kwil_ix = {
-        accounts: ix.accounts.map(address => ({address, role: 0})),
+        accounts: ix.accounts.map(address => ({ address, role: 0 })),
         data: Uint8Array.from(getBase58Encoder().encode(ix.data)),
         programAddress: ix.programId,
     }
 
     switch (identifyKwilInstruction(kwil_ix)) {
-        case KwilInstruction.CreateKwil:
-            const create_kwil = parseCreateKwilInstruction(kwil_ix)
-            await save_eth_address(create_kwil.accounts.kwilAccount.address, Uint8Array.from(create_kwil.data.kwilSigner))
+        case KwilInstruction.Link:
+            const link_ix = parseLinkInstruction(kwil_ix)
+            const eth_address = to_checksum_address(Uint8Array.from(link_ix.data.ethAddress))
+            console.log('Link', link_ix.accounts.linked.address, eth_address)
             break;
 
-        case KwilInstruction.UpdateAcl:
-            const update_acl = parseUpdateAclInstruction(kwil_ix)
-            const subject = update_acl.data.subject
-            await createACL(
-                update_acl.accounts.kwilAccount.address,
-                Uint8Array.from(subject),
-                update_acl.data.target,
-                update_acl.data.readLevel,
-                update_acl.data.writeLevel
-            )
+        case KwilInstruction.Publish:
+            const publish_ix = parsePublishInstruction(kwil_ix)
+            const subject = publish_ix.data.ethAddress
+            await createACL(Uint8Array.from(subject), 'reports', 0, 1)
+            console.log('Publish', subject)
+            break;
+
+        case KwilInstruction.Subscribe:
+            const subscribe_ix = parseSubscribeInstruction(kwil_ix)
+            const linked_account = await fetchLinkedAccount(rpc, subscribe_ix.accounts.linked.address)
+            const linked_eth_address = Uint8Array.from(linked_account.data.data.ethAddress)
+            await createACL(linked_eth_address, 'reports', 1, 0)
+            console.log('Subscribe', linked_eth_address, subscribe_ix.accounts.publisher.address)
             break;
 
         default:

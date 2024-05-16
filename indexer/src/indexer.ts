@@ -61,7 +61,7 @@ type ParsedTransactionInstruction = {
 interface IPlugin {
     initialize: () => Promise<any>
     matchIx: (ix: PartiallyDecodedTransactionInstruction | ParsedTransactionInstruction) => boolean
-    processIx: (ix: PartiallyDecodedTransactionInstruction | ParsedTransactionInstruction, meta: IxMeta) => Promise<any>
+    processIx: (rpc: Rpc<SolanaRpcApiMainnet>, ix: PartiallyDecodedTransactionInstruction | ParsedTransactionInstruction, meta: IxMeta) => Promise<any>
 }
 
 export class Indexer {
@@ -406,7 +406,7 @@ export class Indexer {
 
                     for (const plugin of this.plugins) {
                         if (plugin.matchIx(ix)) {
-                            await plugin.processIx(ix, {tx: signature, index: i})
+                            await plugin.processIx(this.rpc, ix, {tx: signature, index: i})
                         }
                     }
                 }
