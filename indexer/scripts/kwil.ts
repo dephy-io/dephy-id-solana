@@ -58,6 +58,12 @@ try {
             eth_address: {
                 type: 'string'
             },
+            publisher: {
+                type: 'string'
+            },
+            linked: {
+                type: 'string'
+            },
         },
         allowPositionals: true,
     })
@@ -149,6 +155,7 @@ async function link(args: LinkArgs, payer: KeyPairSigner) {
 
     const signature = await sendTransaction(instructions, payer)
     console.log('Link', signature)
+    console.log('linked', linked)
 }
 
 
@@ -196,6 +203,7 @@ async function publish(args: PublishArgs, payer: KeyPairSigner) {
 
     const signature = await sendTransaction(instructions, payer)
     console.log('Publish', signature)
+    console.log('publisher', publisher)
 }
 
 interface SubscribeArgs {
