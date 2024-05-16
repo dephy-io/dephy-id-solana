@@ -600,8 +600,8 @@ fn activate_device<'a>(
     // TODO: verify Device/Product/Vendor
     {
         let device_account_data = ctx.accounts.product_atoken.data.borrow();
-        let device_account = StateWithExtensions::<Account>::unpack(&device_account_data)?;
-        assert_same_pubkeys("Device Owner", ctx.accounts.device, &device_account.base.owner)?;
+        let product_device_account = StateWithExtensions::<Account>::unpack(&device_account_data)?;
+        assert_same_pubkeys("Device Owner", ctx.accounts.device, &product_device_account.base.owner)?;
     }
 
     let product_mint_data = ctx.accounts.product_mint.data.borrow();

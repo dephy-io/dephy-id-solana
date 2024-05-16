@@ -2,6 +2,7 @@ import { Address, Base58EncodedBytes, Rpc, SolanaRpcApiMainnet, getBase16Decoder
 import { KWIL_PROGRAM_ADDRESS,
     parsePublishInstruction, parseLinkInstruction, parseSubscribeInstruction,
     fetchLinkedAccount,
+    fetchPublisherAccount,
     identifyKwilInstruction,
     KwilInstruction
 } from "./generated";
@@ -50,13 +51,13 @@ function to_checksum_address(address_bytes: Uint8Array) {
     return result
 }
 
-async function createACL(subject: Uint8Array, target: string, read_level: number, write_level: number) {
+async function createACL(subject: string, target: string, read_level: number, write_level: number) {
     return await kwil.execute({
         dbid,
         action: "create_acl",
         inputs: [
             {
-                $subject: to_checksum_address(subject),
+                $subject: subject,
                 $target: target,
                 $read_level: read_level,
                 $write_level: write_level,
@@ -102,17 +103,19 @@ export async function processIx(rpc: Rpc<SolanaRpcApiMainnet>, ix: PartiallyDeco
 
         case KwilInstruction.Publish:
             const publish_ix = parsePublishInstruction(kwil_ix)
-            const subject = Uint8Array.from(publish_ix.data.ethAddress)
+            const subject = to_checksum_address(Uint8Array.from(publish_ix.data.ethAddress))
             await createACL(subject, 'reports', 0, 1)
-            console.log('Publish', to_checksum_address(subject))
+            console.log('Publish', subject)
             break;
 
         case KwilInstruction.Subscribe:
             const subscribe_ix = parseSubscribeInstruction(kwil_ix)
             const linked_account = await fetchLinkedAccount(rpc, subscribe_ix.accounts.linked.address)
-            const linked_eth_address = Uint8Array.from(linked_account.data.data.ethAddress)
-            await createACL(linked_eth_address, 'reports', 1, 0)
-            console.log('Subscribe', to_checksum_address(linked_eth_address), subscribe_ix.accounts.publisher.address)
+            const linked_eth_address = to_checksum_address(Uint8Array.from(linked_account.data.data.ethAddress))
+            const publisher_account = await fetchPublisherAccount(rpc, subscribe_ix.accounts.publisher.address)
+            const publisher_eth_address = to_checksum_address(Uint8Array.from(publisher_account.data.data.ethAddress))
+            await createACL(linked_eth_address, publisher_eth_address, 1, 0)
+            console.log('Subscribe', linked_eth_address, publisher_eth_address)
             break;
 
         default:
