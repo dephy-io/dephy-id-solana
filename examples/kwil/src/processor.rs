@@ -3,6 +3,7 @@ use solana_program::{
     account_info::AccountInfo, entrypoint::ProgramResult, program_error::ProgramError,
     pubkey::Pubkey,
 };
+use spl_token_2022::{extension::StateWithExtensions, state::Account};
 
 use crate::{
     assertions::assert_same_pubkeys,
@@ -38,6 +39,12 @@ fn process_publish<'a>(
     let seeds: &[&[u8]] = &[b"PUBLISHER", did_atoken.as_ref(), &[args.bump]];
     let publisher_pubkey = Pubkey::create_program_address(seeds, program_id)?;
     assert_same_pubkeys("publisher", ctx.accounts.publisher, &publisher_pubkey)?;
+
+    {
+        let did_account_data = ctx.accounts.did_atoken.data.borrow();
+        let did_account = StateWithExtensions::<Account>::unpack(&did_account_data)?;
+        assert_same_pubkeys("DID Owner", ctx.accounts.owner, &did_account.base.owner)?;
+    }
 
     create_account(
         ctx.accounts.publisher,

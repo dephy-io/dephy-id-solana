@@ -12,7 +12,7 @@ use solana_client::rpc_client::RpcClient;
 use solana_sdk::{
     commitment_config::{CommitmentConfig, CommitmentLevel},
     ed25519_instruction::new_ed25519_instruction,
-    hash, keccak,
+    keccak,
     pubkey::Pubkey,
     secp256k1_instruction::new_secp256k1_instruction,
     signature::Keypair,
@@ -300,9 +300,8 @@ fn create_product(args: CreateProductCliArgs) {
     let vendor = read_key(&args.vendor_keypair);
     let payer = read_key_or(args.common.payer, &args.vendor_keypair);
 
-    let seed = hash::hash(args.name.as_ref());
     let (product_mint_pubkey, bump) = Pubkey::find_program_address(
-        &[b"DePHY PRODUCT", vendor.pubkey().as_ref(), seed.as_ref()],
+        &[b"DePHY PRODUCT", vendor.pubkey().as_ref(), args.name.as_ref()],
         &program_id,
     );
 
@@ -325,7 +324,6 @@ fn create_product(args: CreateProductCliArgs) {
             .product_mint(product_mint_pubkey)
             .vendor_mint(vendor_mint_pubkey)
             .vendor_atoken(vendor_atoken_pubkey)
-            .seed(seed.to_bytes())
             .bump(bump)
             .name(args.name)
             .symbol(args.symbol)

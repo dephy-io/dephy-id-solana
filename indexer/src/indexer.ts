@@ -145,6 +145,7 @@ export class Indexer {
         }
     }
 
+
     // fetch all missing then process from the beginning
     async fillMissingTransactions(program_address: Address, commitment: Commitment) {
         let done = false
@@ -317,8 +318,27 @@ export class Indexer {
         })
     }
 
-    handleActivateDevice(activate_device: ParsedActivateDeviceInstruction<string, readonly IAccountMeta[]>, meta: IxMeta) {
-        return e.insert(e.DID, {
+    async handleActivateDevice(db_tx: Executor, activate_device: ParsedActivateDeviceInstruction<string, readonly IAccountMeta[]>, meta: IxMeta) {
+        let user = await e.select(e.User, () => ({
+            filter_single: {
+                pubkey: activate_device.accounts.user.address,
+            }
+        })).run(db_tx)
+
+        let user_query;
+        if (user) {
+            user_query = e.select(e.User, () => ({
+                filter_single: {
+                    pubkey: activate_device.accounts.user.address,
+                }
+            }))
+        } else {
+            user_query = e.insert(e.User, {
+                pubkey: activate_device.accounts.user.address,
+            })
+        }
+
+        await e.insert(e.DID, {
             mint_account: activate_device.accounts.didMint.address,
             mint_authority: null,
             token_account: activate_device.accounts.didAtoken.address,
@@ -327,16 +347,14 @@ export class Indexer {
                     pubkey: activate_device.accounts.device.address,
                 }
             })),
-            user: e.insert(e.User, {
-                pubkey: activate_device.accounts.user.address,
-            }),
+            user: user_query,
             tx: e.select(e.Transaction, () => ({
                 filter_single: {
                     signature: meta.tx,
                 },
                 "@ix_index": e.int16(meta.index),
             })),
-        })
+        }).run(db_tx)
 
         // TODO: fetch DID metadata
     }
@@ -371,7 +389,7 @@ export class Indexer {
 
             case DephyIdInstruction.ActivateDevice:
                 let activate_device = parseActivateDeviceInstruction(dephy_ix)
-                await this.handleActivateDevice(activate_device, meta).run(db_tx)
+                await this.handleActivateDevice(db_tx, activate_device, meta)
                 break
 
             default:

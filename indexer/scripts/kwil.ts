@@ -129,6 +129,7 @@ async function sendTransaction(instructions: IInstruction[], payer: KeyPairSigne
 }
 
 interface LinkArgs {
+    dephy_program_id?: string,
     kwil_program_id?: string,
     eth_address?: string,
 }
@@ -145,11 +146,12 @@ async function link(args: LinkArgs, payer: KeyPairSigner) {
 
     const instructions = [
         getLinkInstruction({
+            dephyProgram: address(args.dephy_program_id!),
             bump,
             payer,
             user: payer,
             linked,
-            ethAddress: Array.from(ethAddress)
+            ethAddress: Array.from(ethAddress),
         })
     ]
 
@@ -189,6 +191,8 @@ async function publish(args: PublishArgs, payer: KeyPairSigner) {
             payer,
             owner: payer,
             vendor: address(did!.device.product.vendor.pubkey),
+            vendorMint: address(did!.device.product.vendor.mint_account),
+            vendorAtoken: address(did!.device.product.vendor.token_account),
             productMint: address(did!.device.product.mint_account),
             device: address(did!.device.pubkey),
             productAtoken: address(did!.device.token_account),
@@ -207,6 +211,7 @@ async function publish(args: PublishArgs, payer: KeyPairSigner) {
 }
 
 interface SubscribeArgs {
+    dephy_program_id?: string;
     kwil_program_id?: string;
     publisher?: string;
     linked?: string;
@@ -224,6 +229,7 @@ async function subscribe(args: SubscribeArgs, payer: KeyPairSigner) {
 
     const instructions = [
         getSubscribeInstruction({
+            dephyProgram: address(args.dephy_program_id!),
             payer,
             user: payer,
             publisher,

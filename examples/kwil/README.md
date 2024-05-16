@@ -13,7 +13,7 @@ solana -u l program deploy target/deploy/dephy_kwil_example.so --program-id exam
 
 cd indexer
 # publish data source
-bun run --preload ./env.ts ./scripts/kwil.ts publish -k payer.json --did_atoken <DID_ATOKEN> --eth_address <ETH_ADDR>
+bun run --preload ./env.ts ./scripts/kwil.ts publish -k did_owner.json --did_atoken <DID_ATOKEN> --eth_address <ETH_ADDR>
 
 # link user eth address
 bun run --preload ./env.ts ./scripts/kwil.ts link -k user.json --eth_address <ETH_ADDR>

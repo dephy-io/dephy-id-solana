@@ -62,7 +62,7 @@ async function createACL(subject: Uint8Array, target: string, read_level: number
                 $write_level: write_level,
             }
         ]
-    }, dbOwnerKwilSigner, true)
+    }, dbOwnerKwilSigner)
 }
 
 export async function initialize() {
@@ -102,9 +102,9 @@ export async function processIx(rpc: Rpc<SolanaRpcApiMainnet>, ix: PartiallyDeco
 
         case KwilInstruction.Publish:
             const publish_ix = parsePublishInstruction(kwil_ix)
-            const subject = publish_ix.data.ethAddress
-            await createACL(Uint8Array.from(subject), 'reports', 0, 1)
-            console.log('Publish', subject)
+            const subject = Uint8Array.from(publish_ix.data.ethAddress)
+            await createACL(subject, 'reports', 0, 1)
+            console.log('Publish', to_checksum_address(subject))
             break;
 
         case KwilInstruction.Subscribe:
@@ -112,7 +112,7 @@ export async function processIx(rpc: Rpc<SolanaRpcApiMainnet>, ix: PartiallyDeco
             const linked_account = await fetchLinkedAccount(rpc, subscribe_ix.accounts.linked.address)
             const linked_eth_address = Uint8Array.from(linked_account.data.data.ethAddress)
             await createACL(linked_eth_address, 'reports', 1, 0)
-            console.log('Subscribe', linked_eth_address, subscribe_ix.accounts.publisher.address)
+            console.log('Subscribe', to_checksum_address(linked_eth_address), subscribe_ix.accounts.publisher.address)
             break;
 
         default:

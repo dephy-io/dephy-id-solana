@@ -54,11 +54,19 @@
           ]
         },
         {
-          "name": "productMint",
+          "name": "vendorMint",
           "isMut": false,
           "isSigner": false,
           "docs": [
-            "Product of the Device"
+            "Vendor Mint"
+          ]
+        },
+        {
+          "name": "vendorAtoken",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "Vendor AToken"
           ]
         },
         {
@@ -67,6 +75,14 @@
           "isSigner": false,
           "docs": [
             "The Device pubkey"
+          ]
+        },
+        {
+          "name": "productMint",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "Product of the Device"
           ]
         },
         {
@@ -127,6 +143,14 @@
           ]
         },
         {
+          "name": "dephyProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The DePHY program"
+          ]
+        },
+        {
           "name": "payer",
           "isMut": true,
           "isSigner": true,
@@ -139,7 +163,7 @@
           "isMut": false,
           "isSigner": true,
           "docs": [
-            "The Registed user"
+            "The Registered user"
           ]
         },
         {
@@ -176,6 +200,14 @@
           ]
         },
         {
+          "name": "dephyProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The DePHY program"
+          ]
+        },
+        {
           "name": "payer",
           "isMut": true,
           "isSigner": true,
@@ -188,7 +220,7 @@
           "isMut": false,
           "isSigner": true,
           "docs": [
-            "The Registed user"
+            "The Registered user"
           ]
         },
         {
