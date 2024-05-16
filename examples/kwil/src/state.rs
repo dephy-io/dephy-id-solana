@@ -10,24 +10,25 @@ use crate::error::KwilError;
 #[derive(Clone, BorshSerialize, BorshDeserialize, Debug)]
 pub enum Key {
     Uninitialized,
-    KwilAccount,
-    KwilAclAccount,
+    PublisherAccount,
+    LinkedAccount,
+    SubscriberAccount,
 }
 
 #[repr(C)]
 #[derive(Clone, BorshSerialize, BorshDeserialize, Debug, ShankAccount)]
-pub struct KwilAccount {
+pub struct PublisherAccount {
     pub key: Key,
     pub authority: Pubkey,
-    pub data: KwilData,
+    pub data: PublisherData,
 }
 
-impl KwilAccount {
-    pub const LEN: usize = 1 + 32 + KwilData::LEN;
+impl PublisherAccount {
+    pub const LEN: usize = 1 + 32 + PublisherData::LEN;
 
     pub fn load(account: &AccountInfo) -> Result<Self, ProgramError> {
         let mut bytes: &[u8] = &(*account.data).borrow();
-        KwilAccount::deserialize(&mut bytes).map_err(|error| {
+        PublisherAccount::deserialize(&mut bytes).map_err(|error| {
             msg!("Error: {}", error);
             KwilError::DeserializationError.into()
         })
@@ -42,30 +43,30 @@ impl KwilAccount {
 }
 
 #[derive(Clone, BorshSerialize, BorshDeserialize, Debug)]
-pub struct KwilData {
+pub struct PublisherData {
     pub bump: u8,
-    pub kwil_signer: [u8; 20],
+    pub eth_address: [u8; 20],
 }
 
-impl KwilData {
+impl PublisherData {
     pub const LEN: usize = 1 + 20;
 }
 
 
 #[repr(C)]
 #[derive(Clone, BorshSerialize, BorshDeserialize, Debug, ShankAccount)]
-pub struct KwilAclAccount {
+pub struct LinkedAccount {
     pub key: Key,
     pub authority: Pubkey,
-    pub data: KwilAclData,
+    pub data: LinkedData,
 }
 
-impl KwilAclAccount {
-    pub const LEN: usize = 1 + 32 + KwilAclData::LEN;
+impl LinkedAccount {
+    pub const LEN: usize = 1 + 32 + LinkedData::LEN;
 
     pub fn load(account: &AccountInfo) -> Result<Self, ProgramError> {
         let mut bytes: &[u8] = &(*account.data).borrow();
-        KwilAclAccount::deserialize(&mut bytes).map_err(|error| {
+        LinkedAccount::deserialize(&mut bytes).map_err(|error| {
             msg!("Error: {}", error);
             KwilError::DeserializationError.into()
         })
@@ -80,15 +81,51 @@ impl KwilAclAccount {
 }
 
 #[derive(Clone, BorshSerialize, BorshDeserialize, Debug)]
-pub struct KwilAclData {
+pub struct LinkedData {
     pub bump: u8,
-    pub read_level: u8,
-    pub write_level: u8,
-    pub subject: [u8; 20],
-    pub target_hash: [u8; 32],
+    pub eth_address: [u8; 20],
 }
 
-impl KwilAclData {
-    pub const LEN: usize = 1 + 1 + 1 + 20 + 32;
+impl LinkedData {
+    pub const LEN: usize = 1 + 20;
+}
+
+
+#[repr(C)]
+#[derive(Clone, BorshSerialize, BorshDeserialize, Debug, ShankAccount)]
+pub struct SubscriberAccount {
+    pub key: Key,
+    pub authority: Pubkey,
+    pub data: SubscriberData,
+}
+
+impl SubscriberAccount {
+    pub const LEN: usize = 1 + 32 + SubscriberData::LEN;
+
+    pub fn load(account: &AccountInfo) -> Result<Self, ProgramError> {
+        let mut bytes: &[u8] = &(*account.data).borrow();
+        SubscriberAccount::deserialize(&mut bytes).map_err(|error| {
+            msg!("Error: {}", error);
+            KwilError::DeserializationError.into()
+        })
+    }
+
+    pub fn save(&self, account: &AccountInfo) -> ProgramResult {
+        borsh::to_writer(&mut account.data.borrow_mut()[..], self).map_err(|error| {
+            msg!("Error: {}", error);
+            KwilError::SerializationError.into()
+        })
+    }
+}
+
+#[derive(Clone, BorshSerialize, BorshDeserialize, Debug)]
+pub struct SubscriberData {
+    pub bump: u8,
+    pub publisher: Pubkey,
+    pub linked: Pubkey,
+}
+
+impl SubscriberData {
+    pub const LEN: usize = 1 + 32 + 32;
 }
 
