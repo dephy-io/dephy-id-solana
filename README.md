@@ -16,7 +16,7 @@ This template should help get you started developing Solana programs. Let's walk
    ```sh
    cd indexer
    edgedb project init --server-instance dephy-indexer --non-interactive
-   
+
    bun install
    bun generate:edgeql
    ```
@@ -26,7 +26,7 @@ This template should help get you started developing Solana programs. Let's walk
    ```sh
    edgedb -I dephy-indexer
    ```
-   
+
    ```
    configure instance insert cfg::Auth {
        priority := -1,
@@ -42,6 +42,7 @@ This template should help get you started developing Solana programs. Let's walk
    bun generate:edgeql
    cp -r ../clients/js/src/generated ./src
    ```
+
 
 ## Local setup
 
@@ -89,7 +90,7 @@ This template should help get you started developing Solana programs. Let's walk
 1. Create Vendor
 
    ```sh
-   cargo run create-vendor --admin keys/DePHY.json --vendor $(solana address -k keys/VENDOR1.json) 'Example Vendor' 'DV1' 'https://example.com' -m desc="An example Vendor"
+   cargo run create-vendor --vendor keys/VENDOR1.json 'Example Vendor' 'DV1' 'https://example.com' -m desc="An example Vendor"
    ```
 
 2. Create Product

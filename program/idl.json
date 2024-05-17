@@ -87,14 +87,6 @@
           ]
         },
         {
-          "name": "authority",
-          "isMut": false,
-          "isSigner": true,
-          "docs": [
-            "The DePHY authority"
-          ]
-        },
-        {
           "name": "dephy",
           "isMut": false,
           "isSigner": false,
@@ -105,7 +97,7 @@
         {
           "name": "vendor",
           "isMut": false,
-          "isSigner": false,
+          "isSigner": true,
           "docs": [
             "The Vendor pubkey"
           ]
@@ -487,15 +479,6 @@
       "type": {
         "kind": "struct",
         "fields": [
-          {
-            "name": "seed",
-            "type": {
-              "array": [
-                "u8",
-                32
-              ]
-            }
-          },
           {
             "name": "bump",
             "type": "u8"

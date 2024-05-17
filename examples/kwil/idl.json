@@ -1,0 +1,538 @@
+{
+  "version": "0.0.0",
+  "name": "dephy_kwil_example",
+  "instructions": [
+    {
+      "name": "Publish",
+      "accounts": [
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The system program"
+          ]
+        },
+        {
+          "name": "dephyProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The DePHY program"
+          ]
+        },
+        {
+          "name": "payer",
+          "isMut": true,
+          "isSigner": true,
+          "docs": [
+            "The account paying for the storage fees"
+          ]
+        },
+        {
+          "name": "owner",
+          "isMut": false,
+          "isSigner": true,
+          "docs": [
+            "The DID owner"
+          ]
+        },
+        {
+          "name": "publisher",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "The Publisher account"
+          ]
+        },
+        {
+          "name": "vendor",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "Vendor of the Device"
+          ]
+        },
+        {
+          "name": "vendorMint",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "Vendor Mint"
+          ]
+        },
+        {
+          "name": "vendorAtoken",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "Vendor AToken"
+          ]
+        },
+        {
+          "name": "device",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The Device pubkey"
+          ]
+        },
+        {
+          "name": "productMint",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "Product of the Device"
+          ]
+        },
+        {
+          "name": "productAtoken",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The Product atoken for Device"
+          ]
+        },
+        {
+          "name": "user",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The Device Owner pubkey"
+          ]
+        },
+        {
+          "name": "didMint",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The NFT mint account"
+          ]
+        },
+        {
+          "name": "didAtoken",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The NFT atoken account"
+          ]
+        }
+      ],
+      "args": [
+        {
+          "name": "publishArgs",
+          "type": {
+            "defined": "PublishArgs"
+          }
+        }
+      ],
+      "discriminant": {
+        "type": "u8",
+        "value": 0
+      }
+    },
+    {
+      "name": "Link",
+      "accounts": [
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The system program"
+          ]
+        },
+        {
+          "name": "dephyProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The DePHY program"
+          ]
+        },
+        {
+          "name": "payer",
+          "isMut": true,
+          "isSigner": true,
+          "docs": [
+            "The account paying for the storage fees"
+          ]
+        },
+        {
+          "name": "user",
+          "isMut": false,
+          "isSigner": true,
+          "docs": [
+            "The Registered user"
+          ]
+        },
+        {
+          "name": "linked",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "The Linked account"
+          ]
+        }
+      ],
+      "args": [
+        {
+          "name": "linkArgs",
+          "type": {
+            "defined": "LinkArgs"
+          }
+        }
+      ],
+      "discriminant": {
+        "type": "u8",
+        "value": 1
+      }
+    },
+    {
+      "name": "Subscribe",
+      "accounts": [
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The system program"
+          ]
+        },
+        {
+          "name": "dephyProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The DePHY program"
+          ]
+        },
+        {
+          "name": "payer",
+          "isMut": true,
+          "isSigner": true,
+          "docs": [
+            "The account paying for the storage fees"
+          ]
+        },
+        {
+          "name": "user",
+          "isMut": false,
+          "isSigner": true,
+          "docs": [
+            "The Registered user"
+          ]
+        },
+        {
+          "name": "publisher",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The Publisher account"
+          ]
+        },
+        {
+          "name": "linked",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The Linked account"
+          ]
+        },
+        {
+          "name": "subscriber",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "The Subscriber account"
+          ]
+        }
+      ],
+      "args": [
+        {
+          "name": "subscribeArgs",
+          "type": {
+            "defined": "SubscribeArgs"
+          }
+        }
+      ],
+      "discriminant": {
+        "type": "u8",
+        "value": 2
+      }
+    }
+  ],
+  "accounts": [
+    {
+      "name": "PublisherAccount",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "key",
+            "type": {
+              "defined": "Key"
+            }
+          },
+          {
+            "name": "authority",
+            "type": "publicKey"
+          },
+          {
+            "name": "data",
+            "type": {
+              "defined": "PublisherData"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "LinkedAccount",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "key",
+            "type": {
+              "defined": "Key"
+            }
+          },
+          {
+            "name": "authority",
+            "type": "publicKey"
+          },
+          {
+            "name": "data",
+            "type": {
+              "defined": "LinkedData"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "SubscriberAccount",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "key",
+            "type": {
+              "defined": "Key"
+            }
+          },
+          {
+            "name": "authority",
+            "type": "publicKey"
+          },
+          {
+            "name": "data",
+            "type": {
+              "defined": "SubscriberData"
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "types": [
+    {
+      "name": "PublishArgs",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "bump",
+            "type": "u8"
+          },
+          {
+            "name": "ethAddress",
+            "type": {
+              "array": [
+                "u8",
+                20
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "LinkArgs",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "bump",
+            "type": "u8"
+          },
+          {
+            "name": "ethAddress",
+            "type": {
+              "array": [
+                "u8",
+                20
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "SubscribeArgs",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "PublisherData",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "bump",
+            "type": "u8"
+          },
+          {
+            "name": "ethAddress",
+            "type": {
+              "array": [
+                "u8",
+                20
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "LinkedData",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "bump",
+            "type": "u8"
+          },
+          {
+            "name": "ethAddress",
+            "type": {
+              "array": [
+                "u8",
+                20
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "SubscriberData",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "bump",
+            "type": "u8"
+          },
+          {
+            "name": "publisher",
+            "type": "publicKey"
+          },
+          {
+            "name": "linked",
+            "type": "publicKey"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Key",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Uninitialized"
+          },
+          {
+            "name": "PublisherAccount"
+          },
+          {
+            "name": "LinkedAccount"
+          },
+          {
+            "name": "SubscriberAccount"
+          }
+        ]
+      }
+    }
+  ],
+  "errors": [
+    {
+      "code": 0,
+      "name": "DeserializationError",
+      "msg": "Error deserializing an account"
+    },
+    {
+      "code": 1,
+      "name": "SerializationError",
+      "msg": "Error serializing an account"
+    },
+    {
+      "code": 2,
+      "name": "InvalidProgramOwner",
+      "msg": "Invalid program owner. This likely mean the provided account does not exist"
+    },
+    {
+      "code": 3,
+      "name": "InvalidPda",
+      "msg": "Invalid PDA derivation"
+    },
+    {
+      "code": 4,
+      "name": "ExpectedEmptyAccount",
+      "msg": "Expected empty account"
+    },
+    {
+      "code": 5,
+      "name": "ExpectedNonEmptyAccount",
+      "msg": "Expected non empty account"
+    },
+    {
+      "code": 6,
+      "name": "ExpectedSignerAccount",
+      "msg": "Expected signer account"
+    },
+    {
+      "code": 7,
+      "name": "ExpectedWritableAccount",
+      "msg": "Expected writable account"
+    },
+    {
+      "code": 8,
+      "name": "AccountMismatch",
+      "msg": "Account mismatch"
+    },
+    {
+      "code": 9,
+      "name": "InvalidAccountKey",
+      "msg": "Invalid account key"
+    },
+    {
+      "code": 10,
+      "name": "NumericalOverflow",
+      "msg": "Numerical overflow"
+    }
+  ],
+  "metadata": {
+    "origin": "shank",
+    "address": "7TPUtQM5UNdMSEPEgGEY5HpLJZhK9tbK4SG4wmTcSkKn"
+  }
+}

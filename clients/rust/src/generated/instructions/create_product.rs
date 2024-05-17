@@ -94,7 +94,6 @@ impl CreateProductInstructionData {
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct CreateProductInstructionArgs {
-    pub seed: [u8; 32],
     pub bump: u8,
     pub name: String,
     pub symbol: String,
@@ -122,7 +121,6 @@ pub struct CreateProductBuilder {
     product_mint: Option<solana_program::pubkey::Pubkey>,
     vendor_mint: Option<solana_program::pubkey::Pubkey>,
     vendor_atoken: Option<solana_program::pubkey::Pubkey>,
-    seed: Option<[u8; 32]>,
     bump: Option<u8>,
     name: Option<String>,
     symbol: Option<String>,
@@ -179,11 +177,6 @@ impl CreateProductBuilder {
     #[inline(always)]
     pub fn vendor_atoken(&mut self, vendor_atoken: solana_program::pubkey::Pubkey) -> &mut Self {
         self.vendor_atoken = Some(vendor_atoken);
-        self
-    }
-    #[inline(always)]
-    pub fn seed(&mut self, seed: [u8; 32]) -> &mut Self {
-        self.seed = Some(seed);
         self
     }
     #[inline(always)]
@@ -245,7 +238,6 @@ impl CreateProductBuilder {
             vendor_atoken: self.vendor_atoken.expect("vendor_atoken is not set"),
         };
         let args = CreateProductInstructionArgs {
-            seed: self.seed.clone().expect("seed is not set"),
             bump: self.bump.clone().expect("bump is not set"),
             name: self.name.clone().expect("name is not set"),
             symbol: self.symbol.clone().expect("symbol is not set"),
@@ -444,7 +436,6 @@ impl<'a, 'b> CreateProductCpiBuilder<'a, 'b> {
             product_mint: None,
             vendor_mint: None,
             vendor_atoken: None,
-            seed: None,
             bump: None,
             name: None,
             symbol: None,
@@ -515,11 +506,6 @@ impl<'a, 'b> CreateProductCpiBuilder<'a, 'b> {
         self
     }
     #[inline(always)]
-    pub fn seed(&mut self, seed: [u8; 32]) -> &mut Self {
-        self.instruction.seed = Some(seed);
-        self
-    }
-    #[inline(always)]
     pub fn bump(&mut self, bump: u8) -> &mut Self {
         self.instruction.bump = Some(bump);
         self
@@ -586,7 +572,6 @@ impl<'a, 'b> CreateProductCpiBuilder<'a, 'b> {
         signers_seeds: &[&[&[u8]]],
     ) -> solana_program::entrypoint::ProgramResult {
         let args = CreateProductInstructionArgs {
-            seed: self.instruction.seed.clone().expect("seed is not set"),
             bump: self.instruction.bump.clone().expect("bump is not set"),
             name: self.instruction.name.clone().expect("name is not set"),
             symbol: self.instruction.symbol.clone().expect("symbol is not set"),
@@ -647,7 +632,6 @@ struct CreateProductCpiBuilderInstruction<'a, 'b> {
     product_mint: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     vendor_mint: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     vendor_atoken: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    seed: Option<[u8; 32]>,
     bump: Option<u8>,
     name: Option<String>,
     symbol: Option<String>,
