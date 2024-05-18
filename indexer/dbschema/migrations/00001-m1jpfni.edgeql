@@ -1,4 +1,4 @@
-CREATE MIGRATION m1xwtyi4pd2gurhxe5gd5ermj3il7bjl6jcjvd5qegycdvs6qjbmua
+CREATE MIGRATION m1jpfni6wypvwwv5l6zk5mfupnxwyxhbx7nlclorm7d37izlbvydoa
     ONTO initial
 {
   CREATE EXTENSION graphql VERSION '1.0';
@@ -34,7 +34,7 @@ CREATE MIGRATION m1xwtyi4pd2gurhxe5gd5ermj3il7bjl6jcjvd5qegycdvs6qjbmua
       CREATE REQUIRED LINK authority: default::Admin;
   };
   CREATE ABSTRACT TYPE default::SplAccount {
-      CREATE REQUIRED PROPERTY token_account: std::str {
+      CREATE PROPERTY token_account: std::str {
           CREATE CONSTRAINT std::exclusive;
       };
   };
@@ -46,7 +46,18 @@ CREATE MIGRATION m1xwtyi4pd2gurhxe5gd5ermj3il7bjl6jcjvd5qegycdvs6qjbmua
       CREATE PROPERTY mint_authority: std::str;
   };
   CREATE TYPE default::DID EXTENDING default::SplMint, default::SplAccount, default::WithIx;
-  CREATE TYPE default::Device EXTENDING default::SolanaAccount, default::SplAccount, default::WithIx;
+  CREATE SCALAR TYPE default::KeyType EXTENDING enum<Ed25519, Secp256k1>;
+  CREATE TYPE default::Device EXTENDING default::SolanaAccount, default::SplAccount, default::WithIx {
+      CREATE REQUIRED PROPERTY key_type: default::KeyType;
+      ALTER PROPERTY token_account {
+          SET OWNED;
+          SET REQUIRED;
+          SET TYPE std::str;
+          ALTER CONSTRAINT std::exclusive {
+              SET OWNED;
+          };
+      };
+  };
   ALTER TYPE default::DID {
       CREATE REQUIRED LINK device: default::Device {
           CREATE CONSTRAINT std::exclusive;
@@ -57,7 +68,7 @@ CREATE MIGRATION m1xwtyi4pd2gurhxe5gd5ermj3il7bjl6jcjvd5qegycdvs6qjbmua
   };
   CREATE TYPE default::User EXTENDING default::SolanaAccount;
   ALTER TYPE default::DID {
-      CREATE REQUIRED LINK user: default::User;
+      CREATE LINK user: default::User;
   };
   ALTER TYPE default::User {
       CREATE MULTI LINK dids := (.<user[IS default::DID]);
@@ -69,7 +80,16 @@ CREATE MIGRATION m1xwtyi4pd2gurhxe5gd5ermj3il7bjl6jcjvd5qegycdvs6qjbmua
   ALTER TYPE default::Product {
       CREATE MULTI LINK devices := (.<product[IS default::Device]);
   };
-  CREATE TYPE default::Vendor EXTENDING default::SolanaAccount, default::SplMint, default::SplAccount, default::WithIx;
+  CREATE TYPE default::Vendor EXTENDING default::SolanaAccount, default::SplMint, default::SplAccount, default::WithIx {
+      ALTER PROPERTY token_account {
+          SET OWNED;
+          SET REQUIRED;
+          SET TYPE std::str;
+          ALTER CONSTRAINT std::exclusive {
+              SET OWNED;
+          };
+      };
+  };
   ALTER TYPE default::Product {
       CREATE REQUIRED LINK vendor: default::Vendor;
   };

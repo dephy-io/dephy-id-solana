@@ -87,7 +87,7 @@ export class Indexer {
         this.abortController = new AbortController()
 
         let plugins_path = path.resolve(plugins_dir!)
-        let dirs = fs.readdirSync(plugins_path, {withFileTypes: true})
+        let dirs = fs.readdirSync(plugins_path, { withFileTypes: true })
         console.log('loading plugins from', plugins_path)
         let self = this
         dirs.forEach(async (dir) => {
@@ -204,7 +204,7 @@ export class Indexer {
             maxSupportedTransactionVersion: 0,
             encoding: 'jsonParsed',
         })
-        .send()
+            .send()
     }
 
     saveTx({ slot, signature, err }: { slot: bigint, signature: string, err: any }) {
@@ -299,23 +299,39 @@ export class Indexer {
         })
     }
 
-    handleCreateDevice(create_device: ParsedCreateDeviceInstruction<string, readonly IAccountMeta[]>, meta: IxMeta) {
-        return e.insert(e.Device, {
-            pubkey: create_device.accounts.device.address,
-            token_account: create_device.accounts.productAtoken.address,
-            product: e.select(e.Product, () => ({
-                filter_single: {
-                    mint_account: create_device.accounts.productMint.address,
-                }
-            })),
+    async handleCreateDevice(db_tx: Executor, create_device: ParsedCreateDeviceInstruction<string, readonly IAccountMeta[]>, meta: IxMeta) {
+        await e.insert(e.DID, {
+            mint_account: create_device.accounts.didMint.address,
+            mint_authority: create_device.accounts.didMint.address,
             tx: e.select(e.Transaction, () => ({
                 filter_single: {
                     signature: meta.tx,
                 },
                 "@ix_index": e.int16(meta.index),
             })),
-            key_type: e.cast(e.KeyType, e.str(KeyType[create_device.data.keyType])),
-        })
+            device: e.insert(e.Device, {
+                pubkey: create_device.accounts.device.address,
+                token_account: create_device.accounts.productAtoken.address,
+                product: e.select(e.Product, () => ({
+                    filter_single: {
+                        mint_account: create_device.accounts.productMint.address,
+                    }
+                })),
+                tx: e.select(e.Transaction, () => ({
+                    filter_single: {
+                        signature: meta.tx,
+                    },
+                    "@ix_index": e.int16(meta.index),
+                })),
+                key_type: e.cast(e.KeyType, e.str(KeyType[create_device.data.keyType])),
+            }),
+            metadata: e.insert(e.TokenMetadata, {
+                name: create_device.data.name,
+                symbol: create_device.data.symbol,
+                uri: create_device.data.uri,
+                additional: create_device.data.additionalMetadata as [string, string][],
+            }),
+        }).run(db_tx)
     }
 
     async handleActivateDevice(db_tx: Executor, activate_device: ParsedActivateDeviceInstruction<string, readonly IAccountMeta[]>, meta: IxMeta) {
@@ -338,30 +354,21 @@ export class Indexer {
             })
         }
 
-        await e.insert(e.DID, {
-            mint_account: activate_device.accounts.didMint.address,
-            mint_authority: null,
-            token_account: activate_device.accounts.didAtoken.address,
-            device: e.select(e.Device, () => ({
-                filter_single: {
-                    pubkey: activate_device.accounts.device.address,
-                }
-            })),
-            user: user_query,
-            tx: e.select(e.Transaction, () => ({
-                filter_single: {
-                    signature: meta.tx,
-                },
-                "@ix_index": e.int16(meta.index),
-            })),
-        }).run(db_tx)
-
-        // TODO: fetch DID metadata
+        await e.update(e.DID, () => ({
+            filter_single: {
+                mint_account: activate_device.accounts.didMint.address,
+            },
+            set: {
+                user: user_query,
+                mint_authority: null,
+                token_account: activate_device.accounts.didAtoken.address,
+            }
+        })).run(db_tx)
     }
 
     async processDephyIx(db_tx: Executor, ix: PartiallyDecodedTransactionInstruction, meta: IxMeta) {
         let dephy_ix = {
-            accounts: ix.accounts.map(address => ({address, role: 0})),
+            accounts: ix.accounts.map(address => ({ address, role: 0 })),
             data: Uint8Array.from(getBase58Encoder().encode(ix.data)),
             programAddress: ix.programId,
         }
@@ -384,7 +391,7 @@ export class Indexer {
 
             case DephyIdInstruction.CreateDevice:
                 let create_device = parseCreateDeviceInstruction(dephy_ix)
-                await this.handleCreateDevice(create_device, meta).run(db_tx)
+                await this.handleCreateDevice(db_tx, create_device, meta)
                 break
 
             case DephyIdInstruction.ActivateDevice:
@@ -414,7 +421,7 @@ export class Indexer {
                     switch (ix.programId) {
                         case this.dephy.programAddress:
                             if ('data' in ix) {
-                                await this.processDephyIx(db_tx, ix, {tx: signature, index: i})
+                                await this.processDephyIx(db_tx, ix, { tx: signature, index: i })
                             }
                             break
 
@@ -424,7 +431,7 @@ export class Indexer {
 
                     for (const plugin of this.plugins) {
                         if (plugin.matchIx(ix)) {
-                            await plugin.processIx(this.rpc, ix, {tx: signature, index: i})
+                            await plugin.processIx(this.rpc, ix, { tx: signature, index: i })
                         }
                     }
                 }
