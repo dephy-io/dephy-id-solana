@@ -109,6 +109,11 @@ struct CreateDeviceCliArgs {
     device_pubkey: Pubkey,
     #[arg(value_enum, long, default_value_t = KeyType::Ed25519)]
     key_type: KeyType,
+    name: String,
+    symbol: String,
+    uri: String,
+    #[arg(short = 'm', value_parser = parse_key_val::<String, String>)]
+    additional_metadata: Vec<(String, String)>,
     #[command(flatten)]
     common: CommonArgs,
 }
@@ -382,6 +387,10 @@ fn create_device(args: CreateDeviceCliArgs) {
             .device(args.device_pubkey)
             .product_atoken(product_atoken_pubkey)
             .key_type(args.key_type.into())
+            .name(args.name)
+            .symbol(args.symbol)
+            .uri(args.uri)
+            .additional_metadata(args.additional_metadata)
             .instruction()],
         Some(&payer.pubkey()),
         &[&vendor, &payer],

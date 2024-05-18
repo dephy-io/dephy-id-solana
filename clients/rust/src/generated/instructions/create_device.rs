@@ -27,6 +27,8 @@ pub struct CreateDevice {
     pub product_mint: solana_program::pubkey::Pubkey,
     /// The Product atoken for Device
     pub product_atoken: solana_program::pubkey::Pubkey,
+    /// The NFT mint account
+    pub did_mint: solana_program::pubkey::Pubkey,
 }
 
 impl CreateDevice {
@@ -42,7 +44,7 @@ impl CreateDevice {
         args: CreateDeviceInstructionArgs,
         remaining_accounts: &[solana_program::instruction::AccountMeta],
     ) -> solana_program::instruction::Instruction {
-        let mut accounts = Vec::with_capacity(8 + remaining_accounts.len());
+        let mut accounts = Vec::with_capacity(9 + remaining_accounts.len());
         accounts.push(solana_program::instruction::AccountMeta::new_readonly(
             self.system_program,
             false,
@@ -74,6 +76,10 @@ impl CreateDevice {
             self.product_atoken,
             false,
         ));
+        accounts.push(solana_program::instruction::AccountMeta::new(
+            self.did_mint,
+            false,
+        ));
         accounts.extend_from_slice(remaining_accounts);
         let mut data = borsh::to_vec(&CreateDeviceInstructionData::new()).unwrap();
         let mut args = borsh::to_vec(&args).unwrap();
@@ -101,7 +107,12 @@ impl CreateDeviceInstructionData {
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct CreateDeviceInstructionArgs {
+    pub bump: u8,
     pub key_type: KeyType,
+    pub name: String,
+    pub symbol: String,
+    pub uri: String,
+    pub additional_metadata: Vec<(String, String)>,
 }
 
 /// Instruction builder for `CreateDevice`.
@@ -116,6 +127,7 @@ pub struct CreateDeviceInstructionArgs {
 ///   5. `[]` device
 ///   6. `[writable]` product_mint
 ///   7. `[writable]` product_atoken
+///   8. `[writable]` did_mint
 #[derive(Clone, Debug, Default)]
 pub struct CreateDeviceBuilder {
     system_program: Option<solana_program::pubkey::Pubkey>,
@@ -126,7 +138,13 @@ pub struct CreateDeviceBuilder {
     device: Option<solana_program::pubkey::Pubkey>,
     product_mint: Option<solana_program::pubkey::Pubkey>,
     product_atoken: Option<solana_program::pubkey::Pubkey>,
+    did_mint: Option<solana_program::pubkey::Pubkey>,
+    bump: Option<u8>,
     key_type: Option<KeyType>,
+    name: Option<String>,
+    symbol: Option<String>,
+    uri: Option<String>,
+    additional_metadata: Option<Vec<(String, String)>>,
     __remaining_accounts: Vec<solana_program::instruction::AccountMeta>,
 }
 
@@ -187,9 +205,40 @@ impl CreateDeviceBuilder {
         self.product_atoken = Some(product_atoken);
         self
     }
+    /// The NFT mint account
+    #[inline(always)]
+    pub fn did_mint(&mut self, did_mint: solana_program::pubkey::Pubkey) -> &mut Self {
+        self.did_mint = Some(did_mint);
+        self
+    }
+    #[inline(always)]
+    pub fn bump(&mut self, bump: u8) -> &mut Self {
+        self.bump = Some(bump);
+        self
+    }
     #[inline(always)]
     pub fn key_type(&mut self, key_type: KeyType) -> &mut Self {
         self.key_type = Some(key_type);
+        self
+    }
+    #[inline(always)]
+    pub fn name(&mut self, name: String) -> &mut Self {
+        self.name = Some(name);
+        self
+    }
+    #[inline(always)]
+    pub fn symbol(&mut self, symbol: String) -> &mut Self {
+        self.symbol = Some(symbol);
+        self
+    }
+    #[inline(always)]
+    pub fn uri(&mut self, uri: String) -> &mut Self {
+        self.uri = Some(uri);
+        self
+    }
+    #[inline(always)]
+    pub fn additional_metadata(&mut self, additional_metadata: Vec<(String, String)>) -> &mut Self {
+        self.additional_metadata = Some(additional_metadata);
         self
     }
     /// Add an aditional account to the instruction.
@@ -227,9 +276,18 @@ impl CreateDeviceBuilder {
             device: self.device.expect("device is not set"),
             product_mint: self.product_mint.expect("product_mint is not set"),
             product_atoken: self.product_atoken.expect("product_atoken is not set"),
+            did_mint: self.did_mint.expect("did_mint is not set"),
         };
         let args = CreateDeviceInstructionArgs {
+            bump: self.bump.clone().expect("bump is not set"),
             key_type: self.key_type.clone().expect("key_type is not set"),
+            name: self.name.clone().expect("name is not set"),
+            symbol: self.symbol.clone().expect("symbol is not set"),
+            uri: self.uri.clone().expect("uri is not set"),
+            additional_metadata: self
+                .additional_metadata
+                .clone()
+                .expect("additional_metadata is not set"),
         };
 
         accounts.instruction_with_remaining_accounts(args, &self.__remaining_accounts)
@@ -254,6 +312,8 @@ pub struct CreateDeviceCpiAccounts<'a, 'b> {
     pub product_mint: &'b solana_program::account_info::AccountInfo<'a>,
     /// The Product atoken for Device
     pub product_atoken: &'b solana_program::account_info::AccountInfo<'a>,
+    /// The NFT mint account
+    pub did_mint: &'b solana_program::account_info::AccountInfo<'a>,
 }
 
 /// `create_device` CPI instruction.
@@ -276,6 +336,8 @@ pub struct CreateDeviceCpi<'a, 'b> {
     pub product_mint: &'b solana_program::account_info::AccountInfo<'a>,
     /// The Product atoken for Device
     pub product_atoken: &'b solana_program::account_info::AccountInfo<'a>,
+    /// The NFT mint account
+    pub did_mint: &'b solana_program::account_info::AccountInfo<'a>,
     /// The arguments for the instruction.
     pub __args: CreateDeviceInstructionArgs,
 }
@@ -296,6 +358,7 @@ impl<'a, 'b> CreateDeviceCpi<'a, 'b> {
             device: accounts.device,
             product_mint: accounts.product_mint,
             product_atoken: accounts.product_atoken,
+            did_mint: accounts.did_mint,
             __args: args,
         }
     }
@@ -332,7 +395,7 @@ impl<'a, 'b> CreateDeviceCpi<'a, 'b> {
             bool,
         )],
     ) -> solana_program::entrypoint::ProgramResult {
-        let mut accounts = Vec::with_capacity(8 + remaining_accounts.len());
+        let mut accounts = Vec::with_capacity(9 + remaining_accounts.len());
         accounts.push(solana_program::instruction::AccountMeta::new_readonly(
             *self.system_program.key,
             false,
@@ -365,6 +428,10 @@ impl<'a, 'b> CreateDeviceCpi<'a, 'b> {
             *self.product_atoken.key,
             false,
         ));
+        accounts.push(solana_program::instruction::AccountMeta::new(
+            *self.did_mint.key,
+            false,
+        ));
         remaining_accounts.iter().for_each(|remaining_account| {
             accounts.push(solana_program::instruction::AccountMeta {
                 pubkey: *remaining_account.0.key,
@@ -381,7 +448,7 @@ impl<'a, 'b> CreateDeviceCpi<'a, 'b> {
             accounts,
             data,
         };
-        let mut account_infos = Vec::with_capacity(8 + 1 + remaining_accounts.len());
+        let mut account_infos = Vec::with_capacity(9 + 1 + remaining_accounts.len());
         account_infos.push(self.__program.clone());
         account_infos.push(self.system_program.clone());
         account_infos.push(self.token_program2022.clone());
@@ -391,6 +458,7 @@ impl<'a, 'b> CreateDeviceCpi<'a, 'b> {
         account_infos.push(self.device.clone());
         account_infos.push(self.product_mint.clone());
         account_infos.push(self.product_atoken.clone());
+        account_infos.push(self.did_mint.clone());
         remaining_accounts
             .iter()
             .for_each(|remaining_account| account_infos.push(remaining_account.0.clone()));
@@ -415,6 +483,7 @@ impl<'a, 'b> CreateDeviceCpi<'a, 'b> {
 ///   5. `[]` device
 ///   6. `[writable]` product_mint
 ///   7. `[writable]` product_atoken
+///   8. `[writable]` did_mint
 #[derive(Clone, Debug)]
 pub struct CreateDeviceCpiBuilder<'a, 'b> {
     instruction: Box<CreateDeviceCpiBuilderInstruction<'a, 'b>>,
@@ -432,7 +501,13 @@ impl<'a, 'b> CreateDeviceCpiBuilder<'a, 'b> {
             device: None,
             product_mint: None,
             product_atoken: None,
+            did_mint: None,
+            bump: None,
             key_type: None,
+            name: None,
+            symbol: None,
+            uri: None,
+            additional_metadata: None,
             __remaining_accounts: Vec::new(),
         });
         Self { instruction }
@@ -506,9 +581,43 @@ impl<'a, 'b> CreateDeviceCpiBuilder<'a, 'b> {
         self.instruction.product_atoken = Some(product_atoken);
         self
     }
+    /// The NFT mint account
+    #[inline(always)]
+    pub fn did_mint(
+        &mut self,
+        did_mint: &'b solana_program::account_info::AccountInfo<'a>,
+    ) -> &mut Self {
+        self.instruction.did_mint = Some(did_mint);
+        self
+    }
+    #[inline(always)]
+    pub fn bump(&mut self, bump: u8) -> &mut Self {
+        self.instruction.bump = Some(bump);
+        self
+    }
     #[inline(always)]
     pub fn key_type(&mut self, key_type: KeyType) -> &mut Self {
         self.instruction.key_type = Some(key_type);
+        self
+    }
+    #[inline(always)]
+    pub fn name(&mut self, name: String) -> &mut Self {
+        self.instruction.name = Some(name);
+        self
+    }
+    #[inline(always)]
+    pub fn symbol(&mut self, symbol: String) -> &mut Self {
+        self.instruction.symbol = Some(symbol);
+        self
+    }
+    #[inline(always)]
+    pub fn uri(&mut self, uri: String) -> &mut Self {
+        self.instruction.uri = Some(uri);
+        self
+    }
+    #[inline(always)]
+    pub fn additional_metadata(&mut self, additional_metadata: Vec<(String, String)>) -> &mut Self {
+        self.instruction.additional_metadata = Some(additional_metadata);
         self
     }
     /// Add an additional account to the instruction.
@@ -553,11 +662,20 @@ impl<'a, 'b> CreateDeviceCpiBuilder<'a, 'b> {
         signers_seeds: &[&[&[u8]]],
     ) -> solana_program::entrypoint::ProgramResult {
         let args = CreateDeviceInstructionArgs {
+            bump: self.instruction.bump.clone().expect("bump is not set"),
             key_type: self
                 .instruction
                 .key_type
                 .clone()
                 .expect("key_type is not set"),
+            name: self.instruction.name.clone().expect("name is not set"),
+            symbol: self.instruction.symbol.clone().expect("symbol is not set"),
+            uri: self.instruction.uri.clone().expect("uri is not set"),
+            additional_metadata: self
+                .instruction
+                .additional_metadata
+                .clone()
+                .expect("additional_metadata is not set"),
         };
         let instruction = CreateDeviceCpi {
             __program: self.instruction.__program,
@@ -592,6 +710,8 @@ impl<'a, 'b> CreateDeviceCpiBuilder<'a, 'b> {
                 .instruction
                 .product_atoken
                 .expect("product_atoken is not set"),
+
+            did_mint: self.instruction.did_mint.expect("did_mint is not set"),
             __args: args,
         };
         instruction.invoke_signed_with_remaining_accounts(
@@ -612,7 +732,13 @@ struct CreateDeviceCpiBuilderInstruction<'a, 'b> {
     device: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     product_mint: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     product_atoken: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    did_mint: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    bump: Option<u8>,
     key_type: Option<KeyType>,
+    name: Option<String>,
+    symbol: Option<String>,
+    uri: Option<String>,
+    additional_metadata: Option<Vec<(String, String)>>,
     /// Additional instruction accounts `(AccountInfo, is_writable, is_signer)`.
     __remaining_accounts: Vec<(
         &'b solana_program::account_info::AccountInfo<'a>,
