@@ -40,7 +40,6 @@ This template should help get you started developing Solana programs. Let's walk
    cd indexer
    edgedb migration apply
    bun generate:edgeql
-   cp -r ../clients/js/src/generated ./src
    ```
 
 
@@ -80,7 +79,6 @@ This template should help get you started developing Solana programs. Let's walk
 
    ```sh
    cd indexer
-   cp -r ../clients/js/src/generated ./src
    bun dephy-indexer
    edgedb ui  # go to the GraphQL editor
    ```
