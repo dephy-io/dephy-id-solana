@@ -366,6 +366,10 @@ fn get_device_pubkey(device: &Keypair, key_type: KeyType) -> Pubkey {
 fn create_device(args: CreateDeviceCliArgs) {
     let client = get_client(&args.common.url);
     let token_program_id = spl_token_2022::ID;
+    let program_id = args
+        .common
+        .program_id
+        .unwrap_or(dephy_io_dephy_id_client::ID);
 
     let vendor = read_key(&args.vendor_keypair);
     let payer = read_key_or(args.common.payer, &args.vendor_keypair);
@@ -377,6 +381,11 @@ fn create_device(args: CreateDeviceCliArgs) {
             &token_program_id,
         );
 
+    let (did_mint_pubkey, bump) = Pubkey::find_program_address(
+        &[b"DePHY DID", args.device_pubkey.as_ref()],
+        &program_id,
+    );
+
     let latest_block = client.get_latest_blockhash().unwrap();
     let transaction = Transaction::new_signed_with_payer(
         &[CreateDeviceBuilder::new()
@@ -387,6 +396,8 @@ fn create_device(args: CreateDeviceCliArgs) {
             .device(args.device_pubkey)
             .product_atoken(product_atoken_pubkey)
             .key_type(args.key_type.into())
+            .did_mint(did_mint_pubkey)
+            .bump(bump)
             .name(args.name)
             .symbol(args.symbol)
             .uri(args.uri)
@@ -430,7 +441,7 @@ fn activate_device(args: ActivateDeviceCliArgs) {
         );
 
     let (did_mint_pubkey, bump) = Pubkey::find_program_address(
-        &[b"DePHY DID", device_pubkey.as_ref(), user.pubkey().as_ref()],
+        &[b"DePHY DID", device_pubkey.as_ref()],
         &program_id,
     );
 
