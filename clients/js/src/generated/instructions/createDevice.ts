@@ -21,11 +21,21 @@ import {
   TransactionSigner,
   WritableAccount,
   WritableSignerAccount,
+  addDecoderSizePrefix,
+  addEncoderSizePrefix,
   combineCodec,
+  getArrayDecoder,
+  getArrayEncoder,
   getStructDecoder,
   getStructEncoder,
+  getTupleDecoder,
+  getTupleEncoder,
+  getU32Decoder,
+  getU32Encoder,
   getU8Decoder,
   getU8Encoder,
+  getUtf8Decoder,
+  getUtf8Encoder,
   transformEncoder,
 } from '@solana/web3.js';
 import { DEPHY_ID_PROGRAM_ADDRESS } from '../programs';
@@ -51,6 +61,7 @@ export type CreateDeviceInstruction<
   TAccountDevice extends string | IAccountMeta<string> = string,
   TAccountProductMint extends string | IAccountMeta<string> = string,
   TAccountProductAtoken extends string | IAccountMeta<string> = string,
+  TAccountDidMint extends string | IAccountMeta<string> = string,
   TRemainingAccounts extends readonly IAccountMeta<string>[] = [],
 > = IInstruction<TProgram> &
   IInstructionWithData<Uint8Array> &
@@ -82,22 +93,50 @@ export type CreateDeviceInstruction<
       TAccountProductAtoken extends string
         ? WritableAccount<TAccountProductAtoken>
         : TAccountProductAtoken,
+      TAccountDidMint extends string
+        ? WritableAccount<TAccountDidMint>
+        : TAccountDidMint,
       ...TRemainingAccounts,
     ]
   >;
 
 export type CreateDeviceInstructionData = {
   discriminator: number;
+  bump: number;
   keyType: KeyType;
+  name: string;
+  symbol: string;
+  uri: string;
+  additionalMetadata: Array<readonly [string, string]>;
 };
 
-export type CreateDeviceInstructionDataArgs = { keyType: KeyTypeArgs };
+export type CreateDeviceInstructionDataArgs = {
+  bump: number;
+  keyType: KeyTypeArgs;
+  name: string;
+  symbol: string;
+  uri: string;
+  additionalMetadata: Array<readonly [string, string]>;
+};
 
 export function getCreateDeviceInstructionDataEncoder(): Encoder<CreateDeviceInstructionDataArgs> {
   return transformEncoder(
     getStructEncoder([
       ['discriminator', getU8Encoder()],
+      ['bump', getU8Encoder()],
       ['keyType', getKeyTypeEncoder()],
+      ['name', addEncoderSizePrefix(getUtf8Encoder(), getU32Encoder())],
+      ['symbol', addEncoderSizePrefix(getUtf8Encoder(), getU32Encoder())],
+      ['uri', addEncoderSizePrefix(getUtf8Encoder(), getU32Encoder())],
+      [
+        'additionalMetadata',
+        getArrayEncoder(
+          getTupleEncoder([
+            addEncoderSizePrefix(getUtf8Encoder(), getU32Encoder()),
+            addEncoderSizePrefix(getUtf8Encoder(), getU32Encoder()),
+          ])
+        ),
+      ],
     ]),
     (value) => ({ ...value, discriminator: 3 })
   );
@@ -106,7 +145,20 @@ export function getCreateDeviceInstructionDataEncoder(): Encoder<CreateDeviceIns
 export function getCreateDeviceInstructionDataDecoder(): Decoder<CreateDeviceInstructionData> {
   return getStructDecoder([
     ['discriminator', getU8Decoder()],
+    ['bump', getU8Decoder()],
     ['keyType', getKeyTypeDecoder()],
+    ['name', addDecoderSizePrefix(getUtf8Decoder(), getU32Decoder())],
+    ['symbol', addDecoderSizePrefix(getUtf8Decoder(), getU32Decoder())],
+    ['uri', addDecoderSizePrefix(getUtf8Decoder(), getU32Decoder())],
+    [
+      'additionalMetadata',
+      getArrayDecoder(
+        getTupleDecoder([
+          addDecoderSizePrefix(getUtf8Decoder(), getU32Decoder()),
+          addDecoderSizePrefix(getUtf8Decoder(), getU32Decoder()),
+        ])
+      ),
+    ],
   ]);
 }
 
@@ -129,6 +181,7 @@ export type CreateDeviceInput<
   TAccountDevice extends string = string,
   TAccountProductMint extends string = string,
   TAccountProductAtoken extends string = string,
+  TAccountDidMint extends string = string,
 > = {
   /** The system program */
   systemProgram?: Address<TAccountSystemProgram>;
@@ -146,7 +199,14 @@ export type CreateDeviceInput<
   productMint: Address<TAccountProductMint>;
   /** The Product atoken for Device */
   productAtoken: Address<TAccountProductAtoken>;
+  /** The NFT mint account */
+  didMint: Address<TAccountDidMint>;
+  bump: CreateDeviceInstructionDataArgs['bump'];
   keyType: CreateDeviceInstructionDataArgs['keyType'];
+  name: CreateDeviceInstructionDataArgs['name'];
+  symbol: CreateDeviceInstructionDataArgs['symbol'];
+  uri: CreateDeviceInstructionDataArgs['uri'];
+  additionalMetadata: CreateDeviceInstructionDataArgs['additionalMetadata'];
 };
 
 export function getCreateDeviceInstruction<
@@ -158,6 +218,7 @@ export function getCreateDeviceInstruction<
   TAccountDevice extends string,
   TAccountProductMint extends string,
   TAccountProductAtoken extends string,
+  TAccountDidMint extends string,
 >(
   input: CreateDeviceInput<
     TAccountSystemProgram,
@@ -167,7 +228,8 @@ export function getCreateDeviceInstruction<
     TAccountVendor,
     TAccountDevice,
     TAccountProductMint,
-    TAccountProductAtoken
+    TAccountProductAtoken,
+    TAccountDidMint
   >
 ): CreateDeviceInstruction<
   typeof DEPHY_ID_PROGRAM_ADDRESS,
@@ -178,7 +240,8 @@ export function getCreateDeviceInstruction<
   TAccountVendor,
   TAccountDevice,
   TAccountProductMint,
-  TAccountProductAtoken
+  TAccountProductAtoken,
+  TAccountDidMint
 > {
   // Program address.
   const programAddress = DEPHY_ID_PROGRAM_ADDRESS;
@@ -196,6 +259,7 @@ export function getCreateDeviceInstruction<
     device: { value: input.device ?? null, isWritable: false },
     productMint: { value: input.productMint ?? null, isWritable: true },
     productAtoken: { value: input.productAtoken ?? null, isWritable: true },
+    didMint: { value: input.didMint ?? null, isWritable: true },
   };
   const accounts = originalAccounts as Record<
     keyof typeof originalAccounts,
@@ -226,6 +290,7 @@ export function getCreateDeviceInstruction<
       getAccountMeta(accounts.device),
       getAccountMeta(accounts.productMint),
       getAccountMeta(accounts.productAtoken),
+      getAccountMeta(accounts.didMint),
     ],
     programAddress,
     data: getCreateDeviceInstructionDataEncoder().encode(
@@ -240,7 +305,8 @@ export function getCreateDeviceInstruction<
     TAccountVendor,
     TAccountDevice,
     TAccountProductMint,
-    TAccountProductAtoken
+    TAccountProductAtoken,
+    TAccountDidMint
   >;
 
   return instruction;
@@ -268,6 +334,8 @@ export type ParsedCreateDeviceInstruction<
     productMint: TAccountMetas[6];
     /** The Product atoken for Device */
     productAtoken: TAccountMetas[7];
+    /** The NFT mint account */
+    didMint: TAccountMetas[8];
   };
   data: CreateDeviceInstructionData;
 };
@@ -280,7 +348,7 @@ export function parseCreateDeviceInstruction<
     IInstructionWithAccounts<TAccountMetas> &
     IInstructionWithData<Uint8Array>
 ): ParsedCreateDeviceInstruction<TProgram, TAccountMetas> {
-  if (instruction.accounts.length < 8) {
+  if (instruction.accounts.length < 9) {
     // TODO: Coded error.
     throw new Error('Not enough accounts');
   }
@@ -301,6 +369,7 @@ export function parseCreateDeviceInstruction<
       device: getNextAccount(),
       productMint: getNextAccount(),
       productAtoken: getNextAccount(),
+      didMint: getNextAccount(),
     },
     data: getCreateDeviceInstructionDataDecoder().decode(instruction.data),
   };

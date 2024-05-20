@@ -12,7 +12,6 @@ use solana_program_test::*;
 use solana_sdk::{
     account::ReadableAccount,
     ed25519_instruction::new_ed25519_instruction,
-    hash::hash,
     instruction::{AccountMeta, Instruction},
     keccak,
     secp256k1_instruction::new_secp256k1_instruction,
@@ -75,14 +74,16 @@ async fn test_dephy() {
 
     test_create_vendor(program_id, &mut ctx, dephy_pubkey, &vendor).await;
 
-    test_create_product(program_id, &mut ctx, &vendor, b"Product1").await;
+    let product_name = "Example Product 1".to_string();
+
+    test_create_product(program_id, &mut ctx, &vendor, product_name.clone()).await;
 
     test_create_device(
         program_id,
         &mut ctx,
         &vendor,
         &device1,
-        b"Product1",
+        product_name.as_ref(),
         KeyType::Ed25519,
     )
     .await;
@@ -91,7 +92,7 @@ async fn test_dephy() {
         program_id,
         &mut ctx,
         &vendor,
-        b"Product1",
+        product_name.as_ref(),
         &device1,
         &user1,
         KeyType::Ed25519,
@@ -104,7 +105,7 @@ async fn test_dephy() {
         &mut ctx,
         &vendor,
         &device2,
-        b"Product1",
+        product_name.as_ref(),
         KeyType::Secp256k1,
     )
     .await;
@@ -113,7 +114,7 @@ async fn test_dephy() {
         program_id,
         &mut ctx,
         &vendor,
-        b"Product1",
+        product_name.as_ref(),
         &device2,
         &user1,
         KeyType::Secp256k1,
@@ -209,10 +210,8 @@ async fn test_create_product(
     program_id: Pubkey,
     ctx: &mut ProgramTestContext,
     vendor: &Keypair,
-    product_seed: &[u8],
+    name: String,
 ) {
-    let seed = hash(product_seed);
-
     let (vendor_mint_pubkey, _) =
         Pubkey::find_program_address(&[b"DePHY VENDOR", &vendor.pubkey().to_bytes()], &program_id);
 
@@ -224,7 +223,7 @@ async fn test_create_product(
         );
 
     let (product_mint_pubkey, mint_bump) = Pubkey::find_program_address(
-        &[b"DePHY PRODUCT", &vendor.pubkey().to_bytes(), seed.as_ref()],
+        &[b"DePHY PRODUCT", &vendor.pubkey().to_bytes(), name.as_ref()],
         &program_id,
     );
 
@@ -232,9 +231,8 @@ async fn test_create_product(
         &[Instruction::new_with_borsh(
             program_id,
             &DephyInstruction::CreateProduct(CreateProductArgs {
-                seed: seed.to_bytes(),
                 bump: mint_bump,
-                name: "Example Product 1".to_string(),
+                name,
                 symbol: "PD1".to_string(),
                 uri: "https://example.com".to_string(),
                 additional_metadata: vec![("desc".to_string(), "Product by Vendor".to_string())],
@@ -297,13 +295,11 @@ async fn test_create_device(
     ctx: &mut ProgramTestContext,
     vendor: &Keypair,
     device: &Keypair,
-    product_seed: &[u8],
+    product_name: &[u8],
     key_type: KeyType,
 ) {
-    let seed = hash(product_seed);
-
     let (product_mint_pubkey, _mint_bump) = Pubkey::find_program_address(
-        &[b"DePHY PRODUCT", &vendor.pubkey().to_bytes(), seed.as_ref()],
+        &[b"DePHY PRODUCT", &vendor.pubkey().to_bytes(), product_name],
         &program_id,
     );
 
@@ -314,10 +310,26 @@ async fn test_create_device(
         &spl_token_2022::id(),
     );
 
+    let device_pubkey = get_device_pubkey(device, key_type.clone());
+    let (did_mint_pubkey, did_mint_bump) = Pubkey::find_program_address(
+        &[b"DePHY DID", device_pubkey.as_ref()],
+        &program_id,
+    );
+
     let mut transaction = Transaction::new_with_payer(
         &[Instruction::new_with_borsh(
             program_id,
-            &DephyInstruction::CreateDevice(CreateDeviceArgs { key_type }),
+            &DephyInstruction::CreateDevice(CreateDeviceArgs {
+                key_type,
+                bump: did_mint_bump,
+                name: "DePHY Device DID".to_string(),
+                symbol: "DDID".to_string(),
+                uri: "https://example.com".to_string(),
+                additional_metadata: vec![
+                    ("description".to_string(), "Example DID Device".to_string()),
+                    ("device".to_string(), device_pubkey.to_string()),
+                ],
+            }),
             vec![
                 AccountMeta::new(system_program::id(), false),
                 AccountMeta::new(spl_token_2022::id(), false),
@@ -327,6 +339,7 @@ async fn test_create_device(
                 AccountMeta::new(device_pubkey, false),
                 AccountMeta::new(product_mint_pubkey, false),
                 AccountMeta::new(atoken_pubkey, false),
+                AccountMeta::new(did_mint_pubkey, false),
             ],
         )],
         Some(&ctx.payer.pubkey()),
@@ -353,7 +366,7 @@ async fn test_activate_device(
     program_id: Pubkey,
     ctx: &mut ProgramTestContext,
     vendor: &Keypair,
-    product_seed: &[u8],
+    product_name: &[u8],
     device: &Keypair,
     user: &Keypair,
     key_type: KeyType,
@@ -362,18 +375,14 @@ async fn test_activate_device(
     ctx.warp_to_slot(slot).unwrap();
 
     let (product_mint_pubkey, _) = Pubkey::find_program_address(
-        &[
-            b"DePHY PRODUCT",
-            vendor.pubkey().as_ref(),
-            product_seed.as_ref(),
-        ],
+        &[b"DePHY PRODUCT", vendor.pubkey().as_ref(), product_name],
         &program_id,
     );
 
     let device_pubkey = get_device_pubkey(device, key_type.clone());
 
     let (mint_pubkey, mint_bump) = Pubkey::find_program_address(
-        &[b"DePHY DID", device_pubkey.as_ref(), user.pubkey().as_ref()],
+        &[b"DePHY DID", device_pubkey.as_ref()],
         &program_id,
     );
 

@@ -1,4 +1,4 @@
-use crate::{error::DephyError, state::Key};
+use crate::{error::KwilError, state::Key};
 use solana_program::{
     account_info::AccountInfo, entrypoint::ProgramResult, msg,
     pubkey::Pubkey,
@@ -18,7 +18,7 @@ pub fn assert_program_owner(
             owner,
             account.owner
         );
-        Err(DephyError::InvalidProgramOwner.into())
+        Err(KwilError::InvalidProgramOwner.into())
     } else {
         Ok(())
     }
@@ -40,28 +40,7 @@ pub fn assert_pda(
             account.key,
             key,
         );
-        return Err(DephyError::InvalidPda.into());
-    }
-    Ok(())
-}
-
-/// Assert the derivation of the seeds against the given account and return the bump seed.
-pub fn assert_pda_without_bump(
-    account_name: &str,
-    account: &AccountInfo,
-    program_id: &Pubkey,
-    seeds: &[&[u8]],
-) -> ProgramResult {
-    let (key, _bump) = Pubkey::find_program_address(seeds, program_id);
-
-    if *account.key != key {
-        msg!(
-            "Account \"{}\" [{}] is an invalid PDA. Expected the following valid PDA [{}]",
-            account_name,
-            account.key,
-            key,
-        );
-        return Err(DephyError::InvalidPda.into());
+        return Err(KwilError::InvalidPda.into());
     }
     Ok(())
 }
@@ -74,7 +53,7 @@ pub fn assert_empty(account_name: &str, account: &AccountInfo) -> ProgramResult 
             account_name,
             account.key,
         );
-        Err(DephyError::ExpectedEmptyAccount.into())
+        Err(KwilError::ExpectedEmptyAccount.into())
     } else {
         Ok(())
     }
@@ -88,7 +67,7 @@ pub fn assert_non_empty(account_name: &str, account: &AccountInfo) -> ProgramRes
             account_name,
             account.key,
         );
-        Err(DephyError::ExpectedNonEmptyAccount.into())
+        Err(KwilError::ExpectedNonEmptyAccount.into())
     } else {
         Ok(())
     }
@@ -102,7 +81,7 @@ pub fn assert_signer(account_name: &str, account: &AccountInfo) -> ProgramResult
             account_name,
             account.key,
         );
-        Err(DephyError::ExpectedSignerAccount.into())
+        Err(KwilError::ExpectedSignerAccount.into())
     } else {
         Ok(())
     }
@@ -116,7 +95,7 @@ pub fn assert_writable(account_name: &str, account: &AccountInfo) -> ProgramResu
             account_name,
             account.key,
         );
-        Err(DephyError::ExpectedWritableAccount.into())
+        Err(KwilError::ExpectedWritableAccount.into())
     } else {
         Ok(())
     }
@@ -135,7 +114,7 @@ pub fn assert_same_pubkeys(
             account.key,
             expected
         );
-        Err(DephyError::AccountMismatch.into())
+        Err(KwilError::AccountMismatch.into())
     } else {
         Ok(())
     }
@@ -152,7 +131,7 @@ pub fn assert_account_key(account_name: &str, account: &AccountInfo, key: Key) -
             key_number,
             account.try_borrow_data()?[0]
         );
-        Err(DephyError::InvalidAccountKey.into())
+        Err(KwilError::InvalidAccountKey.into())
     } else {
         Ok(())
     }

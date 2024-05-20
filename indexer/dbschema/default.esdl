@@ -38,7 +38,7 @@ module default {
     }
 
     abstract type SplAccount {
-        required token_account: str {
+        token_account: str {
             constraint exclusive;
         };
     }
@@ -57,6 +57,10 @@ module default {
     }
 
     type Vendor extending SolanaAccount, SplMint, SplAccount, WithIx {
+        overloaded required token_account: str {
+            constraint exclusive;
+        };
+
         multi products := .<vendor[is Product];
     }
 
@@ -71,6 +75,9 @@ module default {
     type Device extending SolanaAccount, SplAccount, WithIx {
         required product: Product;
         required key_type: KeyType;
+        overloaded required token_account: str {
+            constraint exclusive;
+        };
 
         single did := .<device[is DID];
     }
@@ -83,6 +90,8 @@ module default {
         required device: Device {
             constraint exclusive;
         };
-        required user: User;
+
+        user: User;
     }
 }
+

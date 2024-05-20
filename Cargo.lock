@@ -1218,6 +1218,26 @@ dependencies = [
 ]
 
 [[package]]
+name = "dephy-kwil-example"
+version = "0.0.0"
+dependencies = [
+ "borsh 1.5.0",
+ "dephy-io-dephy-id-client",
+ "libsecp256k1",
+ "num-derive 0.4.2",
+ "num-traits",
+ "shank",
+ "solana-program",
+ "solana-program-test",
+ "solana-sdk",
+ "spl-associated-token-account 3.0.2",
+ "spl-token-2022 3.0.2",
+ "spl-token-metadata-interface 0.3.3",
+ "thiserror",
+ "tokio",
+]
+
+[[package]]
 name = "der"
 version = "0.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"

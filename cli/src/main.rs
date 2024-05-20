@@ -12,7 +12,7 @@ use solana_client::rpc_client::RpcClient;
 use solana_sdk::{
     commitment_config::{CommitmentConfig, CommitmentLevel},
     ed25519_instruction::new_ed25519_instruction,
-    hash, keccak,
+    keccak,
     pubkey::Pubkey,
     secp256k1_instruction::new_secp256k1_instruction,
     signature::Keypair,
@@ -109,6 +109,11 @@ struct CreateDeviceCliArgs {
     device_pubkey: Pubkey,
     #[arg(value_enum, long, default_value_t = KeyType::Ed25519)]
     key_type: KeyType,
+    name: String,
+    symbol: String,
+    uri: String,
+    #[arg(short = 'm', value_parser = parse_key_val::<String, String>)]
+    additional_metadata: Vec<(String, String)>,
     #[command(flatten)]
     common: CommonArgs,
 }
@@ -300,9 +305,8 @@ fn create_product(args: CreateProductCliArgs) {
     let vendor = read_key(&args.vendor_keypair);
     let payer = read_key_or(args.common.payer, &args.vendor_keypair);
 
-    let seed = hash::hash(args.name.as_ref());
     let (product_mint_pubkey, bump) = Pubkey::find_program_address(
-        &[b"DePHY PRODUCT", vendor.pubkey().as_ref(), seed.as_ref()],
+        &[b"DePHY PRODUCT", vendor.pubkey().as_ref(), args.name.as_ref()],
         &program_id,
     );
 
@@ -325,7 +329,6 @@ fn create_product(args: CreateProductCliArgs) {
             .product_mint(product_mint_pubkey)
             .vendor_mint(vendor_mint_pubkey)
             .vendor_atoken(vendor_atoken_pubkey)
-            .seed(seed.to_bytes())
             .bump(bump)
             .name(args.name)
             .symbol(args.symbol)
@@ -363,6 +366,10 @@ fn get_device_pubkey(device: &Keypair, key_type: KeyType) -> Pubkey {
 fn create_device(args: CreateDeviceCliArgs) {
     let client = get_client(&args.common.url);
     let token_program_id = spl_token_2022::ID;
+    let program_id = args
+        .common
+        .program_id
+        .unwrap_or(dephy_io_dephy_id_client::ID);
 
     let vendor = read_key(&args.vendor_keypair);
     let payer = read_key_or(args.common.payer, &args.vendor_keypair);
@@ -374,6 +381,11 @@ fn create_device(args: CreateDeviceCliArgs) {
             &token_program_id,
         );
 
+    let (did_mint_pubkey, bump) = Pubkey::find_program_address(
+        &[b"DePHY DID", args.device_pubkey.as_ref()],
+        &program_id,
+    );
+
     let latest_block = client.get_latest_blockhash().unwrap();
     let transaction = Transaction::new_signed_with_payer(
         &[CreateDeviceBuilder::new()
@@ -384,6 +396,12 @@ fn create_device(args: CreateDeviceCliArgs) {
             .device(args.device_pubkey)
             .product_atoken(product_atoken_pubkey)
             .key_type(args.key_type.into())
+            .did_mint(did_mint_pubkey)
+            .bump(bump)
+            .name(args.name)
+            .symbol(args.symbol)
+            .uri(args.uri)
+            .additional_metadata(args.additional_metadata)
             .instruction()],
         Some(&payer.pubkey()),
         &[&vendor, &payer],
@@ -423,7 +441,7 @@ fn activate_device(args: ActivateDeviceCliArgs) {
         );
 
     let (did_mint_pubkey, bump) = Pubkey::find_program_address(
-        &[b"DePHY DID", device_pubkey.as_ref(), user.pubkey().as_ref()],
+        &[b"DePHY DID", device_pubkey.as_ref()],
         &program_id,
     );
 
@@ -488,10 +506,11 @@ fn activate_device(args: ActivateDeviceCliArgs) {
         Ok(sig) => {
             println!("Success: {:?}", sig);
             println!(
-                "User {} activated Device {}, Token: {}",
+                "User {} activated Device {}, Mint: {}, AToken: {}",
                 user.pubkey(),
                 device_pubkey,
-                did_mint_pubkey
+                did_mint_pubkey,
+                did_atoken_pubkey,
             );
         }
         Err(err) => {

@@ -22,6 +22,10 @@ try {
                 type: 'string',
                 short: 'p',
                 default: 'hdMghjD73uASxgJXi6e1mGPsXqnADMsrqB1bveqABP1'
+            },
+            plugins_dir: {
+                type: 'string',
+                default: './src/plugins'
             }
         }
     })

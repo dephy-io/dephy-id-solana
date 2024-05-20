@@ -271,6 +271,14 @@
           "docs": [
             "The Product atoken for Device"
           ]
+        },
+        {
+          "name": "didMint",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "The NFT mint account"
+          ]
         }
       ],
       "args": [
@@ -480,15 +488,6 @@
         "kind": "struct",
         "fields": [
           {
-            "name": "seed",
-            "type": {
-              "array": [
-                "u8",
-                32
-              ]
-            }
-          },
-          {
             "name": "bump",
             "type": "u8"
           },
@@ -524,9 +523,36 @@
         "kind": "struct",
         "fields": [
           {
+            "name": "bump",
+            "type": "u8"
+          },
+          {
             "name": "keyType",
             "type": {
               "defined": "KeyType"
+            }
+          },
+          {
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "name": "symbol",
+            "type": "string"
+          },
+          {
+            "name": "uri",
+            "type": "string"
+          },
+          {
+            "name": "additionalMetadata",
+            "type": {
+              "vec": {
+                "tuple": [
+                  "string",
+                  "string"
+                ]
+              }
             }
           }
         ]

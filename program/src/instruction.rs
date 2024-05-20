@@ -46,6 +46,7 @@ pub enum DephyInstruction {
     #[account(5, name="device", desc = "The Device pubkey")]
     #[account(6, writable, name="product_mint", desc = "The Product mint account")]
     #[account(7, writable, name="product_atoken", desc = "The Product atoken for Device")]
+    #[account(8, writable, name="did_mint", desc = "The NFT mint account")]
     CreateDevice(CreateDeviceArgs),
 
     /// User activate a Device
@@ -63,6 +64,7 @@ pub enum DephyInstruction {
     #[account(11, writable, name="did_atoken", desc = "The NFT atoken account")]
     ActivateDevice(ActivateDeviceArgs),
 }
+
 
 #[repr(C)]
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
@@ -83,7 +85,6 @@ pub struct CreateVendorArgs {
 #[repr(C)]
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
 pub struct CreateProductArgs {
-    pub seed: [u8; 32],
     pub bump: u8,
     pub name: String,
     pub symbol: String,
@@ -152,7 +153,12 @@ impl KeyType {
 #[repr(C)]
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
 pub struct CreateDeviceArgs {
+    pub bump: u8,
     pub key_type: KeyType,
+    pub name: String,
+    pub symbol: String,
+    pub uri: String,
+    pub additional_metadata: Vec<(String, String)>,
 }
 
 #[repr(C)]

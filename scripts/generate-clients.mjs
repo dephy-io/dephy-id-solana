@@ -1,11 +1,11 @@
 #!/usr/bin/env zx
 import "zx/globals";
 import * as k from "@metaplex-foundation/kinobi";
-import { getAllProgramIdls } from "./utils.mjs";
+import path from "path";
 
 // Instanciate Kinobi.
-const [idl, ...additionalIdls] = getAllProgramIdls();
-const kinobi = k.createFromIdl(idl, additionalIdls);
+const idl = path.resolve('program', 'idl.json');
+const kinobi = k.createFromIdl(idl);
 
 // Update programs.
 kinobi.update(
@@ -31,6 +31,14 @@ const jsClient = path.join(__dirname, "..", "clients", "js");
 kinobi.accept(
   k.renderJavaScriptExperimentalVisitor(
     path.join(jsClient, "src", "generated"),
+    { prettier: require(path.join(jsClient, ".prettierrc.json")) }
+  )
+);
+
+const indexer = path.join(__dirname, '..', 'indexer')
+kinobi.accept(
+  k.renderJavaScriptExperimentalVisitor(
+    path.join(indexer, "src", "generated"),
     { prettier: require(path.join(jsClient, ".prettierrc.json")) }
   )
 );

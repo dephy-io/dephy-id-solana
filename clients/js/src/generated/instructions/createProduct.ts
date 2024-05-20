@@ -18,19 +18,14 @@ import {
   IInstructionWithData,
   ReadonlyAccount,
   ReadonlySignerAccount,
-  ReadonlyUint8Array,
   TransactionSigner,
   WritableAccount,
   WritableSignerAccount,
   addDecoderSizePrefix,
   addEncoderSizePrefix,
   combineCodec,
-  fixDecoderSize,
-  fixEncoderSize,
   getArrayDecoder,
   getArrayEncoder,
-  getBytesDecoder,
-  getBytesEncoder,
   getStructDecoder,
   getStructEncoder,
   getTupleDecoder,
@@ -91,7 +86,6 @@ export type CreateProductInstruction<
 
 export type CreateProductInstructionData = {
   discriminator: number;
-  seed: ReadonlyUint8Array;
   bump: number;
   name: string;
   symbol: string;
@@ -100,7 +94,6 @@ export type CreateProductInstructionData = {
 };
 
 export type CreateProductInstructionDataArgs = {
-  seed: ReadonlyUint8Array;
   bump: number;
   name: string;
   symbol: string;
@@ -112,7 +105,6 @@ export function getCreateProductInstructionDataEncoder(): Encoder<CreateProductI
   return transformEncoder(
     getStructEncoder([
       ['discriminator', getU8Encoder()],
-      ['seed', fixEncoderSize(getBytesEncoder(), 32)],
       ['bump', getU8Encoder()],
       ['name', addEncoderSizePrefix(getUtf8Encoder(), getU32Encoder())],
       ['symbol', addEncoderSizePrefix(getUtf8Encoder(), getU32Encoder())],
@@ -134,7 +126,6 @@ export function getCreateProductInstructionDataEncoder(): Encoder<CreateProductI
 export function getCreateProductInstructionDataDecoder(): Decoder<CreateProductInstructionData> {
   return getStructDecoder([
     ['discriminator', getU8Decoder()],
-    ['seed', fixDecoderSize(getBytesDecoder(), 32)],
     ['bump', getU8Decoder()],
     ['name', addDecoderSizePrefix(getUtf8Decoder(), getU32Decoder())],
     ['symbol', addDecoderSizePrefix(getUtf8Decoder(), getU32Decoder())],
@@ -184,7 +175,6 @@ export type CreateProductInput<
   vendorMint: Address<TAccountVendorMint>;
   /** The atoken account for vendor */
   vendorAtoken: Address<TAccountVendorAtoken>;
-  seed: CreateProductInstructionDataArgs['seed'];
   bump: CreateProductInstructionDataArgs['bump'];
   name: CreateProductInstructionDataArgs['name'];
   symbol: CreateProductInstructionDataArgs['symbol'];
