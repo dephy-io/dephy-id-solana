@@ -5,7 +5,7 @@ use solana_program::{
     pubkey::Pubkey,
 };
 
-use crate::error::DephyError;
+use crate::error::Error;
 
 #[derive(Clone, BorshSerialize, BorshDeserialize, Debug)]
 pub enum Key {
@@ -28,14 +28,14 @@ impl DephyAccount {
         let mut bytes: &[u8] = &(*account.data).borrow();
         DephyAccount::deserialize(&mut bytes).map_err(|error| {
             msg!("Error: {}", error);
-            DephyError::DeserializationError.into()
+            Error::DeserializationError.into()
         })
     }
 
     pub fn save(&self, account: &AccountInfo) -> ProgramResult {
         borsh::to_writer(&mut account.data.borrow_mut()[..], self).map_err(|error| {
             msg!("Error: {}", error);
-            DephyError::SerializationError.into()
+            Error::SerializationError.into()
         })
     }
 }

@@ -1,4 +1,4 @@
-use crate::{error::DephyError, state::Key};
+use crate::{error::Error, state::Key};
 use solana_program::{
     account_info::AccountInfo, entrypoint::ProgramResult, msg,
     pubkey::Pubkey,
@@ -18,7 +18,7 @@ pub fn assert_program_owner(
             owner,
             account.owner
         );
-        Err(DephyError::InvalidProgramOwner.into())
+        Err(Error::InvalidProgramOwner.into())
     } else {
         Ok(())
     }
@@ -40,7 +40,7 @@ pub fn assert_pda(
             account.key,
             key,
         );
-        return Err(DephyError::InvalidPda.into());
+        return Err(Error::InvalidPda.into());
     }
     Ok(())
 }
@@ -61,7 +61,7 @@ pub fn assert_pda_without_bump(
             account.key,
             key,
         );
-        return Err(DephyError::InvalidPda.into());
+        return Err(Error::InvalidPda.into());
     }
     Ok(())
 }
@@ -74,7 +74,7 @@ pub fn assert_empty(account_name: &str, account: &AccountInfo) -> ProgramResult 
             account_name,
             account.key,
         );
-        Err(DephyError::ExpectedEmptyAccount.into())
+        Err(Error::ExpectedEmptyAccount.into())
     } else {
         Ok(())
     }
@@ -88,7 +88,7 @@ pub fn assert_non_empty(account_name: &str, account: &AccountInfo) -> ProgramRes
             account_name,
             account.key,
         );
-        Err(DephyError::ExpectedNonEmptyAccount.into())
+        Err(Error::ExpectedNonEmptyAccount.into())
     } else {
         Ok(())
     }
@@ -102,7 +102,7 @@ pub fn assert_signer(account_name: &str, account: &AccountInfo) -> ProgramResult
             account_name,
             account.key,
         );
-        Err(DephyError::ExpectedSignerAccount.into())
+        Err(Error::ExpectedSignerAccount.into())
     } else {
         Ok(())
     }
@@ -116,7 +116,7 @@ pub fn assert_writable(account_name: &str, account: &AccountInfo) -> ProgramResu
             account_name,
             account.key,
         );
-        Err(DephyError::ExpectedWritableAccount.into())
+        Err(Error::ExpectedWritableAccount.into())
     } else {
         Ok(())
     }
@@ -135,7 +135,7 @@ pub fn assert_same_pubkeys(
             account.key,
             expected
         );
-        Err(DephyError::AccountMismatch.into())
+        Err(Error::AccountMismatch.into())
     } else {
         Ok(())
     }
@@ -152,7 +152,7 @@ pub fn assert_account_key(account_name: &str, account: &AccountInfo, key: Key) -
             key_number,
             account.try_borrow_data()?[0]
         );
-        Err(DephyError::InvalidAccountKey.into())
+        Err(Error::InvalidAccountKey.into())
     } else {
         Ok(())
     }

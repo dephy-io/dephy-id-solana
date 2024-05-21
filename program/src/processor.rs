@@ -24,11 +24,12 @@ use crate::{
     },
     instruction::{
         accounts::{
-            ActivateDeviceAccounts, CreateDephyAccounts, CreateDeviceAccounts,
+            ActivateDeviceAccounts, CreateDeviceAccounts,
             CreateProductAccounts, CreateVendorAccounts,
+            InitializeAccounts,
         },
-        ActivateDeviceArgs, CreateDephyArgs, CreateDeviceArgs, CreateProductArgs, CreateVendorArgs,
-        DephyInstruction, KeyType,
+        ActivateDeviceArgs, InitializeArgs, CreateDeviceArgs, CreateProductArgs, CreateVendorArgs,
+        Instruction, KeyType,
     },
     state::{DephyAccount, DephyData, Key},
     utils::create_account,
@@ -39,39 +40,39 @@ pub fn process_instruction<'a>(
     accounts: &'a [AccountInfo<'a>],
     instruction_data: &[u8],
 ) -> ProgramResult {
-    let instruction: DephyInstruction = DephyInstruction::try_from_slice(instruction_data)?;
+    let instruction: Instruction = Instruction::try_from_slice(instruction_data)?;
 
     match instruction {
-        DephyInstruction::CreateDephy(args) => {
-            msg!("Instruction: Create DePHY");
-            create_dephy(program_id, accounts, args)
+        Instruction::Initialize(args) => {
+            msg!("Instruction: Initialize DePHY Id program");
+            initialize(program_id, accounts, args)
         }
-        DephyInstruction::CreateVendor(args) => {
+        Instruction::CreateVendor(args) => {
             msg!("Instruction: Create Vendor");
             create_vendor(program_id, accounts, args)
         }
-        DephyInstruction::CreateProduct(args) => {
+        Instruction::CreateProduct(args) => {
             msg!("Instruction: Create Product");
             create_product(program_id, accounts, args)
         }
-        DephyInstruction::CreateDevice(args) => {
+        Instruction::CreateDevice(args) => {
             msg!("Instruction: Create Device");
             create_device(program_id, accounts, args)
         }
-        DephyInstruction::ActivateDevice(args) => {
+        Instruction::ActivateDevice(args) => {
             msg!("Instruction: Activate Device");
             activate_device(program_id, accounts, args)
         }
     }
 }
 
-fn create_dephy<'a>(
+fn initialize<'a>(
     program_id: &Pubkey,
     accounts: &'a [AccountInfo<'a>],
-    args: CreateDephyArgs,
+    args: InitializeArgs,
 ) -> ProgramResult {
     // Accounts
-    let ctx = CreateDephyAccounts::context(accounts)?;
+    let ctx = InitializeAccounts::context(accounts)?;
 
     // Guards
     let (dephy_pubkey, _bump) = Pubkey::find_program_address(&[b"DePHY"], program_id);
@@ -87,7 +88,7 @@ fn create_dephy<'a>(
     )?;
 
     // CPIs
-    // Create DephyAccount
+    // Create DePHYIdAccount
     create_account(
         ctx.accounts.dephy,
         ctx.accounts.payer,
@@ -488,7 +489,7 @@ fn create_device<'a>(
         &token_program_id,
     )?;
 
-    let atoken_pubkey = spl_associated_token_account::get_associated_token_address_with_program_id(
+    let atoken_pubkey = get_associated_token_address_with_program_id(
         &device_pubkey,
         &mint_pubkey,
         &token_program_id,

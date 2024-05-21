@@ -1,4 +1,5 @@
-# Rust client
+DePHY ID Solana program's client
+====
 
 A generated Rust library for the Dephy Id program.
 

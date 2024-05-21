@@ -1,52 +1,79 @@
 #!/usr/bin/env zx
 import "zx/globals";
-import * as k from "@metaplex-foundation/kinobi";
-import path from "path";
+import * as k from "kinobi";
+import { rootNodeFromAnchor } from "@kinobi-so/nodes-from-anchor";
+import { renderVisitor as renderJavaScriptVisitor } from "@kinobi-so/renderers-js";
+import { renderVisitor as renderRustVisitor } from "@kinobi-so/renderers-rust";
+import { getAllProgramIdls } from "./utils.mjs";
 
 // Instanciate Kinobi.
-const idl = path.resolve('program', 'idl.json');
-const kinobi = k.createFromIdl(idl);
+const [idl, ...additionalIdls] = getAllProgramIdls().map(idl => rootNodeFromAnchor(require(idl)))
+const kinobi = k.createFromRoot(idl, additionalIdls);
 
 // Update programs.
 kinobi.update(
   k.updateProgramsVisitor({
-    "dephyIoDephyId": { name: "dephyId" },
+    "dephyIdProgram": { name: "dephyId" },
   })
 );
 
 // Update accounts.
 kinobi.update(
   k.updateAccountsVisitor({
-    dephyAccount: {
+    counter: {
       seeds: [
-        k.constantPdaSeedNodeFromString('utf8', "DePHY"),
+        k.constantPdaSeedNodeFromString("utf8", "DePHY"),
+        k.variablePdaSeedNode(
+          "authority",
+          k.publicKeyTypeNode(),
+          "The authority of the DePHY account"
+        ),
       ],
     },
   })
 );
 
+// Update instructions.
+kinobi.update(
+  k.updateInstructionsVisitor({
+    create: {
+      byteDeltas: [k.instructionByteDeltaNode(k.accountLinkNode("dephy"))],
+      accounts: {
+        dephy: { defaultValue: k.pdaValueNode("dephy") },
+        payer: { defaultValue: k.accountValueNode("authority") },
+      },
+    },
+    increment: {
+      accounts: {
+        dephy: { defaultValue: k.pdaValueNode("dephy") },
+      },
+      arguments: {
+        amount: { defaultValue: k.noneValueNode() },
+      },
+    },
+  })
+);
+
+// Set account discriminators.
+const key = (name) => ({ field: "key", value: k.enumValueNode("Key", name) });
+kinobi.update(
+  k.setAccountDiscriminatorFromFieldVisitor({
+    dephyAccount: key("DephyAccount"),
+  })
+);
 
 // Render JavaScript.
 const jsClient = path.join(__dirname, "..", "clients", "js");
 kinobi.accept(
-  k.renderJavaScriptExperimentalVisitor(
-    path.join(jsClient, "src", "generated"),
-    { prettier: require(path.join(jsClient, ".prettierrc.json")) }
-  )
-);
-
-const indexer = path.join(__dirname, '..', 'indexer')
-kinobi.accept(
-  k.renderJavaScriptExperimentalVisitor(
-    path.join(indexer, "src", "generated"),
-    { prettier: require(path.join(jsClient, ".prettierrc.json")) }
-  )
+  renderJavaScriptVisitor(path.join(jsClient, "src", "generated"), {
+    prettier: require(path.join(jsClient, ".prettierrc.json"))
+  })
 );
 
 // Render Rust.
 const rustClient = path.join(__dirname, "..", "clients", "rust");
 kinobi.accept(
-  k.renderRustVisitor(path.join(rustClient, "src", "generated"), {
+  renderRustVisitor(path.join(rustClient, "src", "generated"), {
     formatCode: true,
     crateFolder: rustClient,
   })

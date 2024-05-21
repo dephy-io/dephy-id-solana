@@ -7,7 +7,7 @@ use solana_program::{
 use thiserror::Error;
 
 #[derive(Error, Clone, Debug, Eq, PartialEq, FromPrimitive)]
-pub enum DephyError {
+pub enum Error {
     /// 0 - Error deserializing an account
     #[error("Error deserializing an account")]
     DeserializationError,
@@ -46,20 +46,20 @@ pub enum DephyError {
     MissingInstruction,
 }
 
-impl PrintProgramError for DephyError {
+impl PrintProgramError for Error {
     fn print<E>(&self) {
         msg!(&self.to_string());
     }
 }
 
-impl From<DephyError> for ProgramError {
-    fn from(e: DephyError) -> Self {
+impl From<Error> for ProgramError {
+    fn from(e: Error) -> Self {
         ProgramError::Custom(e as u32)
     }
 }
 
-impl<T> DecodeError<T> for DephyError {
+impl<T> DecodeError<T> for Error {
     fn type_of() -> &'static str {
-        "Dephy Error"
+        "DePHY program error"
     }
 }

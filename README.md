@@ -1,4 +1,5 @@
-# Dephy Id
+DePHY ID
+====
 
 This template should help get you started developing Solana programs. Let's walk through this generated program repository and see what's included.
 
@@ -57,22 +58,22 @@ This template should help get you started developing Solana programs. Let's walk
    solana-test-validator
    ```
 
-3. Prepare keys
+3. (Dev only) Prepare keys
 
    ```sh
-   ./PoC/00.generate_keys.sh
+   ./scripts/generate_demo_keys.sh
    ```
 
 4. Deploy program
 
    ```sh
-   solana -u l program deploy target/deploy/dephy_io_dephy_id.so --program-id ./program/keypair.json
+   solana -u l program deploy target/deploy/dephy_id_program.so --program-id ./program/keypair.json
    ```
 
 5. Init DePHY
 
    ```sh
-   cargo run create-dephy --admin keys/DePHY.json
+   cargo run initialize --admin ./tmp/keys/admin.json
    ```
 
 6. Run Indexer
@@ -88,28 +89,28 @@ This template should help get you started developing Solana programs. Let's walk
 1. Create Vendor
 
    ```sh
-   cargo run create-vendor --vendor keys/VENDOR1.json 'Example Vendor' 'DV1' 'https://example.com' -m desc="An example Vendor"
+   cargo run create-vendor --vendor ./tmp/keys/vendor1.json 'Example Vendor' 'DV1' 'https://example.com' -m desc="An example Vendor"
    ```
 
 2. Create Product
 
    ```sh
-   cargo run create-product --vendor keys/VENDOR1.json 'Product 1' 'V1P1' 'https://example.com' -m desc="First Product by Example Vendor"
+   cargo run create-product --vendor ./tmp/keys/vendor1.json 'Product 1' 'V1P1' 'https://example.com' -m desc="First Product by Example Vendor"
    ```
 
 3. Create Device
 
    ```sh
    # the PRODUCT_PUBKEY is from "Create Product" step's command output
-   # the DEVICE_PUBKEY can get by `solana address -k ./keys/DEVICE1.json`
-   cargo run create-device --vendor keys/VENDOR1.json --product <PRODUCT_PUBKEY> --device <DEVICE_PUBKEY>
+   # the DEVICE_PUBKEY can get by `solana address -k ./keys/device1.json`
+   cargo run create-device --vendor ./tmp/keys/vendor1.json --product <PRODUCT_PUBKEY> --device <DEVICE_PUBKEY> <METADATA_URI>
    ```
 
 4. Activate Device
 
    ```sh
    # the VENDOR_PUBKEY is from "Create Vendor" step's command output
-   cargo run activate-device --device keys/DEVICE1.json --user keys/USER1.json --vendor <VENDOR_PUBKEY> --product <PRODUCT_PUBKEY>
+   cargo run activate-device --user ./tmp/keys/user1.json --device ./tmp/keys/device1.json --vendor <VENDOR_PUBKEY> --product <PRODUCT_PUBKEY>
    ```
 
 

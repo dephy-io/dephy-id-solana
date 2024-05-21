@@ -1,5 +1,0 @@
-/node_modules
-/bun.lockb
-/src/generated
-/src/plugins/*/generated
-dbschema/edgeql-js
