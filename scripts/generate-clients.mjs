@@ -20,39 +20,34 @@ kinobi.update(
 // Update accounts.
 kinobi.update(
   k.updateAccountsVisitor({
-    counter: {
+    dephyAccount: {
       seeds: [
-        k.constantPdaSeedNodeFromString("utf8", "DePHY"),
-        k.variablePdaSeedNode(
-          "authority",
-          k.publicKeyTypeNode(),
-          "The authority of the DePHY account"
-        ),
+        k.constantPdaSeedNodeFromString('utf8', "DePHY"),
       ],
     },
   })
 );
 
-// Update instructions.
-kinobi.update(
-  k.updateInstructionsVisitor({
-    create: {
-      byteDeltas: [k.instructionByteDeltaNode(k.accountLinkNode("dephy"))],
-      accounts: {
-        dephy: { defaultValue: k.pdaValueNode("dephy") },
-        payer: { defaultValue: k.accountValueNode("authority") },
-      },
-    },
-    increment: {
-      accounts: {
-        dephy: { defaultValue: k.pdaValueNode("dephy") },
-      },
-      arguments: {
-        amount: { defaultValue: k.noneValueNode() },
-      },
-    },
-  })
-);
+// // Update instructions.
+// kinobi.update(
+//   k.updateInstructionsVisitor({
+//     create: {
+//       byteDeltas: [k.instructionByteDeltaNode(k.accountLinkNode("dephy"))],
+//       accounts: {
+//         dephy: { defaultValue: k.pdaValueNode("dephy") },
+//         payer: { defaultValue: k.accountValueNode("authority") },
+//       },
+//     },
+//     increment: {
+//       accounts: {
+//         dephy: { defaultValue: k.pdaValueNode("dephy") },
+//       },
+//       arguments: {
+//         amount: { defaultValue: k.noneValueNode() },
+//       },
+//     },
+//   })
+// );
 
 // Set account discriminators.
 const key = (name) => ({ field: "key", value: k.enumValueNode("Key", name) });
@@ -64,7 +59,7 @@ kinobi.update(
 
 // Render JavaScript.
 const jsClient = path.join(__dirname, "..", "clients", "js");
-kinobi.accept(
+await kinobi.accept(
   renderJavaScriptVisitor(path.join(jsClient, "src", "generated"), {
     prettier: require(path.join(jsClient, ".prettierrc.json"))
   })

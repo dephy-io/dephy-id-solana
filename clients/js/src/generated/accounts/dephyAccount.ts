@@ -29,6 +29,7 @@ import {
   getStructEncoder,
   transformEncoder,
 } from '@solana/web3.js';
+import { findDephyAccountPda } from '../pdas';
 import {
   DephyData,
   DephyDataArgs,
@@ -121,4 +122,22 @@ export async function fetchAllMaybeDephyAccount(
 
 export function getDephyAccountSize(): number {
   return 34;
+}
+
+export async function fetchDephyAccountFromSeeds(
+  rpc: Parameters<typeof fetchEncodedAccount>[0],
+  config: FetchAccountConfig & { programAddress?: Address } = {}
+): Promise<Account<DephyAccount>> {
+  const maybeAccount = await fetchMaybeDephyAccountFromSeeds(rpc, config);
+  assertAccountExists(maybeAccount);
+  return maybeAccount;
+}
+
+export async function fetchMaybeDephyAccountFromSeeds(
+  rpc: Parameters<typeof fetchEncodedAccount>[0],
+  config: FetchAccountConfig & { programAddress?: Address } = {}
+): Promise<MaybeAccount<DephyAccount>> {
+  const { programAddress, ...fetchConfig } = config;
+  const [address] = await findDephyAccountPda({ programAddress });
+  return await fetchMaybeDephyAccount(rpc, address, fetchConfig);
 }

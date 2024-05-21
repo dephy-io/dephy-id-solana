@@ -6,7 +6,12 @@ license = "Apache-2.0"
 
 [workspace]
 resolver = "2"
-members = ["clients/rust", "cli", "program"]
+members = [
+    "program",
+    "clients/rust",
+    "cli",
+    "examples/kwil",
+]
 
 [workspace.dependencies]
 borsh = "1.5.0"

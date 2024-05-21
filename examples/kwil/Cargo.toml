@@ -1,0 +1,23 @@
+[package]
+name = "dephy-kwil-example"
+version = "0.0.0"
+edition = "2021"
+readme = "./README.md"
+license-file = "../../LICENSE"
+publish = false
+
+[package.metadata.solana]
+program-id = "7TPUtQM5UNdMSEPEgGEY5HpLJZhK9tbK4SG4wmTcSkKn"
+program-dependencies = []
+
+[lib]
+crate-type = ["cdylib", "lib"]
+
+[dependencies]
+borsh = { workspace = true }
+shank = { workspace = true }
+num-derive = { workspace = true }
+num-traits = { workspace = true }
+thiserror = { workspace = true }
+solana-program = { workspace = true }
+spl-token-2022 = { workspace = true, features = ["no-entrypoint"] }

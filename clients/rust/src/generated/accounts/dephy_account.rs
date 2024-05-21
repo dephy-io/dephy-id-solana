@@ -26,6 +26,29 @@ pub struct DephyAccount {
 impl DephyAccount {
     pub const LEN: usize = 34;
 
+    /// Prefix values used to generate a PDA for this account.
+    ///
+    /// Values are positional and appear in the following order:
+    ///
+    ///   0. `DephyAccount::PREFIX`
+    pub const PREFIX: &'static [u8] = "DePHY".as_bytes();
+
+    pub fn create_pda(
+        bump: u8,
+    ) -> Result<solana_program::pubkey::Pubkey, solana_program::pubkey::PubkeyError> {
+        solana_program::pubkey::Pubkey::create_program_address(
+            &["DePHY".as_bytes(), &[bump]],
+            &crate::DEPHY_ID_ID,
+        )
+    }
+
+    pub fn find_pda() -> (solana_program::pubkey::Pubkey, u8) {
+        solana_program::pubkey::Pubkey::find_program_address(
+            &["DePHY".as_bytes()],
+            &crate::DEPHY_ID_ID,
+        )
+    }
+
     #[inline(always)]
     pub fn from_bytes(data: &[u8]) -> Result<Self, std::io::Error> {
         let mut data = data;
