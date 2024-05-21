@@ -1,11 +1,12 @@
-// #![cfg(feature = "test-sbf")]
+#![cfg(feature = "test-sbf")]
 
 use dephy_id_program::{
     instruction::{
-        ActivateDeviceArgs, CreateDeviceArgs, CreateProductArgs, CreateVendorArgs,
+        ActivateDeviceArgs, CreateDeviceArgs, CreateProductArgs, CreateVendorArgs, InitializeArgs,
         Instruction, KeyType,
     },
-    state::DephyAccount,
+    state::ProgramDataAccount,
+    DEVICE_SEED_PREFIX, PRODUCT_SEED_PREFIX, PROGRAM_SEED_PREFIX, VENDOR_SEED_PREFIX,
 };
 use solana_program::pubkey::Pubkey;
 use solana_program_test::*;
@@ -26,7 +27,6 @@ use spl_token_2022::{
 };
 use spl_token_metadata_interface::state::TokenMetadata;
 use std::str::FromStr;
-use dephy_id_program::instruction::InitializeArgs;
 
 #[tokio::test]
 async fn test_smoke() {
@@ -43,7 +43,7 @@ async fn test_smoke() {
     let user1 = Keypair::new();
 
     // Create DePHY account
-    let (dephy_pubkey, bump) = Pubkey::find_program_address(&[b"DePHY"], &program_id);
+    let (pda_pubkey, bump) = Pubkey::find_program_address(&[PROGRAM_SEED_PREFIX], &program_id);
 
     let mut transaction = Transaction::new_with_payer(
         &[SolanaInstruction::new_with_borsh(
@@ -52,7 +52,7 @@ async fn test_smoke() {
             vec![
                 AccountMeta::new(system_program::id(), false),
                 AccountMeta::new(ctx.payer.pubkey(), true),
-                AccountMeta::new(dephy_pubkey, false),
+                AccountMeta::new(pda_pubkey, false),
                 AccountMeta::new(admin.pubkey(), true),
             ],
         )],
@@ -67,13 +67,13 @@ async fn test_smoke() {
     // Associated account now exists
     let allocated_account = ctx
         .banks_client
-        .get_account(dephy_pubkey)
+        .get_account(pda_pubkey)
         .await
         .expect("get_account")
         .expect("DePHY account not none");
-    assert_eq!(allocated_account.data.len(), DephyAccount::LEN);
+    assert_eq!(allocated_account.data.len(), ProgramDataAccount::LEN);
 
-    test_create_vendor(program_id, &mut ctx, dephy_pubkey, &vendor).await;
+    test_create_vendor(program_id, &mut ctx, pda_pubkey, &vendor).await;
 
     let product_name = "Example Product 1".to_string();
 
@@ -130,8 +130,10 @@ async fn test_create_vendor(
     dephy: Pubkey,
     vendor: &Keypair,
 ) {
-    let (mint_pubkey, bump) =
-        Pubkey::find_program_address(&[b"DePHY VENDOR", &vendor.pubkey().to_bytes()], &program_id);
+    let (mint_pubkey, bump) = Pubkey::find_program_address(
+        &[VENDOR_SEED_PREFIX, &vendor.pubkey().to_bytes()],
+        &program_id,
+    );
 
     let atoken_pubkey = spl_associated_token_account::get_associated_token_address_with_program_id(
         &vendor.pubkey(),
@@ -213,8 +215,10 @@ async fn test_create_product(
     vendor: &Keypair,
     name: String,
 ) {
-    let (vendor_mint_pubkey, _) =
-        Pubkey::find_program_address(&[b"DePHY VENDOR", &vendor.pubkey().to_bytes()], &program_id);
+    let (vendor_mint_pubkey, _) = Pubkey::find_program_address(
+        &[VENDOR_SEED_PREFIX, &vendor.pubkey().to_bytes()],
+        &program_id,
+    );
 
     let vendor_atoken_pubkey =
         spl_associated_token_account::get_associated_token_address_with_program_id(
@@ -224,7 +228,7 @@ async fn test_create_product(
         );
 
     let (product_mint_pubkey, mint_bump) = Pubkey::find_program_address(
-        &[b"DePHY PRODUCT", &vendor.pubkey().to_bytes(), name.as_ref()],
+        &[PRODUCT_SEED_PREFIX, &vendor.pubkey().to_bytes(), name.as_ref()],
         &program_id,
     );
 
@@ -300,7 +304,7 @@ async fn test_create_device(
     key_type: KeyType,
 ) {
     let (product_mint_pubkey, _mint_bump) = Pubkey::find_program_address(
-        &[b"DePHY PRODUCT", &vendor.pubkey().to_bytes(), product_name],
+        &[PRODUCT_SEED_PREFIX, &vendor.pubkey().to_bytes(), product_name],
         &program_id,
     );
 
@@ -312,10 +316,8 @@ async fn test_create_device(
     );
 
     let device_pubkey = get_device_pubkey(device, key_type.clone());
-    let (did_mint_pubkey, did_mint_bump) = Pubkey::find_program_address(
-        &[b"DePHY DID", device_pubkey.as_ref()],
-        &program_id,
-    );
+    let (did_mint_pubkey, did_mint_bump) =
+        Pubkey::find_program_address(&[DEVICE_SEED_PREFIX, device_pubkey.as_ref()], &program_id);
 
     let mut transaction = Transaction::new_with_payer(
         &[SolanaInstruction::new_with_borsh(
@@ -376,16 +378,14 @@ async fn test_activate_device(
     ctx.warp_to_slot(slot).unwrap();
 
     let (product_mint_pubkey, _) = Pubkey::find_program_address(
-        &[b"DePHY PRODUCT", vendor.pubkey().as_ref(), product_name],
+        &[PRODUCT_SEED_PREFIX, vendor.pubkey().as_ref(), product_name],
         &program_id,
     );
 
     let device_pubkey = get_device_pubkey(device, key_type.clone());
 
-    let (mint_pubkey, mint_bump) = Pubkey::find_program_address(
-        &[b"DePHY DID", device_pubkey.as_ref()],
-        &program_id,
-    );
+    let (mint_pubkey, mint_bump) =
+        Pubkey::find_program_address(&[DEVICE_SEED_PREFIX, device_pubkey.as_ref()], &program_id);
 
     let product_atoken_pubkey =
         spl_associated_token_account::get_associated_token_address_with_program_id(

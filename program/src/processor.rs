@@ -30,9 +30,11 @@ use crate::{
         },
         ActivateDeviceArgs, InitializeArgs, CreateDeviceArgs, CreateProductArgs, CreateVendorArgs,
         Instruction, KeyType,
+    }, state::{
+        ProgramDataAccount, ProgramData, Key,
     },
-    state::{DephyAccount, DephyData, Key},
     utils::create_account,
+    PROGRAM_SEED_PREFIX, VENDOR_SEED_PREFIX, PRODUCT_SEED_PREFIX, DEVICE_SEED_PREFIX,
 };
 
 pub fn process_instruction<'a>(
@@ -44,7 +46,7 @@ pub fn process_instruction<'a>(
 
     match instruction {
         Instruction::Initialize(args) => {
-            msg!("Instruction: Initialize DePHY Id program");
+            msg!("Instruction: Initialize the program");
             initialize(program_id, accounts, args)
         }
         Instruction::CreateVendor(args) => {
@@ -75,11 +77,11 @@ fn initialize<'a>(
     let ctx = InitializeAccounts::context(accounts)?;
 
     // Guards
-    let (dephy_pubkey, _bump) = Pubkey::find_program_address(&[b"DePHY"], program_id);
-    assert_same_pubkeys("dephy", ctx.accounts.dephy, &dephy_pubkey)?;
+    let (pda_pubkey, _bump) = Pubkey::find_program_address(&[PROGRAM_SEED_PREFIX], program_id);
+    assert_same_pubkeys("program_pda", ctx.accounts.program_pda, &pda_pubkey)?;
 
-    let seeds: &[&[u8]] = &[b"DePHY", &[args.bump]];
-    assert_pda("DePHY", ctx.accounts.dephy, program_id, seeds)?;
+    let seeds: &[&[u8]] = &[PROGRAM_SEED_PREFIX, &[args.bump]];
+    assert_pda("program_pda", ctx.accounts.program_pda, program_id, seeds)?;
     assert_signer("authority", ctx.accounts.authority)?;
     assert_same_pubkeys(
         "system_program",
@@ -88,24 +90,24 @@ fn initialize<'a>(
     )?;
 
     // CPIs
-    // Create DePHYIdAccount
+    // Create PDA
     create_account(
-        ctx.accounts.dephy,
+        ctx.accounts.program_pda,
         ctx.accounts.payer,
         ctx.accounts.system_program,
-        DephyAccount::LEN,
+        ProgramDataAccount::LEN,
         None,
         program_id,
         &[seeds],
     )?;
 
-    let dephy_account = DephyAccount {
-        key: Key::DephyAccount,
+    let program_pda = ProgramDataAccount {
+        key: Key::ProgramDataAccount,
         authority: *ctx.accounts.authority.key,
-        data: DephyData { bump: args.bump },
+        data: ProgramData { bump: args.bump },
     };
 
-    dephy_account.save(ctx.accounts.dephy)
+    program_pda.save(ctx.accounts.program_pda)
 }
 
 fn create_vendor<'a>(
@@ -120,9 +122,9 @@ fn create_vendor<'a>(
     let vendor_pubkey = ctx.accounts.vendor.key;
 
     // Guards
-    assert_program_owner("Dephy owner", ctx.accounts.dephy, program_id)?;
-    let (dephy_pubkey, _bump) = Pubkey::find_program_address(&[b"DePHY"], program_id);
-    assert_same_pubkeys("dephy", ctx.accounts.dephy, &dephy_pubkey)?;
+    assert_program_owner("program_owner", ctx.accounts.program_pda, program_id)?;
+    let (pda_pubkey, _bump) = Pubkey::find_program_address(&[PROGRAM_SEED_PREFIX], program_id);
+    assert_same_pubkeys("program_pda", ctx.accounts.program_pda, &pda_pubkey)?;
 
     assert_same_pubkeys(
         "system_program",
@@ -136,12 +138,12 @@ fn create_vendor<'a>(
         &token_program_id,
     )?;
 
-    let mint_seeds: &[&[u8]] = &[b"DePHY VENDOR", vendor_pubkey.as_ref(), &[args.bump]];
+    let mint_seeds: &[&[u8]] = &[VENDOR_SEED_PREFIX, vendor_pubkey.as_ref(), &[args.bump]];
     let mint_pubkey = Pubkey::create_program_address(mint_seeds, program_id)?;
     assert_same_pubkeys("vendor_mint", ctx.accounts.vendor_mint, &mint_pubkey)?;
     assert_writable("vendor_mint", ctx.accounts.vendor_mint)?;
 
-    let atoken_pubkey = spl_associated_token_account::get_associated_token_address_with_program_id(
+    let atoken_pubkey = get_associated_token_address_with_program_id(
         vendor_pubkey,
         &mint_pubkey,
         &token_program_id,
@@ -165,7 +167,7 @@ fn create_vendor<'a>(
     let metadata_size = metadata.tlv_size_of()?;
 
     // CPIs
-    // create mint account
+    // Create mint account
     create_account(
         ctx.accounts.vendor_mint,
         ctx.accounts.payer,
@@ -339,7 +341,7 @@ fn create_product<'a>(
     assert_signer("vendor", ctx.accounts.vendor)?;
 
     let mint_seeds: &[&[u8]] = &[
-        b"DePHY PRODUCT",
+        PRODUCT_SEED_PREFIX,
         vendor_pubkey.as_ref(),
         args.name.as_ref(),
         &[args.bump],
@@ -348,7 +350,7 @@ fn create_product<'a>(
     assert_same_pubkeys("product_mint", ctx.accounts.product_mint, &product_mint_pubkey)?;
 
     let (vendor_mint_pubkey, _) =
-        Pubkey::find_program_address(&[b"DePHY VENDOR", vendor_pubkey.as_ref()], program_id);
+        Pubkey::find_program_address(&[VENDOR_SEED_PREFIX, vendor_pubkey.as_ref()], program_id);
     assert_same_pubkeys("vendor_mint", ctx.accounts.vendor_mint, &vendor_mint_pubkey)?;
 
     {
@@ -553,10 +555,9 @@ fn create_device<'a>(
         ],
     )?;
 
-
     // Create the DID token
     let did_mint_seeds: &[&[u8]] = &[
-        b"DePHY DID",
+        DEVICE_SEED_PREFIX,
         device_pubkey.as_ref(),
         &[args.bump],
     ];
@@ -737,7 +738,7 @@ fn activate_device<'a>(
         ctx.accounts.product_mint,
         program_id,
         &[
-            b"DePHY PRODUCT",
+            PRODUCT_SEED_PREFIX,
             vendor_pubkey.as_ref(),
             product_mint_metadata.name.as_ref(),
         ],
@@ -756,7 +757,7 @@ fn activate_device<'a>(
 
     // Mint DID
     let did_mint_seeds: &[&[u8]] = &[
-        b"DePHY DID",
+        DEVICE_SEED_PREFIX,
         device_pubkey.as_ref(),
         &[args.bump],
     ];

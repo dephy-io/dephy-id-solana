@@ -10,10 +10,6 @@ readme = "README.md"
 edition = "2021"
 publish = false
 
-[features]
-test-sbf = []
-serde = ["dep:serde", "dep:serde_with"]
-
 [dependencies]
 borsh = "0.10.3" # 1.5.0 has trouble
 num-derive = { workspace = true }
@@ -27,3 +23,7 @@ thiserror = { workspace = true }
 assert_matches = { workspace = true }
 solana-program-test = { workspace = true }
 solana-sdk = { workspace = true }
+
+[features]
+test-sbf = []
+serde = ["dep:serde", "dep:serde_with"]

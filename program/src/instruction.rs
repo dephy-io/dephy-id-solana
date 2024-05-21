@@ -7,19 +7,19 @@ use crate::error::Error;
 #[derive(BorshDeserialize, BorshSerialize, Clone, Debug, ShankContext, ShankInstruction)]
 #[rustfmt::skip]
 pub enum Instruction {
-    /// Create DePHY Account.
+    /// Initialize the program.
     #[account(0, name="system_program", desc = "The system program")]
     #[account(1, writable, signer, name="payer", desc = "The account paying for the storage fees")]
-    #[account(2, writable, name="dephy", desc = "The address of the DePHY account")]
-    #[account(3, signer, name="authority", desc = "The authority of the DePHY account")]
+    #[account(2, writable, name="program_pda", desc = "The PDA of the program")]
+    #[account(3, signer, name="authority", desc = "The authority account of the program")]
     Initialize(InitializeArgs),
 
-    /// DePHY register a Vendor
+    /// Register a vendor
     #[account(0, name="system_program", desc = "The system program")]
     #[account(1, name="token_program_2022", desc = "The token 2022 program")]
     #[account(2, name="ata_program", desc = "The associated token program")]
     #[account(3, writable, signer, name="payer", desc = "The account paying for the storage fees")]
-    #[account(4, name="dephy", desc = "The DePHY account")]
+    #[account(4, name="program_pda", desc = "The PDA of the program")]
     #[account(5, signer, name="vendor", desc = "The Vendor pubkey")]
     #[account(6, writable, name="vendor_mint", desc = "The Vendor mint")]
     #[account(7, writable, name="vendor_atoken", desc = "The atoken account for vendor")]
