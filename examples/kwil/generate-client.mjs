@@ -1,12 +1,14 @@
 #!/usr/bin/env zx
 import "zx/globals";
-import * as k from "@metaplex-foundation/kinobi";
+import * as k from "kinobi";
 import path from "path";
+import { rootNodeFromAnchor } from '@kinobi-so/nodes-from-anchor';
+import { renderVisitor as renderJavaScriptVisitor } from "@kinobi-so/renderers-js";
 
-// Instanciate Kinobi.
-const cwd = path.resolve(__dirname)
-const idl = path.resolve(cwd, 'idl.json')
-const kinobi = k.createFromIdl(idl)
+// Instantiate Kinobi.
+const idl = rootNodeFromAnchor(require(path.resolve(__dirname, 'idl.json')));
+console.log(idl)
+const kinobi = k.createFromRoot(idl);
 
 // Update programs.
 kinobi.update(
@@ -62,17 +64,10 @@ kinobi.update(
 );
 
 // Render JavaScript.
-const indexerPlugin = path.join(__dirname, "..", "..", "indexer", "src", "plugins");
-kinobi.accept(
-  k.renderJavaScriptExperimentalVisitor(
+const indexerPlugin = path.join(__dirname, "indexer", "src", "plugins");
+await kinobi.accept(
+  renderJavaScriptVisitor(
     path.join(indexerPlugin, "kwil", "generated"),
-    {}
-  )
-);
-
-kinobi.accept(
-  k.renderJavaScriptExperimentalVisitor(
-    path.join(cwd, "client", "js", "generated"),
     {}
   )
 );

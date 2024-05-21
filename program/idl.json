@@ -1,9 +1,9 @@
 {
-  "version": "0.0.0",
-  "name": "dephy_io_dephy_id",
+  "version": "0.0.1",
+  "name": "dephy_id_program",
   "instructions": [
     {
-      "name": "CreateDephy",
+      "name": "Initialize",
       "accounts": [
         {
           "name": "systemProgram",
@@ -40,9 +40,9 @@
       ],
       "args": [
         {
-          "name": "createDephyArgs",
+          "name": "initializeArgs",
           "type": {
-            "defined": "CreateDephyArgs"
+            "defined": "InitializeArgs"
           }
         }
       ],
@@ -436,7 +436,7 @@
   ],
   "types": [
     {
-      "name": "CreateDephyArgs",
+      "name": "InitializeArgs",
       "type": {
         "kind": "struct",
         "fields": [

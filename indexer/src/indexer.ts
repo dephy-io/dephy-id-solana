@@ -21,14 +21,14 @@ import {
     DephyAccount,
     DephyIdInstruction,
     KeyType,
-    ParsedActivateDeviceInstruction, ParsedCreateDephyInstruction, ParsedCreateDeviceInstruction,
+    ParsedActivateDeviceInstruction, ParsedInitializeInstruction, ParsedCreateDeviceInstruction,
     ParsedCreateProductInstruction, ParsedCreateVendorInstruction,
     fetchDephyAccount,
     findDephyAccountPda,
     identifyDephyIdInstruction,
-    parseActivateDeviceInstruction, parseCreateDephyInstruction, parseCreateDeviceInstruction,
-    parseCreateProductInstruction, parseCreateVendorInstruction
-} from "./dephy-id"
+    parseActivateDeviceInstruction, parseInitializeInstruction, parseCreateDeviceInstruction,
+    parseCreateProductInstruction, parseCreateVendorInstruction,
+} from './dephy-id';
 
 
 interface Config {
@@ -241,11 +241,11 @@ export class Indexer {
         })).run(this.db)
     }
 
-    handleCreateDephy(create_dephy: ParsedCreateDephyInstruction<string, readonly IAccountMeta[]>, meta: IxMeta) {
+    handleInitialize(initialize: ParsedInitializeInstruction<string, readonly IAccountMeta[]>, meta: IxMeta) {
         return e.insert(e.DePHY, {
-            pubkey: create_dephy.accounts.dephy.address,
+            pubkey: initialize.accounts.dephy.address,
             authority: e.insert(e.Admin, {
-                pubkey: create_dephy.accounts.authority.address
+                pubkey: initialize.accounts.authority.address
             }),
             tx: e.select(e.Transaction, () => ({
                 filter_single: {
@@ -374,9 +374,9 @@ export class Indexer {
         }
 
         switch (identifyDephyIdInstruction(dephy_ix)) {
-            case DephyIdInstruction.CreateDephy:
-                let create_dephy = parseCreateDephyInstruction(dephy_ix)
-                await this.handleCreateDephy(create_dephy, meta).run(db_tx)
+            case DephyIdInstruction.Initialize:
+                let create_dephy = parseInitializeInstruction(dephy_ix)
+                await this.handleInitialize(create_dephy, meta).run(db_tx)
                 break
 
             case DephyIdInstruction.CreateVendor:
@@ -458,4 +458,3 @@ export class Indexer {
     }
 
 }
-

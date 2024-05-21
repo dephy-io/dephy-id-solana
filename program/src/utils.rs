@@ -5,11 +5,11 @@ use solana_program::{
     program_error::ProgramError,
     pubkey::Pubkey,
     rent::Rent,
-    system_instruction,
+    system_instruction, system_program,
     sysvar::Sysvar,
 };
 
-use crate::error::DephyError;
+use crate::error::Error;
 
 /// Create a new account from the given size.
 #[inline(always)]
@@ -88,10 +88,8 @@ pub fn close_account<'a>(
         .unwrap();
     **target_account.lamports.borrow_mut() = 0;
 
-    let mut src_data = target_account.data.borrow_mut();
-    src_data.fill(0);
-
-    Ok(())
+    target_account.assign(&system_program::ID);
+    target_account.realloc(0, false)
 }
 
 /// Transfer lamports.
@@ -117,13 +115,12 @@ pub fn transfer_lamports_from_pdas<'a>(
     **from.lamports.borrow_mut() = from
         .lamports()
         .checked_sub(lamports)
-        .ok_or::<ProgramError>(DephyError::NumericalOverflow.into())?;
+        .ok_or::<ProgramError>(Error::NumericalOverflow.into())?;
 
     **to.lamports.borrow_mut() = to
         .lamports()
         .checked_add(lamports)
-        .ok_or::<ProgramError>(DephyError::NumericalOverflow.into())?;
+        .ok_or::<ProgramError>(Error::NumericalOverflow.into())?;
 
     Ok(())
 }
-

@@ -1,1 +1,1 @@
-export * from './generated'
+export * from "../../clients/js/src"

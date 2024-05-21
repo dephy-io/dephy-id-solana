@@ -2,17 +2,17 @@ use borsh::{BorshDeserialize, BorshSerialize};
 use shank::{ShankContext, ShankInstruction};
 use solana_program::{keccak, pubkey::Pubkey};
 
-use crate::error::DephyError;
+use crate::error::Error;
 
 #[derive(BorshDeserialize, BorshSerialize, Clone, Debug, ShankContext, ShankInstruction)]
 #[rustfmt::skip]
-pub enum DephyInstruction {
+pub enum Instruction {
     /// Create DePHY Account.
     #[account(0, name="system_program", desc = "The system program")]
     #[account(1, writable, signer, name="payer", desc = "The account paying for the storage fees")]
     #[account(2, writable, name="dephy", desc = "The address of the DePHY account")]
     #[account(3, signer, name="authority", desc = "The authority of the DePHY account")]
-    CreateDephy(CreateDephyArgs),
+    Initialize(InitializeArgs),
 
     /// DePHY register a Vendor
     #[account(0, name="system_program", desc = "The system program")]
@@ -68,7 +68,7 @@ pub enum DephyInstruction {
 
 #[repr(C)]
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
-pub struct CreateDephyArgs {
+pub struct InitializeArgs {
     pub bump: u8,
 }
 
@@ -110,17 +110,17 @@ impl KeyType {
     pub fn decode(
         &self,
         data: &[u8],
-    ) -> Result<([u8; 32], [u8; 72]), DephyError> {
+    ) -> Result<([u8; 32], [u8; 72]), Error> {
         match self {
             KeyType::Ed25519 => {
                 if data.len() != 192 {
-                    return Err(DephyError::DeserializationError);
+                    return Err(Error::DeserializationError);
                 }
                 if data[0..16] != Self::ED25519_HEADER {
-                    return Err(DephyError::DeserializationError);
+                    return Err(Error::DeserializationError);
                 }
                 if data[112..120] != Self::DEPHY_PREFIX {
-                    return Err(DephyError::DeserializationError);
+                    return Err(Error::DeserializationError);
                 }
 
                 Ok((
@@ -130,13 +130,13 @@ impl KeyType {
             }
             KeyType::Secp256k1 => {
                 if data.len() != 177 {
-                    return Err(DephyError::DeserializationError);
+                    return Err(Error::DeserializationError);
                 }
                 if data[0..12] != Self::SECP256K1_HEADER {
-                    return Err(DephyError::DeserializationError);
+                    return Err(Error::DeserializationError);
                 }
                 if data[97..105] != Self::DEPHY_PREFIX {
-                    return Err(DephyError::DeserializationError);
+                    return Err(Error::DeserializationError);
                 }
 
                 let pubkey = Pubkey::new_from_array(keccak::hash(&data[12..32]).to_bytes());

@@ -20,14 +20,4 @@ num-derive = { workspace = true }
 num-traits = { workspace = true }
 thiserror = { workspace = true }
 solana-program = { workspace = true }
-spl-token-2022 = { workspace = true }
-spl-token-metadata-interface = { workspace = true }
-spl-associated-token-account = { workspace = true }
-dephy-io-dephy-id-client = { path = "../../clients/rust" }
-
-[dev-dependencies]
-solana-program-test = "~1.18"
-solana-sdk = "~1.18"
-tokio = "^1.37"
-libsecp256k1 = { workspace = true }
-
+spl-token-2022 = { workspace = true, features = ["no-entrypoint"] }

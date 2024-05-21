@@ -1,12 +1,13 @@
 use std::{error::Error, time::Duration};
 
 use clap::{Args, Parser, Subcommand, ValueEnum};
-use dephy_io_dephy_id_client::{
+use dephy_id_program_client::{
     instructions::{
-        ActivateDeviceBuilder, CreateDephyBuilder, CreateDeviceBuilder, CreateProductBuilder,
+        ActivateDeviceBuilder, InitializeBuilder, CreateDeviceBuilder, CreateProductBuilder,
         CreateVendorBuilder,
     },
     types,
+    ID as PROGRAM_ID,
 };
 use solana_client::rpc_client::RpcClient;
 use solana_sdk::{
@@ -30,7 +31,7 @@ struct Cli {
 
 #[derive(Debug, Subcommand)]
 enum Commands {
-    CreateDephy(CreateDephyCliArgs),
+    Initialize(InitializeCliArgs),
     CreateVendor(CreateVendorCliArgs),
     CreateProduct(CreateProductCliArgs),
     CreateDevice(CreateDeviceCliArgs),
@@ -51,7 +52,7 @@ struct CommonArgs {
 }
 
 #[derive(Debug, Args)]
-struct CreateDephyCliArgs {
+struct InitializeCliArgs {
     #[arg(long = "admin")]
     admin_keypair: String,
     #[command(flatten)]
@@ -165,7 +166,7 @@ fn main() {
     let args = Cli::parse();
 
     match args.command {
-        Commands::CreateDephy(args) => create_dephy(args),
+        Commands::Initialize(args) => create_dephy(args),
         Commands::CreateVendor(args) => create_vendor(args),
         Commands::CreateProduct(args) => create_product(args),
         Commands::CreateDevice(args) => create_device(args),
@@ -199,12 +200,12 @@ fn read_key_or(path: Option<String>, default_path: &String) -> Keypair {
     }
 }
 
-fn create_dephy(args: CreateDephyCliArgs) {
+fn create_dephy(args: InitializeCliArgs) {
     let client = get_client(&args.common.url);
     let program_id = args
         .common
         .program_id
-        .unwrap_or(dephy_io_dephy_id_client::ID);
+        .unwrap_or(PROGRAM_ID);
 
     let admin = read_key(&args.admin_keypair);
     let (dephy_pubkey, bump) = Pubkey::find_program_address(&[b"DePHY"], &program_id);
@@ -213,7 +214,7 @@ fn create_dephy(args: CreateDephyCliArgs) {
 
     let latest_block = client.get_latest_blockhash().unwrap();
     let transaction = Transaction::new_signed_with_payer(
-        &[CreateDephyBuilder::new()
+        &[InitializeBuilder::new()
             .payer(payer.pubkey())
             .authority(admin.pubkey())
             .dephy(dephy_pubkey)
@@ -240,7 +241,7 @@ fn create_vendor(args: CreateVendorCliArgs) {
     let program_id = args
         .common
         .program_id
-        .unwrap_or(dephy_io_dephy_id_client::ID);
+        .unwrap_or(PROGRAM_ID);
     let token_program_id = spl_token_2022::ID;
 
     let vendor = read_key(&args.vendor_keypair);
@@ -299,7 +300,7 @@ fn create_product(args: CreateProductCliArgs) {
     let program_id = args
         .common
         .program_id
-        .unwrap_or(dephy_io_dephy_id_client::ID);
+        .unwrap_or(PROGRAM_ID);
     let token_program_id = spl_token_2022::ID;
 
     let vendor = read_key(&args.vendor_keypair);
@@ -369,7 +370,7 @@ fn create_device(args: CreateDeviceCliArgs) {
     let program_id = args
         .common
         .program_id
-        .unwrap_or(dephy_io_dephy_id_client::ID);
+        .unwrap_or(PROGRAM_ID);
 
     let vendor = read_key(&args.vendor_keypair);
     let payer = read_key_or(args.common.payer, &args.vendor_keypair);
@@ -424,7 +425,7 @@ fn activate_device(args: ActivateDeviceCliArgs) {
     let program_id = args
         .common
         .program_id
-        .unwrap_or(dephy_io_dephy_id_client::ID);
+        .unwrap_or(PROGRAM_ID);
     let token_program_id = spl_token_2022::ID;
     let instructions_id = instructions::ID;
 

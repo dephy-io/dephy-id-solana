@@ -1,17 +1,17 @@
 {
-  "name": "@dephy-io/dephy-id",
-  "version": "0.0.0",
-  "description": "JavaScript client for the Dephy Id program",
+  "name": "@dephy-io/dephy-id-program-client",
+  "version": "0.0.1",
+  "description": "JavaScript client for the DePHY ID Solana program",
   "sideEffects": false,
-  "module": "./dist/src/index.js",
-  "main": "./dist/src/index.cjs",
-  "types": "./dist/types/src/index.d.ts",
-  "type": "module",
+  "module": "./dist/src/index.mjs",
+  "main": "./dist/src/index.js",
+  "types": "./dist/types/index.d.ts",
+  "type": "commonjs",
   "exports": {
     ".": {
-      "types": "./dist/types/src/index.d.ts",
-      "import": "./dist/src/index.js",
-      "require": "./dist/src/index.cjs"
+      "types": "./dist/types/index.d.ts",
+      "import": "./dist/src/index.mjs",
+      "require": "./dist/src/index.js"
     }
   },
   "files": [
@@ -25,7 +25,8 @@
     "lint": "eslint --ext js,ts,tsx src",
     "lint:fix": "eslint --fix --ext js,ts,tsx src",
     "format": "prettier --check src test",
-    "format:fix": "prettier --write src test"
+    "format:fix": "prettier --write src test",
+    "prepublishOnly": "pnpm build"
   },
   "publishConfig": {
     "access": "public",
@@ -33,13 +34,13 @@
   },
   "license": "MIT",
   "peerDependencies": {
-    "@solana/web3.js": "tp3"
+    "@solana/web3.js": "2.0.0-preview.3"
   },
   "devDependencies": {
     "@ava/typescript": "^4.1.0",
-    "@solana/eslint-config-solana": "^3.0.0",
-    "@solana/web3.js": "tp3",
-    "@solana/webcrypto-ed25519-polyfill": "tp3",
+    "@solana/eslint-config-solana": "^3.0.3",
+    "@solana/web3.js": "2.0.0-preview.3",
+    "@solana/webcrypto-ed25519-polyfill": "2.0.0-preview.3",
     "@typescript-eslint/eslint-plugin": "^7.3.1",
     "@typescript-eslint/parser": "^7.3.1",
     "ava": "^6.1.2",
@@ -62,5 +63,5 @@
       }
     }
   },
-  "packageManager": "pnpm@8.2.0"
+  "packageManager": "pnpm@9.1.2"
 }
