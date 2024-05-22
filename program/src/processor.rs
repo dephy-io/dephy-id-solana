@@ -84,12 +84,7 @@ fn initialize<'a>(
     )?;
 
     let seeds: &[&[u8]] = &[PROGRAM_PDA_SEED_PREFIX, &[args.bump]];
-    assert_pda(
-        "program_pda",
-        ctx.accounts.program_data,
-        program_id,
-        seeds,
-    )?;
+    assert_pda("program_pda", ctx.accounts.program_data, program_id, seeds)?;
     assert_signer("authority", ctx.accounts.authority)?;
     assert_same_pubkeys(
         "system_program",

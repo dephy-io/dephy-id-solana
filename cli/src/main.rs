@@ -6,11 +6,8 @@ use dephy_id_program_client::{
         ActivateDeviceBuilder, CreateDeviceBuilder, CreateProductBuilder, CreateVendorBuilder,
         InitializeBuilder,
     },
-    types,
-    ID as PROGRAM_ID,
-    PROGRAM_PDA_SEED_PREFIX, VENDOR_MINT_SEED_PREFIX,
-    PRODUCT_MINT_SEED_PREFIX, DEVICE_MINT_SEED_PREFIX,
-    DEVICE_MESSAGE_PREFIX,
+    types, DEVICE_MESSAGE_PREFIX, DEVICE_MINT_SEED_PREFIX, ID as PROGRAM_ID,
+    PRODUCT_MINT_SEED_PREFIX, PROGRAM_PDA_SEED_PREFIX, VENDOR_MINT_SEED_PREFIX,
 };
 use solana_client::rpc_client::RpcClient;
 use solana_sdk::{
@@ -208,7 +205,8 @@ fn initialize_program(args: InitializeCliArgs) {
     let program_id = args.common.program_id.unwrap_or(PROGRAM_ID);
 
     let admin = read_key(&args.admin_keypair);
-    let (dephy_pubkey, bump) = Pubkey::find_program_address(&[PROGRAM_PDA_SEED_PREFIX], &program_id);
+    let (dephy_pubkey, bump) =
+        Pubkey::find_program_address(&[PROGRAM_PDA_SEED_PREFIX], &program_id);
 
     let payer = read_key_or(args.common.payer, &args.admin_keypair);
 
@@ -244,8 +242,10 @@ fn create_vendor(args: CreateVendorCliArgs) {
     let vendor = read_key(&args.vendor_keypair);
     let payer = read_key_or(args.common.payer, &args.vendor_keypair);
 
-    let (vendor_mint_pubkey, bump) =
-        Pubkey::find_program_address(&[VENDOR_MINT_SEED_PREFIX, vendor.pubkey().as_ref()], &program_id);
+    let (vendor_mint_pubkey, bump) = Pubkey::find_program_address(
+        &[VENDOR_MINT_SEED_PREFIX, vendor.pubkey().as_ref()],
+        &program_id,
+    );
 
     let vendor_atoken_pubkey =
         spl_associated_token_account::get_associated_token_address_with_program_id(
@@ -301,8 +301,10 @@ fn create_product(args: CreateProductCliArgs) {
         &program_id,
     );
 
-    let (vendor_mint_pubkey, _) =
-        Pubkey::find_program_address(&[VENDOR_MINT_SEED_PREFIX, &vendor.pubkey().to_bytes()], &program_id);
+    let (vendor_mint_pubkey, _) = Pubkey::find_program_address(
+        &[VENDOR_MINT_SEED_PREFIX, &vendor.pubkey().to_bytes()],
+        &program_id,
+    );
 
     let vendor_atoken_pubkey =
         spl_associated_token_account::get_associated_token_address_with_program_id(
@@ -369,8 +371,10 @@ fn create_device(args: CreateDeviceCliArgs) {
             &token_program_id,
         );
 
-    let (did_mint_pubkey, bump) =
-        Pubkey::find_program_address(&[DEVICE_MINT_SEED_PREFIX, args.device_pubkey.as_ref()], &program_id);
+    let (did_mint_pubkey, bump) = Pubkey::find_program_address(
+        &[DEVICE_MINT_SEED_PREFIX, args.device_pubkey.as_ref()],
+        &program_id,
+    );
 
     let latest_block = client.get_latest_blockhash().unwrap();
     let transaction = Transaction::new_signed_with_payer(
@@ -423,8 +427,10 @@ fn activate_device(args: ActivateDeviceCliArgs) {
             &token_program_id,
         );
 
-    let (did_mint_pubkey, bump) =
-        Pubkey::find_program_address(&[DEVICE_MINT_SEED_PREFIX, device_pubkey.as_ref()], &program_id);
+    let (did_mint_pubkey, bump) = Pubkey::find_program_address(
+        &[DEVICE_MINT_SEED_PREFIX, device_pubkey.as_ref()],
+        &program_id,
+    );
 
     let did_atoken_pubkey =
         spl_associated_token_account::get_associated_token_address_with_program_id(
