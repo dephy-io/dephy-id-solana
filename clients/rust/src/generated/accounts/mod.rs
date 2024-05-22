@@ -5,6 +5,6 @@
 //! <https://github.com/kinobi-so/kinobi>
 //!
 
-pub(crate) mod r#dephy_account;
+pub(crate) mod r#program_data_account;
 
-pub use self::r#dephy_account::*;
+pub use self::r#program_data_account::*;

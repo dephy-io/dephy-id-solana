@@ -11,7 +11,7 @@ pub enum Instruction {
     /// Initialize the program.
     #[account(0, name="system_program", desc="The system program")]
     #[account(1, writable, signer, name="payer", desc="The account paying for the storage fees")]
-    #[account(2, writable, name="program_program_data", desc="The PDA for the program")]
+    #[account(2, writable, name="program_data", desc="The program data account for the program")]
     #[account(3, signer, name="authority", desc="The authority account of the program")]
     Initialize(InitializeArgs),
 
@@ -22,7 +22,7 @@ pub enum Instruction {
     #[account(3, writable, signer, name="payer", desc="The account paying for the storage fees")]
     #[account(4, signer, name="vendor", desc="The vendor")]
     #[account(5, writable, name="vendor_mint", desc="The mint account of the vendor")]
-    #[account(6, writable, name="vendor_associated_token", desc="The ATA of the vendor")]
+    #[account(6, writable, name="vendor_associated_token", desc="The associated token account of the vendor")]
     CreateVendor(CreateVendorArgs),
 
     /// Vendor register a Product
@@ -32,7 +32,7 @@ pub enum Instruction {
     #[account(2, writable, signer, name="payer", desc="The account paying for the storage fees")]
     #[account(3, signer, name="vendor", desc="The vendor")]
     #[account(4, name="vendor_mint", desc="The mint account of the vendor")]
-    #[account(5, name="vendor_associated_token", desc="The ATA of the vendor")]
+    #[account(5, name="vendor_associated_token", desc="The associated token account of the vendor")]
     #[account(6, writable, name="product_mint", desc="The mint account of the product")]
     CreateProduct(CreateProductArgs),
 
@@ -44,7 +44,7 @@ pub enum Instruction {
     #[account(3, writable, signer, name="payer", desc="The account paying for the storage fees")]
     #[account(4, signer, name="vendor", desc="The vendor")]
     #[account(5, writable, name="product_mint", desc="The mint account of the product")]
-    #[account(6, writable, name="product_associated_token", desc="The ATA of the product")]
+    #[account(6, writable, name="product_associated_token", desc="The associated token account of the product")]
     #[account(7, name="device", desc="The device")]
     #[account(8, writable, name="device_mint", desc="The mint account of the device")]
     CreateDevice(CreateDeviceArgs),
@@ -57,10 +57,10 @@ pub enum Instruction {
     #[account(4, writable, signer, name="payer", desc="The account paying for the storage fees")]
     #[account(5, name="vendor", desc="The vendor")]
     #[account(6, name="product_mint", desc="The mint account for the product")]
-    #[account(7, name="product_associated_token", desc="The ATA for the product")]
+    #[account(7, name="product_associated_token", desc="The associated token account for the product")]
     #[account(8, name="device", desc="The device")]
     #[account(9, writable, name="device_mint", desc="The mint account for the device")]
-    #[account(10, writable, name="device_associated_token", desc="The ATA for the device")]
+    #[account(10, writable, name="device_associated_token", desc="The associated token account for the device")]
     #[account(11, name="owner", desc="The device's owner")]
     ActivateDevice(ActivateDeviceArgs),
 }

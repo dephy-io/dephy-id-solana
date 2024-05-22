@@ -22,7 +22,7 @@ kinobi.update(
     k.updateAccountsVisitor({
         programDataAccount: {
             seeds: [
-                k.constantPdaSeedNodeFromString('utf8', "DePHY ID"),
+                k.constantPdaSeedNodeFromString('utf8', "DePHY_ID"),
             ],
         },
     })
@@ -30,23 +30,23 @@ kinobi.update(
 
 // // Update instructions.
 // kinobi.update(
-//   k.updateInstructionsVisitor({
-//     create: {
-//       byteDeltas: [k.instructionByteDeltaNode(k.accountLinkNode("dephy"))],
-//       accounts: {
-//         dephy: { defaultValue: k.pdaValueNode("dephy") },
-//         payer: { defaultValue: k.accountValueNode("authority") },
-//       },
-//     },
-//     increment: {
-//       accounts: {
-//         dephy: { defaultValue: k.pdaValueNode("dephy") },
-//       },
-//       arguments: {
-//         amount: { defaultValue: k.noneValueNode() },
-//       },
-//     },
-//   })
+//     k.updateInstructionsVisitor({
+//         initialize: {
+//             byteDeltas: [k.instructionByteDeltaNode(k.accountLinkNode("dephy"))],
+//             accounts: {
+//                 dephy: {defaultValue: k.pdaValueNode("dephy")},
+//                 payer: {defaultValue: k.accountValueNode("authority")},
+//             },
+//         },
+//         increment: {
+//             accounts: {
+//                 dephy: {defaultValue: k.pdaValueNode("dephy")},
+//             },
+//             arguments: {
+//                 amount: {defaultValue: k.noneValueNode()},
+//             },
+//         },
+//     })
 // );
 
 // Set account discriminators.

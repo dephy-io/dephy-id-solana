@@ -5,46 +5,46 @@
 //! <https://github.com/kinobi-so/kinobi>
 //!
 
-use crate::generated::types::DephyData;
 use crate::generated::types::Key;
+use crate::generated::types::ProgramData;
 use borsh::BorshDeserialize;
 use borsh::BorshSerialize;
 use solana_program::pubkey::Pubkey;
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-pub struct DephyAccount {
+pub struct ProgramDataAccount {
     pub key: Key,
     #[cfg_attr(
         feature = "serde",
         serde(with = "serde_with::As::<serde_with::DisplayFromStr>")
     )]
     pub authority: Pubkey,
-    pub data: DephyData,
+    pub data: ProgramData,
 }
 
-impl DephyAccount {
+impl ProgramDataAccount {
     pub const LEN: usize = 34;
 
     /// Prefix values used to generate a PDA for this account.
     ///
     /// Values are positional and appear in the following order:
     ///
-    ///   0. `DephyAccount::PREFIX`
-    pub const PREFIX: &'static [u8] = "DePHY".as_bytes();
+    ///   0. `ProgramDataAccount::PREFIX`
+    pub const PREFIX: &'static [u8] = "DePHY_ID".as_bytes();
 
     pub fn create_pda(
         bump: u8,
     ) -> Result<solana_program::pubkey::Pubkey, solana_program::pubkey::PubkeyError> {
         solana_program::pubkey::Pubkey::create_program_address(
-            &["DePHY".as_bytes(), &[bump]],
+            &["DePHY_ID".as_bytes(), &[bump]],
             &crate::DEPHY_ID_ID,
         )
     }
 
     pub fn find_pda() -> (solana_program::pubkey::Pubkey, u8) {
         solana_program::pubkey::Pubkey::find_program_address(
-            &["DePHY".as_bytes()],
+            &["DePHY_ID".as_bytes()],
             &crate::DEPHY_ID_ID,
         )
     }
@@ -56,7 +56,7 @@ impl DephyAccount {
     }
 }
 
-impl<'a> TryFrom<&solana_program::account_info::AccountInfo<'a>> for DephyAccount {
+impl<'a> TryFrom<&solana_program::account_info::AccountInfo<'a>> for ProgramDataAccount {
     type Error = std::io::Error;
 
     fn try_from(

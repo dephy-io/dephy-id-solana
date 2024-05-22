@@ -46,15 +46,14 @@ export type CreateVendorInstruction<
   TAccountSystemProgram extends
     | string
     | IAccountMeta<string> = '11111111111111111111111111111111',
-  TAccountTokenProgram2022 extends string | IAccountMeta<string> = string,
+  TAccountToken2022Program extends string | IAccountMeta<string> = string,
   TAccountAtaProgram extends
     | string
     | IAccountMeta<string> = 'ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL',
   TAccountPayer extends string | IAccountMeta<string> = string,
-  TAccountDephy extends string | IAccountMeta<string> = string,
   TAccountVendor extends string | IAccountMeta<string> = string,
   TAccountVendorMint extends string | IAccountMeta<string> = string,
-  TAccountVendorAtoken extends string | IAccountMeta<string> = string,
+  TAccountVendorAssociatedToken extends string | IAccountMeta<string> = string,
   TRemainingAccounts extends readonly IAccountMeta<string>[] = [],
 > = IInstruction<TProgram> &
   IInstructionWithData<Uint8Array> &
@@ -63,9 +62,9 @@ export type CreateVendorInstruction<
       TAccountSystemProgram extends string
         ? ReadonlyAccount<TAccountSystemProgram>
         : TAccountSystemProgram,
-      TAccountTokenProgram2022 extends string
-        ? ReadonlyAccount<TAccountTokenProgram2022>
-        : TAccountTokenProgram2022,
+      TAccountToken2022Program extends string
+        ? ReadonlyAccount<TAccountToken2022Program>
+        : TAccountToken2022Program,
       TAccountAtaProgram extends string
         ? ReadonlyAccount<TAccountAtaProgram>
         : TAccountAtaProgram,
@@ -73,9 +72,6 @@ export type CreateVendorInstruction<
         ? WritableSignerAccount<TAccountPayer> &
             IAccountSignerMeta<TAccountPayer>
         : TAccountPayer,
-      TAccountDephy extends string
-        ? ReadonlyAccount<TAccountDephy>
-        : TAccountDephy,
       TAccountVendor extends string
         ? ReadonlySignerAccount<TAccountVendor> &
             IAccountSignerMeta<TAccountVendor>
@@ -83,9 +79,9 @@ export type CreateVendorInstruction<
       TAccountVendorMint extends string
         ? WritableAccount<TAccountVendorMint>
         : TAccountVendorMint,
-      TAccountVendorAtoken extends string
-        ? WritableAccount<TAccountVendorAtoken>
-        : TAccountVendorAtoken,
+      TAccountVendorAssociatedToken extends string
+        ? WritableAccount<TAccountVendorAssociatedToken>
+        : TAccountVendorAssociatedToken,
       ...TRemainingAccounts,
     ]
   >;
@@ -160,30 +156,27 @@ export function getCreateVendorInstructionDataCodec(): Codec<
 
 export type CreateVendorInput<
   TAccountSystemProgram extends string = string,
-  TAccountTokenProgram2022 extends string = string,
+  TAccountToken2022Program extends string = string,
   TAccountAtaProgram extends string = string,
   TAccountPayer extends string = string,
-  TAccountDephy extends string = string,
   TAccountVendor extends string = string,
   TAccountVendorMint extends string = string,
-  TAccountVendorAtoken extends string = string,
+  TAccountVendorAssociatedToken extends string = string,
 > = {
   /** The system program */
   systemProgram?: Address<TAccountSystemProgram>;
   /** The token 2022 program */
-  tokenProgram2022: Address<TAccountTokenProgram2022>;
+  token2022Program: Address<TAccountToken2022Program>;
   /** The associated token program */
   ataProgram?: Address<TAccountAtaProgram>;
   /** The account paying for the storage fees */
   payer: TransactionSigner<TAccountPayer>;
-  /** The DePHY account */
-  dephy: Address<TAccountDephy>;
-  /** The Vendor pubkey */
+  /** The vendor */
   vendor: TransactionSigner<TAccountVendor>;
-  /** The Vendor mint */
+  /** The mint account of the vendor */
   vendorMint: Address<TAccountVendorMint>;
-  /** The atoken account for vendor */
-  vendorAtoken: Address<TAccountVendorAtoken>;
+  /** The associated token account of the vendor */
+  vendorAssociatedToken: Address<TAccountVendorAssociatedToken>;
   bump: CreateVendorInstructionDataArgs['bump'];
   name: CreateVendorInstructionDataArgs['name'];
   symbol: CreateVendorInstructionDataArgs['symbol'];
@@ -193,34 +186,31 @@ export type CreateVendorInput<
 
 export function getCreateVendorInstruction<
   TAccountSystemProgram extends string,
-  TAccountTokenProgram2022 extends string,
+  TAccountToken2022Program extends string,
   TAccountAtaProgram extends string,
   TAccountPayer extends string,
-  TAccountDephy extends string,
   TAccountVendor extends string,
   TAccountVendorMint extends string,
-  TAccountVendorAtoken extends string,
+  TAccountVendorAssociatedToken extends string,
 >(
   input: CreateVendorInput<
     TAccountSystemProgram,
-    TAccountTokenProgram2022,
+    TAccountToken2022Program,
     TAccountAtaProgram,
     TAccountPayer,
-    TAccountDephy,
     TAccountVendor,
     TAccountVendorMint,
-    TAccountVendorAtoken
+    TAccountVendorAssociatedToken
   >
 ): CreateVendorInstruction<
   typeof DEPHY_ID_PROGRAM_ADDRESS,
   TAccountSystemProgram,
-  TAccountTokenProgram2022,
+  TAccountToken2022Program,
   TAccountAtaProgram,
   TAccountPayer,
-  TAccountDephy,
   TAccountVendor,
   TAccountVendorMint,
-  TAccountVendorAtoken
+  TAccountVendorAssociatedToken
 > {
   // Program address.
   const programAddress = DEPHY_ID_PROGRAM_ADDRESS;
@@ -228,16 +218,18 @@ export function getCreateVendorInstruction<
   // Original accounts.
   const originalAccounts = {
     systemProgram: { value: input.systemProgram ?? null, isWritable: false },
-    tokenProgram2022: {
-      value: input.tokenProgram2022 ?? null,
+    token2022Program: {
+      value: input.token2022Program ?? null,
       isWritable: false,
     },
     ataProgram: { value: input.ataProgram ?? null, isWritable: false },
     payer: { value: input.payer ?? null, isWritable: true },
-    dephy: { value: input.dephy ?? null, isWritable: false },
     vendor: { value: input.vendor ?? null, isWritable: false },
     vendorMint: { value: input.vendorMint ?? null, isWritable: true },
-    vendorAtoken: { value: input.vendorAtoken ?? null, isWritable: true },
+    vendorAssociatedToken: {
+      value: input.vendorAssociatedToken ?? null,
+      isWritable: true,
+    },
   };
   const accounts = originalAccounts as Record<
     keyof typeof originalAccounts,
@@ -261,13 +253,12 @@ export function getCreateVendorInstruction<
   const instruction = {
     accounts: [
       getAccountMeta(accounts.systemProgram),
-      getAccountMeta(accounts.tokenProgram2022),
+      getAccountMeta(accounts.token2022Program),
       getAccountMeta(accounts.ataProgram),
       getAccountMeta(accounts.payer),
-      getAccountMeta(accounts.dephy),
       getAccountMeta(accounts.vendor),
       getAccountMeta(accounts.vendorMint),
-      getAccountMeta(accounts.vendorAtoken),
+      getAccountMeta(accounts.vendorAssociatedToken),
     ],
     programAddress,
     data: getCreateVendorInstructionDataEncoder().encode(
@@ -276,13 +267,12 @@ export function getCreateVendorInstruction<
   } as CreateVendorInstruction<
     typeof DEPHY_ID_PROGRAM_ADDRESS,
     TAccountSystemProgram,
-    TAccountTokenProgram2022,
+    TAccountToken2022Program,
     TAccountAtaProgram,
     TAccountPayer,
-    TAccountDephy,
     TAccountVendor,
     TAccountVendorMint,
-    TAccountVendorAtoken
+    TAccountVendorAssociatedToken
   >;
 
   return instruction;
@@ -297,19 +287,17 @@ export type ParsedCreateVendorInstruction<
     /** The system program */
     systemProgram: TAccountMetas[0];
     /** The token 2022 program */
-    tokenProgram2022: TAccountMetas[1];
+    token2022Program: TAccountMetas[1];
     /** The associated token program */
     ataProgram: TAccountMetas[2];
     /** The account paying for the storage fees */
     payer: TAccountMetas[3];
-    /** The DePHY account */
-    dephy: TAccountMetas[4];
-    /** The Vendor pubkey */
-    vendor: TAccountMetas[5];
-    /** The Vendor mint */
-    vendorMint: TAccountMetas[6];
-    /** The atoken account for vendor */
-    vendorAtoken: TAccountMetas[7];
+    /** The vendor */
+    vendor: TAccountMetas[4];
+    /** The mint account of the vendor */
+    vendorMint: TAccountMetas[5];
+    /** The associated token account of the vendor */
+    vendorAssociatedToken: TAccountMetas[6];
   };
   data: CreateVendorInstructionData;
 };
@@ -322,7 +310,7 @@ export function parseCreateVendorInstruction<
     IInstructionWithAccounts<TAccountMetas> &
     IInstructionWithData<Uint8Array>
 ): ParsedCreateVendorInstruction<TProgram, TAccountMetas> {
-  if (instruction.accounts.length < 8) {
+  if (instruction.accounts.length < 7) {
     // TODO: Coded error.
     throw new Error('Not enough accounts');
   }
@@ -336,13 +324,12 @@ export function parseCreateVendorInstruction<
     programAddress: instruction.programAddress,
     accounts: {
       systemProgram: getNextAccount(),
-      tokenProgram2022: getNextAccount(),
+      token2022Program: getNextAccount(),
       ataProgram: getNextAccount(),
       payer: getNextAccount(),
-      dephy: getNextAccount(),
       vendor: getNextAccount(),
       vendorMint: getNextAccount(),
-      vendorAtoken: getNextAccount(),
+      vendorAssociatedToken: getNextAccount(),
     },
     data: getCreateVendorInstructionDataDecoder().decode(instruction.data),
   };

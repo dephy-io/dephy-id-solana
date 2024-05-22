@@ -79,14 +79,14 @@ fn initialize<'a>(
         Pubkey::find_program_address(&[PROGRAM_PDA_SEED_PREFIX], program_id);
     assert_same_pubkeys(
         "program_pda",
-        ctx.accounts.program_program_data,
+        ctx.accounts.program_data,
         &program_pda_pubkey,
     )?;
 
     let seeds: &[&[u8]] = &[PROGRAM_PDA_SEED_PREFIX, &[args.bump]];
     assert_pda(
         "program_pda",
-        ctx.accounts.program_program_data,
+        ctx.accounts.program_data,
         program_id,
         seeds,
     )?;
@@ -100,7 +100,7 @@ fn initialize<'a>(
     // CPIs
     // Create PDA
     create_account(
-        ctx.accounts.program_program_data,
+        ctx.accounts.program_data,
         ctx.accounts.payer,
         ctx.accounts.system_program,
         ProgramDataAccount::LEN,
@@ -115,7 +115,7 @@ fn initialize<'a>(
         data: ProgramData { bump: args.bump },
     };
 
-    program_pda.save(ctx.accounts.program_program_data)
+    program_pda.save(ctx.accounts.program_data)
 }
 
 fn create_vendor<'a>(

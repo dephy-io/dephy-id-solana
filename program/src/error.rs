@@ -60,6 +60,6 @@ impl From<Error> for ProgramError {
 
 impl<T> DecodeError<T> for Error {
     fn type_of() -> &'static str {
-        "DePHY program error"
+        "DePHY ID program error"
     }
 }
