@@ -3,6 +3,7 @@ use shank::{ShankContext, ShankInstruction};
 use solana_program::{keccak, pubkey::Pubkey};
 
 use crate::error::Error;
+use crate::DEVICE_MESSAGE_PREFIX;
 
 #[derive(BorshDeserialize, BorshSerialize, Clone, Debug, ShankContext, ShankInstruction)]
 #[rustfmt::skip]
@@ -97,7 +98,7 @@ pub enum DeviceSigningAlgorithm {
 }
 
 impl DeviceSigningAlgorithm {
-    const MESSAGE_PREFIX: [u8; 8] = *b"DEPHY_ID";
+    const MESSAGE_PREFIX: [u8; 8] = *DEVICE_MESSAGE_PREFIX;
     const ED25519_HEADER: [u8; 16] = [
         1, 0, 48, 0, 255, 255, 16, 0, 255, 255, 112, 0, 80, 0, 255, 255,
     ];

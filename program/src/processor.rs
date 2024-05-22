@@ -34,7 +34,7 @@ use crate::{
         ProgramDataAccount, ProgramData, Key,
     },
     utils::create_account,
-    PROGRAM_SEED_PREFIX, VENDOR_SEED_PREFIX, PRODUCT_SEED_PREFIX, DEVICE_SEED_PREFIX,
+    PROGRAM_PDA_SEED_PREFIX, VENDOR_PDA_SEED_PREFIX, PRODUCT_PDA_SEED_PREFIX, DEVICE_PDA_SEED_PREFIX,
 };
 
 pub fn process_instruction<'a>(
@@ -77,10 +77,10 @@ fn initialize<'a>(
     let ctx = InitializeAccounts::context(accounts)?;
 
     // Guards
-    let (program_pda_pubkey, _bump) = Pubkey::find_program_address(&[PROGRAM_SEED_PREFIX], program_id);
+    let (program_pda_pubkey, _bump) = Pubkey::find_program_address(&[PROGRAM_PDA_SEED_PREFIX], program_id);
     assert_same_pubkeys("program_pda", ctx.accounts.program_program_data, &program_pda_pubkey)?;
 
-    let seeds: &[&[u8]] = &[PROGRAM_SEED_PREFIX, &[args.bump]];
+    let seeds: &[&[u8]] = &[PROGRAM_PDA_SEED_PREFIX, &[args.bump]];
     assert_pda("program_pda", ctx.accounts.program_program_data, program_id, seeds)?;
     assert_signer("authority", ctx.accounts.authority)?;
     assert_same_pubkeys(
@@ -134,7 +134,7 @@ fn create_vendor<'a>(
         &token_program_id,
     )?;
 
-    let vendor_pda_seeds: &[&[u8]] = &[VENDOR_SEED_PREFIX, vendor_pubkey.as_ref(), &[args.bump]];
+    let vendor_pda_seeds: &[&[u8]] = &[VENDOR_PDA_SEED_PREFIX, vendor_pubkey.as_ref(), &[args.bump]];
     let vendor_pda_pubkey = Pubkey::create_program_address(vendor_pda_seeds, program_id)?;
     assert_same_pubkeys("vendor_pda", ctx.accounts.vendor_program_data, &vendor_pda_pubkey)?;
     assert_writable("vendor_pda", ctx.accounts.vendor_program_data)?;
@@ -337,7 +337,7 @@ fn create_product<'a>(
     assert_signer("vendor", ctx.accounts.vendor)?;
 
     let product_pda_seeds: &[&[u8]] = &[
-        PRODUCT_SEED_PREFIX,
+        PRODUCT_PDA_SEED_PREFIX,
         vendor_pubkey.as_ref(),
         args.name.as_ref(),
         &[args.bump],
@@ -346,7 +346,7 @@ fn create_product<'a>(
     assert_same_pubkeys("product_pda", ctx.accounts.product_program_data, &product_pda_pubkey)?;
 
     let (vendor_pda_pubkey, _) =
-        Pubkey::find_program_address(&[VENDOR_SEED_PREFIX, vendor_pubkey.as_ref()], program_id);
+        Pubkey::find_program_address(&[VENDOR_PDA_SEED_PREFIX, vendor_pubkey.as_ref()], program_id);
     assert_same_pubkeys("vendor_pda", ctx.accounts.vendor_program_data, &vendor_pda_pubkey)?;
 
     {
@@ -553,7 +553,7 @@ fn create_device<'a>(
 
     // Create the DID token
     let device_pda_seeds: &[&[u8]] = &[
-        DEVICE_SEED_PREFIX,
+        DEVICE_PDA_SEED_PREFIX,
         device_pubkey.as_ref(),
         &[args.bump],
     ];
@@ -734,7 +734,7 @@ fn activate_device<'a>(
         ctx.accounts.product_program_data,
         program_id,
         &[
-            PRODUCT_SEED_PREFIX,
+            PRODUCT_PDA_SEED_PREFIX,
             vendor_pubkey.as_ref(),
             product_mint_metadata.name.as_ref(),
         ],
@@ -753,7 +753,7 @@ fn activate_device<'a>(
 
     // Mint DID
     let did_mint_seeds: &[&[u8]] = &[
-        DEVICE_SEED_PREFIX,
+        DEVICE_PDA_SEED_PREFIX,
         device_pubkey.as_ref(),
         &[args.bump],
     ];

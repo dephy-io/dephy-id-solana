@@ -2,11 +2,12 @@
 
 use dephy_id_program::{
     instruction::{
-        ActivateDeviceArgs, CreateDeviceArgs, CreateProductArgs, CreateVendorArgs, InitializeArgs,
-        Instruction, DeviceSigningAlgorithm,
+        ActivateDeviceArgs, CreateDeviceArgs, CreateProductArgs, CreateVendorArgs,
+        DeviceSigningAlgorithm, InitializeArgs, Instruction,
     },
     state::ProgramDataAccount,
-    DEVICE_SEED_PREFIX, PRODUCT_SEED_PREFIX, PROGRAM_SEED_PREFIX, VENDOR_SEED_PREFIX,
+    DEVICE_MESSAGE_PREFIX, DEVICE_PDA_SEED_PREFIX, PRODUCT_PDA_SEED_PREFIX,
+    PROGRAM_PDA_SEED_PREFIX, VENDOR_PDA_SEED_PREFIX,
 };
 use solana_program::pubkey::Pubkey;
 use solana_program_test::*;
@@ -43,7 +44,8 @@ async fn test_smoke() {
     let user1 = Keypair::new();
 
     // Create DePHY account
-    let (program_pda_pubkey, bump) = Pubkey::find_program_address(&[PROGRAM_SEED_PREFIX], &program_id);
+    let (program_pda_pubkey, bump) =
+        Pubkey::find_program_address(&[PROGRAM_PDA_SEED_PREFIX], &program_id);
 
     let mut transaction = Transaction::new_with_payer(
         &[SolanaInstruction::new_with_borsh(
@@ -124,13 +126,9 @@ async fn test_smoke() {
     .await;
 }
 
-async fn test_create_vendor(
-    program_id: Pubkey,
-    ctx: &mut ProgramTestContext,
-    vendor: &Keypair,
-) {
+async fn test_create_vendor(program_id: Pubkey, ctx: &mut ProgramTestContext, vendor: &Keypair) {
     let (mint_pubkey, bump) = Pubkey::find_program_address(
-        &[VENDOR_SEED_PREFIX, &vendor.pubkey().to_bytes()],
+        &[VENDOR_PDA_SEED_PREFIX, &vendor.pubkey().to_bytes()],
         &program_id,
     );
 
@@ -214,7 +212,7 @@ async fn test_create_product(
     name: String,
 ) {
     let (vendor_mint_pubkey, _) = Pubkey::find_program_address(
-        &[VENDOR_SEED_PREFIX, &vendor.pubkey().to_bytes()],
+        &[VENDOR_PDA_SEED_PREFIX, &vendor.pubkey().to_bytes()],
         &program_id,
     );
 
@@ -226,7 +224,11 @@ async fn test_create_product(
         );
 
     let (product_mint_pubkey, mint_bump) = Pubkey::find_program_address(
-        &[PRODUCT_SEED_PREFIX, &vendor.pubkey().to_bytes(), name.as_ref()],
+        &[
+            PRODUCT_PDA_SEED_PREFIX,
+            &vendor.pubkey().to_bytes(),
+            name.as_ref(),
+        ],
         &program_id,
     );
 
@@ -302,7 +304,11 @@ async fn test_create_device(
     key_type: DeviceSigningAlgorithm,
 ) {
     let (product_mint_pubkey, _mint_bump) = Pubkey::find_program_address(
-        &[PRODUCT_SEED_PREFIX, &vendor.pubkey().to_bytes(), product_name],
+        &[
+            PRODUCT_PDA_SEED_PREFIX,
+            &vendor.pubkey().to_bytes(),
+            product_name,
+        ],
         &program_id,
     );
 
@@ -314,8 +320,10 @@ async fn test_create_device(
     );
 
     let device_pubkey = get_device_pubkey(device, key_type.clone());
-    let (did_mint_pubkey, did_mint_bump) =
-        Pubkey::find_program_address(&[DEVICE_SEED_PREFIX, device_pubkey.as_ref()], &program_id);
+    let (did_mint_pubkey, did_mint_bump) = Pubkey::find_program_address(
+        &[DEVICE_PDA_SEED_PREFIX, device_pubkey.as_ref()],
+        &program_id,
+    );
 
     let mut transaction = Transaction::new_with_payer(
         &[SolanaInstruction::new_with_borsh(
@@ -376,14 +384,20 @@ async fn test_activate_device(
     ctx.warp_to_slot(slot).unwrap();
 
     let (product_mint_pubkey, _) = Pubkey::find_program_address(
-        &[PRODUCT_SEED_PREFIX, vendor.pubkey().as_ref(), product_name],
+        &[
+            PRODUCT_PDA_SEED_PREFIX,
+            vendor.pubkey().as_ref(),
+            product_name,
+        ],
         &program_id,
     );
 
     let device_pubkey = get_device_pubkey(device, key_type.clone());
 
-    let (mint_pubkey, mint_bump) =
-        Pubkey::find_program_address(&[DEVICE_SEED_PREFIX, device_pubkey.as_ref()], &program_id);
+    let (mint_pubkey, mint_bump) = Pubkey::find_program_address(
+        &[DEVICE_PDA_SEED_PREFIX, device_pubkey.as_ref()],
+        &program_id,
+    );
 
     let product_atoken_pubkey =
         spl_associated_token_account::get_associated_token_address_with_program_id(
@@ -443,7 +457,7 @@ async fn test_activate_device(
         .expect_err("should fail");
 
     let message = [
-        b"DEPHY_ID",
+        DEVICE_MESSAGE_PREFIX,
         product_atoken_pubkey.as_ref(),
         user.pubkey().as_ref(),
         &slot.to_le_bytes(),
