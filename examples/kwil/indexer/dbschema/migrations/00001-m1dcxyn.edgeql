@@ -1,4 +1,4 @@
-CREATE MIGRATION m1jpfni6wypvwwv5l6zk5mfupnxwyxhbx7nlclorm7d37izlbvydoa
+CREATE MIGRATION m1dcxynsczsyb6kr6v7lzzrygf2li6ldn27xazqd75asfcb6ty4ycq
     ONTO initial
 {
   CREATE EXTENSION graphql VERSION '1.0';
@@ -30,7 +30,7 @@ CREATE MIGRATION m1jpfni6wypvwwv5l6zk5mfupnxwyxhbx7nlclorm7d37izlbvydoa
           CREATE PROPERTY ix_index: std::int16;
       };
   };
-  CREATE TYPE default::DePHY EXTENDING default::SolanaAccount, default::WithIx {
+  CREATE TYPE default::Program EXTENDING default::SolanaAccount, default::WithIx {
       CREATE REQUIRED LINK authority: default::Admin;
   };
   CREATE ABSTRACT TYPE default::SplAccount {
@@ -46,9 +46,9 @@ CREATE MIGRATION m1jpfni6wypvwwv5l6zk5mfupnxwyxhbx7nlclorm7d37izlbvydoa
       CREATE PROPERTY mint_authority: std::str;
   };
   CREATE TYPE default::DID EXTENDING default::SplMint, default::SplAccount, default::WithIx;
-  CREATE SCALAR TYPE default::KeyType EXTENDING enum<Ed25519, Secp256k1>;
+  CREATE SCALAR TYPE default::DeviceSigningAlgorithm EXTENDING enum<Ed25519, Secp256k1>;
   CREATE TYPE default::Device EXTENDING default::SolanaAccount, default::SplAccount, default::WithIx {
-      CREATE REQUIRED PROPERTY key_type: default::KeyType;
+      CREATE REQUIRED PROPERTY signing_alg: default::DeviceSigningAlgorithm;
       ALTER PROPERTY token_account {
           SET OWNED;
           SET REQUIRED;
@@ -68,10 +68,10 @@ CREATE MIGRATION m1jpfni6wypvwwv5l6zk5mfupnxwyxhbx7nlclorm7d37izlbvydoa
   };
   CREATE TYPE default::User EXTENDING default::SolanaAccount;
   ALTER TYPE default::DID {
-      CREATE LINK user: default::User;
+      CREATE LINK owner: default::User;
   };
   ALTER TYPE default::User {
-      CREATE MULTI LINK dids := (.<user[IS default::DID]);
+      CREATE MULTI LINK dids := (.<owner[IS default::DID]);
   };
   CREATE TYPE default::Product EXTENDING default::SplMint, default::WithIx;
   ALTER TYPE default::Device {
