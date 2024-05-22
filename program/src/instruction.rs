@@ -21,7 +21,7 @@ pub enum Instruction {
     #[account(2, name="ata_program", desc="The associated token program")]
     #[account(3, writable, signer, name="payer", desc="The account paying for the storage fees")]
     #[account(4, signer, name="vendor", desc="The vendor")]
-    #[account(5, writable, name="vendor_program_data", desc="The PDA of the vendor to store mint data")]
+    #[account(5, writable, name="vendor_mint", desc="The mint account of the vendor")]
     #[account(6, writable, name="vendor_associated_token", desc="The ATA of the vendor")]
     CreateVendor(CreateVendorArgs),
 
@@ -31,9 +31,9 @@ pub enum Instruction {
     #[account(1, name="token_2022_program", desc="The SPL Token 2022 program")]
     #[account(2, writable, signer, name="payer", desc="The account paying for the storage fees")]
     #[account(3, signer, name="vendor", desc="The vendor")]
-    #[account(4, name="vendor_program_data", desc="The PDA of the vendor to store mint data")]
+    #[account(4, name="vendor_mint", desc="The mint account of the vendor")]
     #[account(5, name="vendor_associated_token", desc="The ATA of the vendor")]
-    #[account(6, writable, name="product_program_data", desc="The PDA of the product to store mint data")]
+    #[account(6, writable, name="product_mint", desc="The mint account of the product")]
     CreateProduct(CreateProductArgs),
 
     /// Vendor register a Device
@@ -43,10 +43,10 @@ pub enum Instruction {
     #[account(2, name="ata_program", desc="The associated token program")]
     #[account(3, writable, signer, name="payer", desc="The account paying for the storage fees")]
     #[account(4, signer, name="vendor", desc="The vendor")]
-    #[account(5, writable, name="product_program_data", desc="The PDA of the product to store mint data")]
+    #[account(5, writable, name="product_mint", desc="The mint account of the product")]
     #[account(6, writable, name="product_associated_token", desc="The ATA of the product")]
     #[account(7, name="device", desc="The device")]
-    #[account(8, writable, name="device_program_data", desc="The PDA of the device to store mint data")]
+    #[account(8, writable, name="device_mint", desc="The mint account of the device")]
     CreateDevice(CreateDeviceArgs),
 
     /// User activate a Device
@@ -56,10 +56,10 @@ pub enum Instruction {
     #[account(3, name="instructions", desc="The instructions sysvar")]
     #[account(4, writable, signer, name="payer", desc="The account paying for the storage fees")]
     #[account(5, name="vendor", desc="The vendor")]
-    #[account(6, name="product_program_data", desc="The PDA for the product to store mint data")]
+    #[account(6, name="product_mint", desc="The mint account for the product")]
     #[account(7, name="product_associated_token", desc="The ATA for the product")]
     #[account(8, name="device", desc="The device")]
-    #[account(9, writable, name="device_program_data", desc="The PDA for the device to store mint data")]
+    #[account(9, writable, name="device_mint", desc="The mint account for the device")]
     #[account(10, writable, name="device_associated_token", desc="The ATA for the device")]
     #[account(11, name="owner", desc="The device's owner")]
     ActivateDevice(ActivateDeviceArgs),
@@ -156,5 +156,5 @@ pub struct CreateDeviceArgs {
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
 pub struct ActivateDeviceArgs {
     pub bump: u8,
-    pub key_type: DeviceSigningAlgorithm,
+    pub signing_alg: DeviceSigningAlgorithm,
 }

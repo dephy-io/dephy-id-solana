@@ -6,8 +6,8 @@ use dephy_id_program::{
         DeviceSigningAlgorithm, InitializeArgs, Instruction,
     },
     state::ProgramDataAccount,
-    DEVICE_MESSAGE_PREFIX, DEVICE_PDA_SEED_PREFIX, PRODUCT_PDA_SEED_PREFIX,
-    PROGRAM_PDA_SEED_PREFIX, VENDOR_PDA_SEED_PREFIX,
+    DEVICE_MESSAGE_PREFIX, DEVICE_MINT_SEED_PREFIX, PRODUCT_MINT_SEED_PREFIX,
+    PROGRAM_PDA_SEED_PREFIX, VENDOR_MINT_SEED_PREFIX,
 };
 use solana_program::pubkey::Pubkey;
 use solana_program_test::*;
@@ -128,7 +128,7 @@ async fn test_smoke() {
 
 async fn test_create_vendor(program_id: Pubkey, ctx: &mut ProgramTestContext, vendor: &Keypair) {
     let (mint_pubkey, bump) = Pubkey::find_program_address(
-        &[VENDOR_PDA_SEED_PREFIX, &vendor.pubkey().to_bytes()],
+        &[VENDOR_MINT_SEED_PREFIX, &vendor.pubkey().to_bytes()],
         &program_id,
     );
 
@@ -212,7 +212,7 @@ async fn test_create_product(
     name: String,
 ) {
     let (vendor_mint_pubkey, _) = Pubkey::find_program_address(
-        &[VENDOR_PDA_SEED_PREFIX, &vendor.pubkey().to_bytes()],
+        &[VENDOR_MINT_SEED_PREFIX, &vendor.pubkey().to_bytes()],
         &program_id,
     );
 
@@ -225,7 +225,7 @@ async fn test_create_product(
 
     let (product_mint_pubkey, mint_bump) = Pubkey::find_program_address(
         &[
-            PRODUCT_PDA_SEED_PREFIX,
+            PRODUCT_MINT_SEED_PREFIX,
             &vendor.pubkey().to_bytes(),
             name.as_ref(),
         ],
@@ -305,7 +305,7 @@ async fn test_create_device(
 ) {
     let (product_mint_pubkey, _mint_bump) = Pubkey::find_program_address(
         &[
-            PRODUCT_PDA_SEED_PREFIX,
+            PRODUCT_MINT_SEED_PREFIX,
             &vendor.pubkey().to_bytes(),
             product_name,
         ],
@@ -321,7 +321,7 @@ async fn test_create_device(
 
     let device_pubkey = get_device_pubkey(device, key_type.clone());
     let (did_mint_pubkey, did_mint_bump) = Pubkey::find_program_address(
-        &[DEVICE_PDA_SEED_PREFIX, device_pubkey.as_ref()],
+        &[DEVICE_MINT_SEED_PREFIX, device_pubkey.as_ref()],
         &program_id,
     );
 
@@ -385,7 +385,7 @@ async fn test_activate_device(
 
     let (product_mint_pubkey, _) = Pubkey::find_program_address(
         &[
-            PRODUCT_PDA_SEED_PREFIX,
+            PRODUCT_MINT_SEED_PREFIX,
             vendor.pubkey().as_ref(),
             product_name,
         ],
@@ -395,7 +395,7 @@ async fn test_activate_device(
     let device_pubkey = get_device_pubkey(device, key_type.clone());
 
     let (mint_pubkey, mint_bump) = Pubkey::find_program_address(
-        &[DEVICE_PDA_SEED_PREFIX, device_pubkey.as_ref()],
+        &[DEVICE_MINT_SEED_PREFIX, device_pubkey.as_ref()],
         &program_id,
     );
 
@@ -416,7 +416,7 @@ async fn test_activate_device(
         program_id,
         &Instruction::ActivateDevice(ActivateDeviceArgs {
             bump: mint_bump,
-            key_type: key_type.clone(),
+            signing_alg: key_type.clone(),
         }),
         vec![
             // #[account(0, name="system_program", desc="The system program")]
