@@ -7,8 +7,14 @@ use spl_token_2022::{extension::StateWithExtensions, state::Account};
 
 use crate::{
     assertions::assert_same_pubkeys,
-    instruction::{accounts::{LinkAccounts, PublishAccounts, SubscribeAccounts}, KwilExampleInstruction, PublishArgs},
-    state::{Key, LinkedAccount, LinkedData, PublisherAccount, PublisherData, SubscriberAccount, SubscriberData},
+    instruction::{
+        accounts::{LinkAccounts, PublishAccounts, SubscribeAccounts},
+        KwilExampleInstruction, PublishArgs,
+    },
+    state::{
+        Key, LinkedAccount, LinkedData, PublisherAccount, PublisherData, SubscriberAccount,
+        SubscriberData,
+    },
     utils::create_account,
 };
 
@@ -67,7 +73,6 @@ fn process_publish<'a>(
     publisher_account.save(ctx.accounts.publisher)
 }
 
-
 fn process_link<'a>(
     program_id: &Pubkey,
     accounts: &'a [AccountInfo<'a>],
@@ -80,7 +85,7 @@ fn process_link<'a>(
         b"LINKED",
         user_pubkey.as_ref(),
         &args.eth_address,
-        &[args.bump]
+        &[args.bump],
     ];
     let linked_pubkey = Pubkey::create_program_address(seeds, program_id)?;
     assert_same_pubkeys("linked", ctx.accounts.linked, &linked_pubkey)?;
@@ -100,12 +105,11 @@ fn process_link<'a>(
         data: LinkedData {
             bump: args.bump,
             eth_address: args.eth_address,
-        }
+        },
     };
 
     linked_account.save(ctx.accounts.linked)
 }
-
 
 fn process_subscribe<'a>(
     program_id: &Pubkey,
@@ -121,13 +125,17 @@ fn process_subscribe<'a>(
         b"SUBSCRIBER",
         publisher_pubkey.as_ref(),
         linked_pubkey.as_ref(),
-        &[args.bump]
+        &[args.bump],
     ];
     let subscriber_pubkey = Pubkey::create_program_address(seeds, program_id)?;
     assert_same_pubkeys("subscriber", ctx.accounts.subscriber, &subscriber_pubkey)?;
 
     let linked_account = LinkedAccount::load(ctx.accounts.linked)?;
-    assert_same_pubkeys("Linked Account", ctx.accounts.user, &linked_account.authority)?;
+    assert_same_pubkeys(
+        "Linked Account",
+        ctx.accounts.user,
+        &linked_account.authority,
+    )?;
     let _publisher_account = PublisherAccount::load(ctx.accounts.publisher)?;
 
     create_account(
@@ -146,7 +154,7 @@ fn process_subscribe<'a>(
             bump: args.bump,
             publisher: *publisher_pubkey,
             linked: *linked_pubkey,
-        }
+        },
     };
 
     subscriber_account.save(ctx.accounts.subscriber)

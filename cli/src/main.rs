@@ -3,11 +3,10 @@ use std::{error::Error, time::Duration};
 use clap::{Args, Parser, Subcommand, ValueEnum};
 use dephy_id_program_client::{
     instructions::{
-        ActivateDeviceBuilder, InitializeBuilder, CreateDeviceBuilder, CreateProductBuilder,
-        CreateVendorBuilder,
+        ActivateDeviceBuilder, CreateDeviceBuilder, CreateProductBuilder, CreateVendorBuilder,
+        InitializeBuilder,
     },
-    types,
-    ID as PROGRAM_ID,
+    types, ID as PROGRAM_ID,
 };
 use solana_client::rpc_client::RpcClient;
 use solana_sdk::{
@@ -202,10 +201,7 @@ fn read_key_or(path: Option<String>, default_path: &String) -> Keypair {
 
 fn create_dephy(args: InitializeCliArgs) {
     let client = get_client(&args.common.url);
-    let program_id = args
-        .common
-        .program_id
-        .unwrap_or(PROGRAM_ID);
+    let program_id = args.common.program_id.unwrap_or(PROGRAM_ID);
 
     let admin = read_key(&args.admin_keypair);
     let (dephy_pubkey, bump) = Pubkey::find_program_address(&[b"DePHY"], &program_id);
@@ -238,10 +234,7 @@ fn create_dephy(args: InitializeCliArgs) {
 
 fn create_vendor(args: CreateVendorCliArgs) {
     let client = get_client(&args.common.url);
-    let program_id = args
-        .common
-        .program_id
-        .unwrap_or(PROGRAM_ID);
+    let program_id = args.common.program_id.unwrap_or(PROGRAM_ID);
     let token_program_id = spl_token_2022::ID;
 
     let vendor = read_key(&args.vendor_keypair);
@@ -297,17 +290,18 @@ fn create_vendor(args: CreateVendorCliArgs) {
 
 fn create_product(args: CreateProductCliArgs) {
     let client = get_client(&args.common.url);
-    let program_id = args
-        .common
-        .program_id
-        .unwrap_or(PROGRAM_ID);
+    let program_id = args.common.program_id.unwrap_or(PROGRAM_ID);
     let token_program_id = spl_token_2022::ID;
 
     let vendor = read_key(&args.vendor_keypair);
     let payer = read_key_or(args.common.payer, &args.vendor_keypair);
 
     let (product_mint_pubkey, bump) = Pubkey::find_program_address(
-        &[b"DePHY PRODUCT", vendor.pubkey().as_ref(), args.name.as_ref()],
+        &[
+            b"DePHY PRODUCT",
+            vendor.pubkey().as_ref(),
+            args.name.as_ref(),
+        ],
         &program_id,
     );
 
@@ -367,10 +361,7 @@ fn get_device_pubkey(device: &Keypair, key_type: KeyType) -> Pubkey {
 fn create_device(args: CreateDeviceCliArgs) {
     let client = get_client(&args.common.url);
     let token_program_id = spl_token_2022::ID;
-    let program_id = args
-        .common
-        .program_id
-        .unwrap_or(PROGRAM_ID);
+    let program_id = args.common.program_id.unwrap_or(PROGRAM_ID);
 
     let vendor = read_key(&args.vendor_keypair);
     let payer = read_key_or(args.common.payer, &args.vendor_keypair);
@@ -382,10 +373,8 @@ fn create_device(args: CreateDeviceCliArgs) {
             &token_program_id,
         );
 
-    let (did_mint_pubkey, bump) = Pubkey::find_program_address(
-        &[b"DePHY DID", args.device_pubkey.as_ref()],
-        &program_id,
-    );
+    let (did_mint_pubkey, bump) =
+        Pubkey::find_program_address(&[b"DePHY DID", args.device_pubkey.as_ref()], &program_id);
 
     let latest_block = client.get_latest_blockhash().unwrap();
     let transaction = Transaction::new_signed_with_payer(
@@ -422,10 +411,7 @@ fn create_device(args: CreateDeviceCliArgs) {
 
 fn activate_device(args: ActivateDeviceCliArgs) {
     let client = get_client(&args.common.url);
-    let program_id = args
-        .common
-        .program_id
-        .unwrap_or(PROGRAM_ID);
+    let program_id = args.common.program_id.unwrap_or(PROGRAM_ID);
     let token_program_id = spl_token_2022::ID;
     let instructions_id = instructions::ID;
 
@@ -441,10 +427,8 @@ fn activate_device(args: ActivateDeviceCliArgs) {
             &token_program_id,
         );
 
-    let (did_mint_pubkey, bump) = Pubkey::find_program_address(
-        &[b"DePHY DID", device_pubkey.as_ref()],
-        &program_id,
-    );
+    let (did_mint_pubkey, bump) =
+        Pubkey::find_program_address(&[b"DePHY DID", device_pubkey.as_ref()], &program_id);
 
     let did_atoken_pubkey =
         spl_associated_token_account::get_associated_token_address_with_program_id(
@@ -541,10 +525,13 @@ fn generate_message(args: GenerateMessageCliArgs) {
         product_atoken_pubkey.as_ref(),
         args.user_pubkey.as_ref(),
         &slot.to_le_bytes(),
-    ].concat();
+    ]
+    .concat();
 
-    let msg = message.iter().map(|b| format!("{:0x?}", b)).collect::<Vec<_>>().join("");
+    let msg = message
+        .iter()
+        .map(|b| format!("{:0x?}", b))
+        .collect::<Vec<_>>()
+        .join("");
     println!("0x{}", msg);
-
 }
-
