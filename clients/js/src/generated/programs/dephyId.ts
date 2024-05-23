@@ -18,7 +18,7 @@ import {
 import { Key, getKeyEncoder } from '../types';
 
 export const DEPHY_ID_PROGRAM_ADDRESS =
-  'hdMghjD73uASxgJXi6e1mGPsXqnADMsrqB1bveqABP1' as Address<'hdMghjD73uASxgJXi6e1mGPsXqnADMsrqB1bveqABP1'>;
+  'DiSU1nme5VJvMdry5FYhfw6LLFb3HUFLkCLZDe53x3PV' as Address<'DiSU1nme5VJvMdry5FYhfw6LLFb3HUFLkCLZDe53x3PV'>;
 
 export enum DephyIdAccount {
   ProgramDataAccount,
@@ -74,7 +74,7 @@ export function identifyDephyIdInstruction(
 }
 
 export type ParsedDephyIdInstruction<
-  TProgram extends string = 'hdMghjD73uASxgJXi6e1mGPsXqnADMsrqB1bveqABP1',
+  TProgram extends string = 'DiSU1nme5VJvMdry5FYhfw6LLFb3HUFLkCLZDe53x3PV',
 > =
   | ({
       instructionType: DephyIdInstruction.Initialize;
