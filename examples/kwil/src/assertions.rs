@@ -1,8 +1,5 @@
 use crate::{error::KwilError, state::Key};
-use solana_program::{
-    account_info::AccountInfo, entrypoint::ProgramResult, msg,
-    pubkey::Pubkey,
-};
+use solana_program::{account_info::AccountInfo, entrypoint::ProgramResult, msg, pubkey::Pubkey};
 
 /// Assert that the given account is owned by the given program.
 pub fn assert_program_owner(

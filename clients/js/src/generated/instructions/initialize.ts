@@ -37,7 +37,7 @@ export type InitializeInstruction<
     | string
     | IAccountMeta<string> = '11111111111111111111111111111111',
   TAccountPayer extends string | IAccountMeta<string> = string,
-  TAccountDephy extends string | IAccountMeta<string> = string,
+  TAccountProgramData extends string | IAccountMeta<string> = string,
   TAccountAuthority extends string | IAccountMeta<string> = string,
   TRemainingAccounts extends readonly IAccountMeta<string>[] = [],
 > = IInstruction<TProgram> &
@@ -51,9 +51,9 @@ export type InitializeInstruction<
         ? WritableSignerAccount<TAccountPayer> &
             IAccountSignerMeta<TAccountPayer>
         : TAccountPayer,
-      TAccountDephy extends string
-        ? WritableAccount<TAccountDephy>
-        : TAccountDephy,
+      TAccountProgramData extends string
+        ? WritableAccount<TAccountProgramData>
+        : TAccountProgramData,
       TAccountAuthority extends string
         ? ReadonlySignerAccount<TAccountAuthority> &
             IAccountSignerMeta<TAccountAuthority>
@@ -96,16 +96,16 @@ export function getInitializeInstructionDataCodec(): Codec<
 export type InitializeInput<
   TAccountSystemProgram extends string = string,
   TAccountPayer extends string = string,
-  TAccountDephy extends string = string,
+  TAccountProgramData extends string = string,
   TAccountAuthority extends string = string,
 > = {
   /** The system program */
   systemProgram?: Address<TAccountSystemProgram>;
   /** The account paying for the storage fees */
   payer: TransactionSigner<TAccountPayer>;
-  /** The address of the DePHY account */
-  dephy: Address<TAccountDephy>;
-  /** The authority of the DePHY account */
+  /** The program data account for the program */
+  programData: Address<TAccountProgramData>;
+  /** The authority account of the program */
   authority: TransactionSigner<TAccountAuthority>;
   bump: InitializeInstructionDataArgs['bump'];
 };
@@ -113,20 +113,20 @@ export type InitializeInput<
 export function getInitializeInstruction<
   TAccountSystemProgram extends string,
   TAccountPayer extends string,
-  TAccountDephy extends string,
+  TAccountProgramData extends string,
   TAccountAuthority extends string,
 >(
   input: InitializeInput<
     TAccountSystemProgram,
     TAccountPayer,
-    TAccountDephy,
+    TAccountProgramData,
     TAccountAuthority
   >
 ): InitializeInstruction<
   typeof DEPHY_ID_PROGRAM_ADDRESS,
   TAccountSystemProgram,
   TAccountPayer,
-  TAccountDephy,
+  TAccountProgramData,
   TAccountAuthority
 > {
   // Program address.
@@ -136,7 +136,7 @@ export function getInitializeInstruction<
   const originalAccounts = {
     systemProgram: { value: input.systemProgram ?? null, isWritable: false },
     payer: { value: input.payer ?? null, isWritable: true },
-    dephy: { value: input.dephy ?? null, isWritable: true },
+    programData: { value: input.programData ?? null, isWritable: true },
     authority: { value: input.authority ?? null, isWritable: false },
   };
   const accounts = originalAccounts as Record<
@@ -158,7 +158,7 @@ export function getInitializeInstruction<
     accounts: [
       getAccountMeta(accounts.systemProgram),
       getAccountMeta(accounts.payer),
-      getAccountMeta(accounts.dephy),
+      getAccountMeta(accounts.programData),
       getAccountMeta(accounts.authority),
     ],
     programAddress,
@@ -169,7 +169,7 @@ export function getInitializeInstruction<
     typeof DEPHY_ID_PROGRAM_ADDRESS,
     TAccountSystemProgram,
     TAccountPayer,
-    TAccountDephy,
+    TAccountProgramData,
     TAccountAuthority
   >;
 
@@ -186,9 +186,9 @@ export type ParsedInitializeInstruction<
     systemProgram: TAccountMetas[0];
     /** The account paying for the storage fees */
     payer: TAccountMetas[1];
-    /** The address of the DePHY account */
-    dephy: TAccountMetas[2];
-    /** The authority of the DePHY account */
+    /** The program data account for the program */
+    programData: TAccountMetas[2];
+    /** The authority account of the program */
     authority: TAccountMetas[3];
   };
   data: InitializeInstructionData;
@@ -217,7 +217,7 @@ export function parseInitializeInstruction<
     accounts: {
       systemProgram: getNextAccount(),
       payer: getNextAccount(),
-      dephy: getNextAccount(),
+      programData: getNextAccount(),
       authority: getNextAccount(),
     },
     data: getInitializeInstructionDataDecoder().decode(instruction.data),

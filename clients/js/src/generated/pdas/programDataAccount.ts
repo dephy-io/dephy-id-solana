@@ -13,7 +13,7 @@ import {
   getUtf8Encoder,
 } from '@solana/web3.js';
 
-export async function findDephyAccountPda(
+export async function findProgramDataAccountPda(
   config: { programAddress?: Address | undefined } = {}
 ): Promise<ProgramDerivedAddress> {
   const {
@@ -21,6 +21,6 @@ export async function findDephyAccountPda(
   } = config;
   return await getProgramDerivedAddress({
     programAddress,
-    seeds: [getUtf8Encoder().encode('DePHY')],
+    seeds: [getUtf8Encoder().encode('DePHY_ID')],
   });
 }

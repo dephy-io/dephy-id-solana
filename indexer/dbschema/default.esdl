@@ -52,7 +52,7 @@ module default {
     type Admin extending SolanaAccount {
     }
 
-    type DePHY extending SolanaAccount, WithIx {
+    type Program extending SolanaAccount, WithIx {
         required authority: Admin;
     }
 
@@ -70,11 +70,11 @@ module default {
         multi devices := .<product[is Device];
     }
 
-    scalar type KeyType extending enum<Ed25519, Secp256k1>;
+    scalar type DeviceSigningAlgorithm extending enum<Ed25519, Secp256k1>;
 
     type Device extending SolanaAccount, SplAccount, WithIx {
         required product: Product;
-        required key_type: KeyType;
+        required signing_alg: DeviceSigningAlgorithm;
         overloaded required token_account: str {
             constraint exclusive;
         };
@@ -83,7 +83,7 @@ module default {
     }
 
     type User extending SolanaAccount {
-        multi dids := .<user[is DID];
+        multi dids := .<owner[is DID];
     }
 
     type DID extending SplMint, SplAccount, WithIx {
@@ -91,7 +91,6 @@ module default {
             constraint exclusive;
         };
 
-        user: User;
+        owner: User;
     }
 }
-

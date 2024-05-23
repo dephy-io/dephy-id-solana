@@ -1,11 +1,13 @@
-// #![cfg(feature = "test-sbf")]
+#![cfg(feature = "test-sbf")]
 
 use dephy_id_program::{
     instruction::{
         ActivateDeviceArgs, CreateDeviceArgs, CreateProductArgs, CreateVendorArgs,
-        Instruction, KeyType,
+        DeviceSigningAlgorithm, InitializeArgs, Instruction,
     },
-    state::DephyAccount,
+    state::ProgramDataAccount,
+    DEVICE_MESSAGE_PREFIX, DEVICE_MINT_SEED_PREFIX, PRODUCT_MINT_SEED_PREFIX,
+    PROGRAM_PDA_SEED_PREFIX, VENDOR_MINT_SEED_PREFIX,
 };
 use solana_program::pubkey::Pubkey;
 use solana_program_test::*;
@@ -26,7 +28,6 @@ use spl_token_2022::{
 };
 use spl_token_metadata_interface::state::TokenMetadata;
 use std::str::FromStr;
-use dephy_id_program::instruction::InitializeArgs;
 
 #[tokio::test]
 async fn test_smoke() {
@@ -43,7 +44,8 @@ async fn test_smoke() {
     let user1 = Keypair::new();
 
     // Create DePHY account
-    let (dephy_pubkey, bump) = Pubkey::find_program_address(&[b"DePHY"], &program_id);
+    let (program_pda_pubkey, bump) =
+        Pubkey::find_program_address(&[PROGRAM_PDA_SEED_PREFIX], &program_id);
 
     let mut transaction = Transaction::new_with_payer(
         &[SolanaInstruction::new_with_borsh(
@@ -52,7 +54,7 @@ async fn test_smoke() {
             vec![
                 AccountMeta::new(system_program::id(), false),
                 AccountMeta::new(ctx.payer.pubkey(), true),
-                AccountMeta::new(dephy_pubkey, false),
+                AccountMeta::new(program_pda_pubkey, false),
                 AccountMeta::new(admin.pubkey(), true),
             ],
         )],
@@ -67,13 +69,13 @@ async fn test_smoke() {
     // Associated account now exists
     let allocated_account = ctx
         .banks_client
-        .get_account(dephy_pubkey)
+        .get_account(program_pda_pubkey)
         .await
         .expect("get_account")
-        .expect("DePHY account not none");
-    assert_eq!(allocated_account.data.len(), DephyAccount::LEN);
+        .expect("Account not none");
+    assert_eq!(allocated_account.data.len(), ProgramDataAccount::LEN);
 
-    test_create_vendor(program_id, &mut ctx, dephy_pubkey, &vendor).await;
+    test_create_vendor(program_id, &mut ctx, &vendor).await;
 
     let product_name = "Example Product 1".to_string();
 
@@ -85,7 +87,7 @@ async fn test_smoke() {
         &vendor,
         &device1,
         product_name.as_ref(),
-        KeyType::Ed25519,
+        DeviceSigningAlgorithm::Ed25519,
     )
     .await;
 
@@ -96,7 +98,7 @@ async fn test_smoke() {
         product_name.as_ref(),
         &device1,
         &user1,
-        KeyType::Ed25519,
+        DeviceSigningAlgorithm::Ed25519,
         1_000,
     )
     .await;
@@ -107,7 +109,7 @@ async fn test_smoke() {
         &vendor,
         &device2,
         product_name.as_ref(),
-        KeyType::Secp256k1,
+        DeviceSigningAlgorithm::Secp256k1,
     )
     .await;
 
@@ -118,26 +120,24 @@ async fn test_smoke() {
         product_name.as_ref(),
         &device2,
         &user1,
-        KeyType::Secp256k1,
+        DeviceSigningAlgorithm::Secp256k1,
         2_000,
     )
     .await;
 }
 
-async fn test_create_vendor(
-    program_id: Pubkey,
-    ctx: &mut ProgramTestContext,
-    dephy: Pubkey,
-    vendor: &Keypair,
-) {
-    let (mint_pubkey, bump) =
-        Pubkey::find_program_address(&[b"DePHY VENDOR", &vendor.pubkey().to_bytes()], &program_id);
-
-    let atoken_pubkey = spl_associated_token_account::get_associated_token_address_with_program_id(
-        &vendor.pubkey(),
-        &mint_pubkey,
-        &spl_token_2022::id(),
+async fn test_create_vendor(program_id: Pubkey, ctx: &mut ProgramTestContext, vendor: &Keypair) {
+    let (vendor_mint_pubkey, bump) = Pubkey::find_program_address(
+        &[VENDOR_MINT_SEED_PREFIX, &vendor.pubkey().to_bytes()],
+        &program_id,
     );
+
+    let vendor_ata_pubkey =
+        spl_associated_token_account::get_associated_token_address_with_program_id(
+            &vendor.pubkey(),
+            &vendor_mint_pubkey,
+            &spl_token_2022::id(),
+        );
 
     let mut transaction = Transaction::new_with_payer(
         &[SolanaInstruction::new_with_borsh(
@@ -154,10 +154,9 @@ async fn test_create_vendor(
                 AccountMeta::new(spl_token_2022::id(), false),
                 AccountMeta::new(spl_associated_token_account::id(), false),
                 AccountMeta::new(ctx.payer.pubkey(), true),
-                AccountMeta::new(dephy, false),
                 AccountMeta::new(vendor.pubkey(), true),
-                AccountMeta::new(mint_pubkey, false),
-                AccountMeta::new(atoken_pubkey, false),
+                AccountMeta::new(vendor_mint_pubkey, false),
+                AccountMeta::new(vendor_ata_pubkey, false),
             ],
         )],
         Some(&ctx.payer.pubkey()),
@@ -171,39 +170,43 @@ async fn test_create_vendor(
         .unwrap();
 
     // Mint account
-    let mint_account = ctx
+    let vendor_mint_account = ctx
         .banks_client
-        .get_account(mint_pubkey)
+        .get_account(vendor_mint_pubkey)
         .await
         .expect("get_account")
         .expect("mint account not none");
 
-    let mint_state = StateWithExtensions::<Mint>::unpack(mint_account.data()).unwrap();
+    let vendor_mint_state =
+        StateWithExtensions::<Mint>::unpack(vendor_mint_account.data()).unwrap();
     assert_eq!(
-        mint_state.try_get_account_len().unwrap() > 238,
+        vendor_mint_state.try_get_account_len().unwrap() > 238,
         true,
         "account size"
     );
     assert_eq!(
-        mint_state.try_get_account_len().unwrap() > 238,
+        vendor_mint_state.try_get_account_len().unwrap() > 238,
         true,
         "account size"
     );
 
-    let mint_metadata = mint_state
+    let vendor_mint_metadata = vendor_mint_state
         .get_variable_len_extension::<TokenMetadata>()
         .unwrap();
-    assert_eq!(mint_metadata.name, "DePHY Example Vendor", "metadata name");
+    assert_eq!(
+        vendor_mint_metadata.name, "DePHY Example Vendor",
+        "metadata name"
+    );
 
     // Associated account now exists
-    let atoken_account = ctx
+    let vendor_ata = ctx
         .banks_client
-        .get_account(atoken_pubkey)
+        .get_account(vendor_ata_pubkey)
         .await
         .expect("get_account")
         .expect("atoken account not none");
 
-    let account_state = StateWithExtensions::<Account>::unpack(atoken_account.data()).unwrap();
+    let account_state = StateWithExtensions::<Account>::unpack(vendor_ata.data()).unwrap();
     assert_eq!(account_state.base.amount, 1, "coin not 1");
 }
 
@@ -213,10 +216,12 @@ async fn test_create_product(
     vendor: &Keypair,
     name: String,
 ) {
-    let (vendor_mint_pubkey, _) =
-        Pubkey::find_program_address(&[b"DePHY VENDOR", &vendor.pubkey().to_bytes()], &program_id);
+    let (vendor_mint_pubkey, _) = Pubkey::find_program_address(
+        &[VENDOR_MINT_SEED_PREFIX, &vendor.pubkey().to_bytes()],
+        &program_id,
+    );
 
-    let vendor_atoken_pubkey =
+    let vendor_ata_pubkey =
         spl_associated_token_account::get_associated_token_address_with_program_id(
             &vendor.pubkey(),
             &vendor_mint_pubkey,
@@ -224,7 +229,11 @@ async fn test_create_product(
         );
 
     let (product_mint_pubkey, mint_bump) = Pubkey::find_program_address(
-        &[b"DePHY PRODUCT", &vendor.pubkey().to_bytes(), name.as_ref()],
+        &[
+            PRODUCT_MINT_SEED_PREFIX,
+            &vendor.pubkey().to_bytes(),
+            name.as_ref(),
+        ],
         &program_id,
     );
 
@@ -243,9 +252,9 @@ async fn test_create_product(
                 AccountMeta::new(spl_token_2022::id(), false),
                 AccountMeta::new(ctx.payer.pubkey(), true),
                 AccountMeta::new(vendor.pubkey(), true),
-                AccountMeta::new(product_mint_pubkey, false),
                 AccountMeta::new(vendor_mint_pubkey, false),
-                AccountMeta::new(vendor_atoken_pubkey, false),
+                AccountMeta::new(vendor_ata_pubkey, false),
+                AccountMeta::new(product_mint_pubkey, false),
             ],
         )],
         Some(&ctx.payer.pubkey()),
@@ -259,30 +268,34 @@ async fn test_create_product(
         .unwrap();
 
     // Mint account
-    let mint_account = ctx
+    let product_mint_account = ctx
         .banks_client
         .get_account(product_mint_pubkey)
         .await
         .expect("get_account")
         .expect("mint account not none");
 
-    let mint_state = StateWithExtensions::<Mint>::unpack(mint_account.data()).unwrap();
+    let product_mint_state =
+        StateWithExtensions::<Mint>::unpack(product_mint_account.data()).unwrap();
     assert_eq!(
-        mint_state.try_get_account_len().unwrap() > 238,
+        product_mint_state.try_get_account_len().unwrap() > 238,
         true,
         "account size"
     );
 
-    let mint_metadata = mint_state
+    let product_mint_metadata = product_mint_state
         .get_variable_len_extension::<TokenMetadata>()
         .unwrap();
-    assert_eq!(mint_metadata.name, "Example Product 1", "metadata name");
+    assert_eq!(
+        product_mint_metadata.name, "Example Product 1",
+        "metadata name"
+    );
 }
 
-fn get_device_pubkey(device: &Keypair, key_type: KeyType) -> Pubkey {
-    match key_type {
-        KeyType::Ed25519 => device.pubkey(),
-        KeyType::Secp256k1 => {
+fn get_device_pubkey(device: &Keypair, signing_alg: DeviceSigningAlgorithm) -> Pubkey {
+    match signing_alg {
+        DeviceSigningAlgorithm::Ed25519 => device.pubkey(),
+        DeviceSigningAlgorithm::Secp256k1 => {
             let privkey = libsecp256k1::SecretKey::parse(device.secret().as_bytes()).unwrap();
             let pubkey = libsecp256k1::PublicKey::from_secret_key(&privkey);
             let hash = keccak::hash(&pubkey.serialize()[1..]);
@@ -297,23 +310,28 @@ async fn test_create_device(
     vendor: &Keypair,
     device: &Keypair,
     product_name: &[u8],
-    key_type: KeyType,
+    signing_alg: DeviceSigningAlgorithm,
 ) {
-    let (product_mint_pubkey, _mint_bump) = Pubkey::find_program_address(
-        &[b"DePHY PRODUCT", &vendor.pubkey().to_bytes(), product_name],
+    let (product_mint_pubkey, _bump) = Pubkey::find_program_address(
+        &[
+            PRODUCT_MINT_SEED_PREFIX,
+            &vendor.pubkey().to_bytes(),
+            product_name,
+        ],
         &program_id,
     );
 
-    let device_pubkey = get_device_pubkey(device, key_type.clone());
-    let atoken_pubkey = spl_associated_token_account::get_associated_token_address_with_program_id(
-        &device_pubkey,
-        &product_mint_pubkey,
-        &spl_token_2022::id(),
-    );
+    let device_pubkey = get_device_pubkey(device, signing_alg.clone());
+    let product_ata_pubkey =
+        spl_associated_token_account::get_associated_token_address_with_program_id(
+            &device_pubkey,
+            &product_mint_pubkey,
+            &spl_token_2022::id(),
+        );
 
-    let device_pubkey = get_device_pubkey(device, key_type.clone());
-    let (did_mint_pubkey, did_mint_bump) = Pubkey::find_program_address(
-        &[b"DePHY DID", device_pubkey.as_ref()],
+    let device_pubkey = get_device_pubkey(device, signing_alg.clone());
+    let (device_mint_pubkey, did_mint_bump) = Pubkey::find_program_address(
+        &[DEVICE_MINT_SEED_PREFIX, device_pubkey.as_ref()],
         &program_id,
     );
 
@@ -321,7 +339,7 @@ async fn test_create_device(
         &[SolanaInstruction::new_with_borsh(
             program_id,
             &Instruction::CreateDevice(CreateDeviceArgs {
-                key_type,
+                signing_alg,
                 bump: did_mint_bump,
                 name: "DePHY Device DID".to_string(),
                 symbol: "DDID".to_string(),
@@ -337,10 +355,10 @@ async fn test_create_device(
                 AccountMeta::new(spl_associated_token_account::id(), false),
                 AccountMeta::new(ctx.payer.pubkey(), true),
                 AccountMeta::new(vendor.pubkey(), true),
-                AccountMeta::new(device_pubkey, false),
                 AccountMeta::new(product_mint_pubkey, false),
-                AccountMeta::new(atoken_pubkey, false),
-                AccountMeta::new(did_mint_pubkey, false),
+                AccountMeta::new(product_ata_pubkey, false),
+                AccountMeta::new(device_pubkey, false),
+                AccountMeta::new(device_mint_pubkey, false),
             ],
         )],
         Some(&ctx.payer.pubkey()),
@@ -353,13 +371,13 @@ async fn test_create_device(
         .await
         .unwrap();
 
-    let atoken_account = ctx
+    let product_ata_account = ctx
         .banks_client
-        .get_account(atoken_pubkey)
+        .get_account(product_ata_pubkey)
         .await
         .expect("get_account")
         .expect("atoken account not none");
-    let account_data = StateWithExtensions::<Account>::unpack(atoken_account.data()).unwrap();
+    let account_data = StateWithExtensions::<Account>::unpack(product_ata_account.data()).unwrap();
     assert_eq!(account_data.base.amount, 1, "Token amount is 1");
 }
 
@@ -370,67 +388,72 @@ async fn test_activate_device(
     product_name: &[u8],
     device: &Keypair,
     user: &Keypair,
-    key_type: KeyType,
+    key_type: DeviceSigningAlgorithm,
     slot: u64,
 ) {
     ctx.warp_to_slot(slot).unwrap();
 
     let (product_mint_pubkey, _) = Pubkey::find_program_address(
-        &[b"DePHY PRODUCT", vendor.pubkey().as_ref(), product_name],
+        &[
+            PRODUCT_MINT_SEED_PREFIX,
+            vendor.pubkey().as_ref(),
+            product_name,
+        ],
         &program_id,
     );
 
     let device_pubkey = get_device_pubkey(device, key_type.clone());
 
-    let (mint_pubkey, mint_bump) = Pubkey::find_program_address(
-        &[b"DePHY DID", device_pubkey.as_ref()],
+    let (device_mint_pubkey, device_mint_bump) = Pubkey::find_program_address(
+        &[DEVICE_MINT_SEED_PREFIX, device_pubkey.as_ref()],
         &program_id,
     );
 
-    let product_atoken_pubkey =
+    let product_ata_pubkey =
         spl_associated_token_account::get_associated_token_address_with_program_id(
             &device_pubkey,
             &product_mint_pubkey,
             &spl_token_2022::id(),
         );
 
-    let atoken_pubkey = spl_associated_token_account::get_associated_token_address_with_program_id(
-        &user.pubkey(),
-        &mint_pubkey,
-        &spl_token_2022::id(),
-    );
+    let device_ata_pubkey =
+        spl_associated_token_account::get_associated_token_address_with_program_id(
+            &user.pubkey(),
+            &device_mint_pubkey,
+            &spl_token_2022::id(),
+        );
 
     let activate_device_ix = SolanaInstruction::new_with_borsh(
         program_id,
         &Instruction::ActivateDevice(ActivateDeviceArgs {
-            bump: mint_bump,
-            key_type: key_type.clone(),
+            bump: device_mint_bump,
+            signing_alg: key_type.clone(),
         }),
         vec![
-            // #[account(0, name="system_program", desc = "The system program")]
+            // #[account(0, name="system_program", desc="The system program")]
             AccountMeta::new(system_program::id(), false),
-            // #[account(1, name="token_program_2022", desc = "The SPL Token 2022 program")]
+            // #[account(1, name="token_2022_program", desc="The SPL Token 2022 program")]
             AccountMeta::new(spl_token_2022::id(), false),
-            // #[account(2, name="ata_program", desc = "The associated token program")]
+            // #[account(2, name="ata_program", desc="The associated token program")]
             AccountMeta::new(spl_associated_token_account::id(), false),
-            // #[account(3, name="instructions", desc = "The Instructions sysvar")]
+            // #[account(3, name="instructions", desc="The instructions sys var")]
             AccountMeta::new(sysvar::instructions::id(), false),
-            // #[account(4, writable, signer, name="payer", desc = "The account paying for the storage fees")]
+            // #[account(4, writable, signer, name="payer", desc="The account paying for the storage fees")]
             AccountMeta::new(ctx.payer.pubkey(), true),
-            // #[account(5, signer, name="device", desc = "The Device pubkey")]
-            AccountMeta::new(device_pubkey, false),
-            // #[account(6, name="vendor", desc = "Vendor of the Device")]
+            // #[account(5, name="vendor", desc="The vendor")]
             AccountMeta::new(vendor.pubkey(), false),
-            // #[account(7, name="product_mint", desc = "Product of the Device")]
+            // #[account(6, name="product_program_data", desc="The PDA for the product to store mint data")]
             AccountMeta::new(product_mint_pubkey, false),
-            // #[account(8, name="product_atoken", desc = "The Product atoken for Device")]
-            AccountMeta::new(product_atoken_pubkey, false),
-            // #[account(9, name="user", desc = "The Device Owner pubkey")]
+            // #[account(7, name="product_associated_token", desc="The ATA for the product")]
+            AccountMeta::new(product_ata_pubkey, false),
+            // #[account(8, name="device", desc="The device")]
+            AccountMeta::new(device_pubkey, false),
+            // #[account(9, writable, name="device_program_data", desc="The PDA for the device to store mint data")]
+            AccountMeta::new(device_mint_pubkey, false),
+            // #[account(10, writable, name="device_associated_token", desc="The ATA for the device")]
+            AccountMeta::new(device_ata_pubkey, false),
+            // #[account(11, name="owner", desc="The device's owner")]
             AccountMeta::new(user.pubkey(), true),
-            // #[account(10, writable, name="did_mint", desc = "The NFT mint account")]
-            AccountMeta::new(mint_pubkey, false),
-            // #[account(11, writable, name="did_atoken", desc = "The NFT atoken account")]
-            AccountMeta::new(atoken_pubkey, false),
         ],
     );
 
@@ -445,20 +468,20 @@ async fn test_activate_device(
         .expect_err("should fail");
 
     let message = [
-        b"DEPHY_ID",
-        product_atoken_pubkey.as_ref(),
+        DEVICE_MESSAGE_PREFIX,
+        product_ata_pubkey.as_ref(),
         user.pubkey().as_ref(),
         &slot.to_le_bytes(),
     ]
     .concat();
 
     let sign_ix = match key_type {
-        KeyType::Ed25519 => {
+        DeviceSigningAlgorithm::Ed25519 => {
             let device_ed25519_keypair =
                 ed25519_dalek::Keypair::from_bytes(&device.to_bytes()).unwrap();
             new_ed25519_instruction(&device_ed25519_keypair, &message)
         }
-        KeyType::Secp256k1 => {
+        DeviceSigningAlgorithm::Secp256k1 => {
             let device_secp256k1_priv_key =
                 libsecp256k1::SecretKey::parse(device.secret().as_bytes()).unwrap();
             new_secp256k1_instruction(&device_secp256k1_priv_key, &message)
@@ -475,12 +498,12 @@ async fn test_activate_device(
         .await
         .unwrap();
 
-    let atoken_account = ctx
+    let device_ata = ctx
         .banks_client
-        .get_account(atoken_pubkey)
+        .get_account(device_ata_pubkey)
         .await
         .expect("get_account")
         .expect("atoken account not none");
-    let account_data = StateWithExtensions::<Account>::unpack(atoken_account.data()).unwrap();
-    assert_eq!(account_data.base.amount, 1, "Token amount is 1");
+    let device_ata_data = StateWithExtensions::<Account>::unpack(device_ata.data()).unwrap();
+    assert_eq!(device_ata_data.base.amount, 1, "Token amount is 1");
 }

@@ -5,10 +5,10 @@
 //! <https://github.com/kinobi-so/kinobi>
 //!
 
-pub(crate) mod r#dephy_data;
+pub(crate) mod r#device_signing_algorithm;
 pub(crate) mod r#key;
-pub(crate) mod r#key_type;
+pub(crate) mod r#program_data;
 
-pub use self::r#dephy_data::*;
+pub use self::r#device_signing_algorithm::*;
 pub use self::r#key::*;
-pub use self::r#key_type::*;
+pub use self::r#program_data::*;

@@ -22,11 +22,11 @@
           ]
         },
         {
-          "name": "dephy",
+          "name": "programData",
           "isMut": true,
           "isSigner": false,
           "docs": [
-            "The address of the DePHY account"
+            "The program data account for the program"
           ]
         },
         {
@@ -34,7 +34,7 @@
           "isMut": false,
           "isSigner": true,
           "docs": [
-            "The authority of the DePHY account"
+            "The authority account of the program"
           ]
         }
       ],
@@ -63,7 +63,7 @@
           ]
         },
         {
-          "name": "tokenProgram2022",
+          "name": "token2022Program",
           "isMut": false,
           "isSigner": false,
           "docs": [
@@ -87,19 +87,11 @@
           ]
         },
         {
-          "name": "dephy",
-          "isMut": false,
-          "isSigner": false,
-          "docs": [
-            "The DePHY account"
-          ]
-        },
-        {
           "name": "vendor",
           "isMut": false,
           "isSigner": true,
           "docs": [
-            "The Vendor pubkey"
+            "The vendor"
           ]
         },
         {
@@ -107,15 +99,15 @@
           "isMut": true,
           "isSigner": false,
           "docs": [
-            "The Vendor mint"
+            "The mint account of the vendor"
           ]
         },
         {
-          "name": "vendorAtoken",
+          "name": "vendorAssociatedToken",
           "isMut": true,
           "isSigner": false,
           "docs": [
-            "The atoken account for vendor"
+            "The associated token account of the vendor"
           ]
         }
       ],
@@ -144,7 +136,7 @@
           ]
         },
         {
-          "name": "tokenProgram2022",
+          "name": "token2022Program",
           "isMut": false,
           "isSigner": false,
           "docs": [
@@ -164,15 +156,7 @@
           "isMut": false,
           "isSigner": true,
           "docs": [
-            "The Vendor pubkey"
-          ]
-        },
-        {
-          "name": "productMint",
-          "isMut": true,
-          "isSigner": false,
-          "docs": [
-            "The product mint account"
+            "The vendor"
           ]
         },
         {
@@ -180,15 +164,23 @@
           "isMut": false,
           "isSigner": false,
           "docs": [
-            "The Vendor mint"
+            "The mint account of the vendor"
           ]
         },
         {
-          "name": "vendorAtoken",
+          "name": "vendorAssociatedToken",
           "isMut": false,
           "isSigner": false,
           "docs": [
-            "The atoken account for vendor"
+            "The associated token account of the vendor"
+          ]
+        },
+        {
+          "name": "productMint",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "The mint account of the product"
           ]
         }
       ],
@@ -217,7 +209,7 @@
           ]
         },
         {
-          "name": "tokenProgram2022",
+          "name": "token2022Program",
           "isMut": false,
           "isSigner": false,
           "docs": [
@@ -245,15 +237,7 @@
           "isMut": false,
           "isSigner": true,
           "docs": [
-            "The Vendor pubkey"
-          ]
-        },
-        {
-          "name": "device",
-          "isMut": false,
-          "isSigner": false,
-          "docs": [
-            "The Device pubkey"
+            "The vendor"
           ]
         },
         {
@@ -261,23 +245,31 @@
           "isMut": true,
           "isSigner": false,
           "docs": [
-            "The Product mint account"
+            "The mint account of the product"
           ]
         },
         {
-          "name": "productAtoken",
+          "name": "productAssociatedToken",
           "isMut": true,
           "isSigner": false,
           "docs": [
-            "The Product atoken for Device"
+            "The associated token account of the product"
           ]
         },
         {
-          "name": "didMint",
+          "name": "device",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The device"
+          ]
+        },
+        {
+          "name": "deviceMint",
           "isMut": true,
           "isSigner": false,
           "docs": [
-            "The NFT mint account"
+            "The mint account of the device"
           ]
         }
       ],
@@ -306,7 +298,7 @@
           ]
         },
         {
-          "name": "tokenProgram2022",
+          "name": "token2022Program",
           "isMut": false,
           "isSigner": false,
           "docs": [
@@ -326,7 +318,7 @@
           "isMut": false,
           "isSigner": false,
           "docs": [
-            "The Instructions sysvar"
+            "The instructions sysvar"
           ]
         },
         {
@@ -338,19 +330,11 @@
           ]
         },
         {
-          "name": "device",
-          "isMut": false,
-          "isSigner": false,
-          "docs": [
-            "The Device pubkey"
-          ]
-        },
-        {
           "name": "vendor",
           "isMut": false,
           "isSigner": false,
           "docs": [
-            "Vendor of the Device"
+            "The vendor"
           ]
         },
         {
@@ -358,39 +342,47 @@
           "isMut": false,
           "isSigner": false,
           "docs": [
-            "Product of the Device"
+            "The mint account for the product"
           ]
         },
         {
-          "name": "productAtoken",
+          "name": "productAssociatedToken",
           "isMut": false,
           "isSigner": false,
           "docs": [
-            "The Product atoken for Device"
+            "The associated token account for the product"
           ]
         },
         {
-          "name": "user",
+          "name": "device",
           "isMut": false,
           "isSigner": false,
           "docs": [
-            "The Device Owner pubkey"
+            "The device"
           ]
         },
         {
-          "name": "didMint",
+          "name": "deviceMint",
           "isMut": true,
           "isSigner": false,
           "docs": [
-            "The NFT mint account"
+            "The mint account for the device"
           ]
         },
         {
-          "name": "didAtoken",
+          "name": "deviceAssociatedToken",
           "isMut": true,
           "isSigner": false,
           "docs": [
-            "The NFT atoken account"
+            "The associated token account for the device"
+          ]
+        },
+        {
+          "name": "owner",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The device's owner"
           ]
         }
       ],
@@ -410,7 +402,7 @@
   ],
   "accounts": [
     {
-      "name": "DephyAccount",
+      "name": "ProgramDataAccount",
       "type": {
         "kind": "struct",
         "fields": [
@@ -427,7 +419,7 @@
           {
             "name": "data",
             "type": {
-              "defined": "DephyData"
+              "defined": "ProgramData"
             }
           }
         ]
@@ -527,9 +519,9 @@
             "type": "u8"
           },
           {
-            "name": "keyType",
+            "name": "signingAlg",
             "type": {
-              "defined": "KeyType"
+              "defined": "DeviceSigningAlgorithm"
             }
           },
           {
@@ -568,16 +560,16 @@
             "type": "u8"
           },
           {
-            "name": "keyType",
+            "name": "signingAlg",
             "type": {
-              "defined": "KeyType"
+              "defined": "DeviceSigningAlgorithm"
             }
           }
         ]
       }
     },
     {
-      "name": "DephyData",
+      "name": "ProgramData",
       "type": {
         "kind": "struct",
         "fields": [
@@ -589,7 +581,7 @@
       }
     },
     {
-      "name": "KeyType",
+      "name": "DeviceSigningAlgorithm",
       "type": {
         "kind": "enum",
         "variants": [
@@ -611,7 +603,7 @@
             "name": "Uninitialized"
           },
           {
-            "name": "DephyAccount"
+            "name": "ProgramDataAccount"
           }
         ]
       }

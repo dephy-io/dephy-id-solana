@@ -13,7 +13,7 @@ use num_derive::FromPrimitive;
     BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq, PartialOrd, Hash, FromPrimitive,
 )]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-pub enum KeyType {
+pub enum DeviceSigningAlgorithm {
     Ed25519,
     Secp256k1,
 }

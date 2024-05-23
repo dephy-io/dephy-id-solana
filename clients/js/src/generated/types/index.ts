@@ -6,6 +6,6 @@
  * @see https://github.com/kinobi-so/kinobi
  */
 
-export * from './dephyData';
+export * from './deviceSigningAlgorithm';
 export * from './key';
-export * from './keyType';
+export * from './programData';

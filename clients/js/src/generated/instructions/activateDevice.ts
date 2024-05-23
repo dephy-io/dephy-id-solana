@@ -30,10 +30,10 @@ import {
 import { DEPHY_ID_PROGRAM_ADDRESS } from '../programs';
 import { ResolvedAccount, getAccountMetaFactory } from '../shared';
 import {
-  KeyType,
-  KeyTypeArgs,
-  getKeyTypeDecoder,
-  getKeyTypeEncoder,
+  DeviceSigningAlgorithm,
+  DeviceSigningAlgorithmArgs,
+  getDeviceSigningAlgorithmDecoder,
+  getDeviceSigningAlgorithmEncoder,
 } from '../types';
 
 export type ActivateDeviceInstruction<
@@ -41,19 +41,19 @@ export type ActivateDeviceInstruction<
   TAccountSystemProgram extends
     | string
     | IAccountMeta<string> = '11111111111111111111111111111111',
-  TAccountTokenProgram2022 extends string | IAccountMeta<string> = string,
+  TAccountToken2022Program extends string | IAccountMeta<string> = string,
   TAccountAtaProgram extends
     | string
     | IAccountMeta<string> = 'ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL',
   TAccountInstructions extends string | IAccountMeta<string> = string,
   TAccountPayer extends string | IAccountMeta<string> = string,
-  TAccountDevice extends string | IAccountMeta<string> = string,
   TAccountVendor extends string | IAccountMeta<string> = string,
   TAccountProductMint extends string | IAccountMeta<string> = string,
-  TAccountProductAtoken extends string | IAccountMeta<string> = string,
-  TAccountUser extends string | IAccountMeta<string> = string,
-  TAccountDidMint extends string | IAccountMeta<string> = string,
-  TAccountDidAtoken extends string | IAccountMeta<string> = string,
+  TAccountProductAssociatedToken extends string | IAccountMeta<string> = string,
+  TAccountDevice extends string | IAccountMeta<string> = string,
+  TAccountDeviceMint extends string | IAccountMeta<string> = string,
+  TAccountDeviceAssociatedToken extends string | IAccountMeta<string> = string,
+  TAccountOwner extends string | IAccountMeta<string> = string,
   TRemainingAccounts extends readonly IAccountMeta<string>[] = [],
 > = IInstruction<TProgram> &
   IInstructionWithData<Uint8Array> &
@@ -62,9 +62,9 @@ export type ActivateDeviceInstruction<
       TAccountSystemProgram extends string
         ? ReadonlyAccount<TAccountSystemProgram>
         : TAccountSystemProgram,
-      TAccountTokenProgram2022 extends string
-        ? ReadonlyAccount<TAccountTokenProgram2022>
-        : TAccountTokenProgram2022,
+      TAccountToken2022Program extends string
+        ? ReadonlyAccount<TAccountToken2022Program>
+        : TAccountToken2022Program,
       TAccountAtaProgram extends string
         ? ReadonlyAccount<TAccountAtaProgram>
         : TAccountAtaProgram,
@@ -75,27 +75,27 @@ export type ActivateDeviceInstruction<
         ? WritableSignerAccount<TAccountPayer> &
             IAccountSignerMeta<TAccountPayer>
         : TAccountPayer,
-      TAccountDevice extends string
-        ? ReadonlyAccount<TAccountDevice>
-        : TAccountDevice,
       TAccountVendor extends string
         ? ReadonlyAccount<TAccountVendor>
         : TAccountVendor,
       TAccountProductMint extends string
         ? ReadonlyAccount<TAccountProductMint>
         : TAccountProductMint,
-      TAccountProductAtoken extends string
-        ? ReadonlyAccount<TAccountProductAtoken>
-        : TAccountProductAtoken,
-      TAccountUser extends string
-        ? ReadonlyAccount<TAccountUser>
-        : TAccountUser,
-      TAccountDidMint extends string
-        ? WritableAccount<TAccountDidMint>
-        : TAccountDidMint,
-      TAccountDidAtoken extends string
-        ? WritableAccount<TAccountDidAtoken>
-        : TAccountDidAtoken,
+      TAccountProductAssociatedToken extends string
+        ? ReadonlyAccount<TAccountProductAssociatedToken>
+        : TAccountProductAssociatedToken,
+      TAccountDevice extends string
+        ? ReadonlyAccount<TAccountDevice>
+        : TAccountDevice,
+      TAccountDeviceMint extends string
+        ? WritableAccount<TAccountDeviceMint>
+        : TAccountDeviceMint,
+      TAccountDeviceAssociatedToken extends string
+        ? WritableAccount<TAccountDeviceAssociatedToken>
+        : TAccountDeviceAssociatedToken,
+      TAccountOwner extends string
+        ? ReadonlyAccount<TAccountOwner>
+        : TAccountOwner,
       ...TRemainingAccounts,
     ]
   >;
@@ -103,12 +103,12 @@ export type ActivateDeviceInstruction<
 export type ActivateDeviceInstructionData = {
   discriminator: number;
   bump: number;
-  keyType: KeyType;
+  signingAlg: DeviceSigningAlgorithm;
 };
 
 export type ActivateDeviceInstructionDataArgs = {
   bump: number;
-  keyType: KeyTypeArgs;
+  signingAlg: DeviceSigningAlgorithmArgs;
 };
 
 export function getActivateDeviceInstructionDataEncoder(): Encoder<ActivateDeviceInstructionDataArgs> {
@@ -116,7 +116,7 @@ export function getActivateDeviceInstructionDataEncoder(): Encoder<ActivateDevic
     getStructEncoder([
       ['discriminator', getU8Encoder()],
       ['bump', getU8Encoder()],
-      ['keyType', getKeyTypeEncoder()],
+      ['signingAlg', getDeviceSigningAlgorithmEncoder()],
     ]),
     (value) => ({ ...value, discriminator: 4 })
   );
@@ -126,7 +126,7 @@ export function getActivateDeviceInstructionDataDecoder(): Decoder<ActivateDevic
   return getStructDecoder([
     ['discriminator', getU8Decoder()],
     ['bump', getU8Decoder()],
-    ['keyType', getKeyTypeDecoder()],
+    ['signingAlg', getDeviceSigningAlgorithmDecoder()],
   ]);
 }
 
@@ -142,88 +142,88 @@ export function getActivateDeviceInstructionDataCodec(): Codec<
 
 export type ActivateDeviceInput<
   TAccountSystemProgram extends string = string,
-  TAccountTokenProgram2022 extends string = string,
+  TAccountToken2022Program extends string = string,
   TAccountAtaProgram extends string = string,
   TAccountInstructions extends string = string,
   TAccountPayer extends string = string,
-  TAccountDevice extends string = string,
   TAccountVendor extends string = string,
   TAccountProductMint extends string = string,
-  TAccountProductAtoken extends string = string,
-  TAccountUser extends string = string,
-  TAccountDidMint extends string = string,
-  TAccountDidAtoken extends string = string,
+  TAccountProductAssociatedToken extends string = string,
+  TAccountDevice extends string = string,
+  TAccountDeviceMint extends string = string,
+  TAccountDeviceAssociatedToken extends string = string,
+  TAccountOwner extends string = string,
 > = {
   /** The system program */
   systemProgram?: Address<TAccountSystemProgram>;
   /** The SPL Token 2022 program */
-  tokenProgram2022: Address<TAccountTokenProgram2022>;
+  token2022Program: Address<TAccountToken2022Program>;
   /** The associated token program */
   ataProgram?: Address<TAccountAtaProgram>;
-  /** The Instructions sysvar */
+  /** The instructions sysvar */
   instructions: Address<TAccountInstructions>;
   /** The account paying for the storage fees */
   payer: TransactionSigner<TAccountPayer>;
-  /** The Device pubkey */
-  device: Address<TAccountDevice>;
-  /** Vendor of the Device */
+  /** The vendor */
   vendor: Address<TAccountVendor>;
-  /** Product of the Device */
+  /** The mint account for the product */
   productMint: Address<TAccountProductMint>;
-  /** The Product atoken for Device */
-  productAtoken: Address<TAccountProductAtoken>;
-  /** The Device Owner pubkey */
-  user: Address<TAccountUser>;
-  /** The NFT mint account */
-  didMint: Address<TAccountDidMint>;
-  /** The NFT atoken account */
-  didAtoken: Address<TAccountDidAtoken>;
+  /** The associated token account for the product */
+  productAssociatedToken: Address<TAccountProductAssociatedToken>;
+  /** The device */
+  device: Address<TAccountDevice>;
+  /** The mint account for the device */
+  deviceMint: Address<TAccountDeviceMint>;
+  /** The associated token account for the device */
+  deviceAssociatedToken: Address<TAccountDeviceAssociatedToken>;
+  /** The device's owner */
+  owner: Address<TAccountOwner>;
   bump: ActivateDeviceInstructionDataArgs['bump'];
-  keyType: ActivateDeviceInstructionDataArgs['keyType'];
+  signingAlg: ActivateDeviceInstructionDataArgs['signingAlg'];
 };
 
 export function getActivateDeviceInstruction<
   TAccountSystemProgram extends string,
-  TAccountTokenProgram2022 extends string,
+  TAccountToken2022Program extends string,
   TAccountAtaProgram extends string,
   TAccountInstructions extends string,
   TAccountPayer extends string,
-  TAccountDevice extends string,
   TAccountVendor extends string,
   TAccountProductMint extends string,
-  TAccountProductAtoken extends string,
-  TAccountUser extends string,
-  TAccountDidMint extends string,
-  TAccountDidAtoken extends string,
+  TAccountProductAssociatedToken extends string,
+  TAccountDevice extends string,
+  TAccountDeviceMint extends string,
+  TAccountDeviceAssociatedToken extends string,
+  TAccountOwner extends string,
 >(
   input: ActivateDeviceInput<
     TAccountSystemProgram,
-    TAccountTokenProgram2022,
+    TAccountToken2022Program,
     TAccountAtaProgram,
     TAccountInstructions,
     TAccountPayer,
-    TAccountDevice,
     TAccountVendor,
     TAccountProductMint,
-    TAccountProductAtoken,
-    TAccountUser,
-    TAccountDidMint,
-    TAccountDidAtoken
+    TAccountProductAssociatedToken,
+    TAccountDevice,
+    TAccountDeviceMint,
+    TAccountDeviceAssociatedToken,
+    TAccountOwner
   >
 ): ActivateDeviceInstruction<
   typeof DEPHY_ID_PROGRAM_ADDRESS,
   TAccountSystemProgram,
-  TAccountTokenProgram2022,
+  TAccountToken2022Program,
   TAccountAtaProgram,
   TAccountInstructions,
   TAccountPayer,
-  TAccountDevice,
   TAccountVendor,
   TAccountProductMint,
-  TAccountProductAtoken,
-  TAccountUser,
-  TAccountDidMint,
-  TAccountDidAtoken
+  TAccountProductAssociatedToken,
+  TAccountDevice,
+  TAccountDeviceMint,
+  TAccountDeviceAssociatedToken,
+  TAccountOwner
 > {
   // Program address.
   const programAddress = DEPHY_ID_PROGRAM_ADDRESS;
@@ -231,20 +231,26 @@ export function getActivateDeviceInstruction<
   // Original accounts.
   const originalAccounts = {
     systemProgram: { value: input.systemProgram ?? null, isWritable: false },
-    tokenProgram2022: {
-      value: input.tokenProgram2022 ?? null,
+    token2022Program: {
+      value: input.token2022Program ?? null,
       isWritable: false,
     },
     ataProgram: { value: input.ataProgram ?? null, isWritable: false },
     instructions: { value: input.instructions ?? null, isWritable: false },
     payer: { value: input.payer ?? null, isWritable: true },
-    device: { value: input.device ?? null, isWritable: false },
     vendor: { value: input.vendor ?? null, isWritable: false },
     productMint: { value: input.productMint ?? null, isWritable: false },
-    productAtoken: { value: input.productAtoken ?? null, isWritable: false },
-    user: { value: input.user ?? null, isWritable: false },
-    didMint: { value: input.didMint ?? null, isWritable: true },
-    didAtoken: { value: input.didAtoken ?? null, isWritable: true },
+    productAssociatedToken: {
+      value: input.productAssociatedToken ?? null,
+      isWritable: false,
+    },
+    device: { value: input.device ?? null, isWritable: false },
+    deviceMint: { value: input.deviceMint ?? null, isWritable: true },
+    deviceAssociatedToken: {
+      value: input.deviceAssociatedToken ?? null,
+      isWritable: true,
+    },
+    owner: { value: input.owner ?? null, isWritable: false },
   };
   const accounts = originalAccounts as Record<
     keyof typeof originalAccounts,
@@ -268,17 +274,17 @@ export function getActivateDeviceInstruction<
   const instruction = {
     accounts: [
       getAccountMeta(accounts.systemProgram),
-      getAccountMeta(accounts.tokenProgram2022),
+      getAccountMeta(accounts.token2022Program),
       getAccountMeta(accounts.ataProgram),
       getAccountMeta(accounts.instructions),
       getAccountMeta(accounts.payer),
-      getAccountMeta(accounts.device),
       getAccountMeta(accounts.vendor),
       getAccountMeta(accounts.productMint),
-      getAccountMeta(accounts.productAtoken),
-      getAccountMeta(accounts.user),
-      getAccountMeta(accounts.didMint),
-      getAccountMeta(accounts.didAtoken),
+      getAccountMeta(accounts.productAssociatedToken),
+      getAccountMeta(accounts.device),
+      getAccountMeta(accounts.deviceMint),
+      getAccountMeta(accounts.deviceAssociatedToken),
+      getAccountMeta(accounts.owner),
     ],
     programAddress,
     data: getActivateDeviceInstructionDataEncoder().encode(
@@ -287,17 +293,17 @@ export function getActivateDeviceInstruction<
   } as ActivateDeviceInstruction<
     typeof DEPHY_ID_PROGRAM_ADDRESS,
     TAccountSystemProgram,
-    TAccountTokenProgram2022,
+    TAccountToken2022Program,
     TAccountAtaProgram,
     TAccountInstructions,
     TAccountPayer,
-    TAccountDevice,
     TAccountVendor,
     TAccountProductMint,
-    TAccountProductAtoken,
-    TAccountUser,
-    TAccountDidMint,
-    TAccountDidAtoken
+    TAccountProductAssociatedToken,
+    TAccountDevice,
+    TAccountDeviceMint,
+    TAccountDeviceAssociatedToken,
+    TAccountOwner
   >;
 
   return instruction;
@@ -312,27 +318,27 @@ export type ParsedActivateDeviceInstruction<
     /** The system program */
     systemProgram: TAccountMetas[0];
     /** The SPL Token 2022 program */
-    tokenProgram2022: TAccountMetas[1];
+    token2022Program: TAccountMetas[1];
     /** The associated token program */
     ataProgram: TAccountMetas[2];
-    /** The Instructions sysvar */
+    /** The instructions sysvar */
     instructions: TAccountMetas[3];
     /** The account paying for the storage fees */
     payer: TAccountMetas[4];
-    /** The Device pubkey */
-    device: TAccountMetas[5];
-    /** Vendor of the Device */
-    vendor: TAccountMetas[6];
-    /** Product of the Device */
-    productMint: TAccountMetas[7];
-    /** The Product atoken for Device */
-    productAtoken: TAccountMetas[8];
-    /** The Device Owner pubkey */
-    user: TAccountMetas[9];
-    /** The NFT mint account */
-    didMint: TAccountMetas[10];
-    /** The NFT atoken account */
-    didAtoken: TAccountMetas[11];
+    /** The vendor */
+    vendor: TAccountMetas[5];
+    /** The mint account for the product */
+    productMint: TAccountMetas[6];
+    /** The associated token account for the product */
+    productAssociatedToken: TAccountMetas[7];
+    /** The device */
+    device: TAccountMetas[8];
+    /** The mint account for the device */
+    deviceMint: TAccountMetas[9];
+    /** The associated token account for the device */
+    deviceAssociatedToken: TAccountMetas[10];
+    /** The device's owner */
+    owner: TAccountMetas[11];
   };
   data: ActivateDeviceInstructionData;
 };
@@ -359,17 +365,17 @@ export function parseActivateDeviceInstruction<
     programAddress: instruction.programAddress,
     accounts: {
       systemProgram: getNextAccount(),
-      tokenProgram2022: getNextAccount(),
+      token2022Program: getNextAccount(),
       ataProgram: getNextAccount(),
       instructions: getNextAccount(),
       payer: getNextAccount(),
-      device: getNextAccount(),
       vendor: getNextAccount(),
       productMint: getNextAccount(),
-      productAtoken: getNextAccount(),
-      user: getNextAccount(),
-      didMint: getNextAccount(),
-      didAtoken: getNextAccount(),
+      productAssociatedToken: getNextAccount(),
+      device: getNextAccount(),
+      deviceMint: getNextAccount(),
+      deviceAssociatedToken: getNextAccount(),
+      owner: getNextAccount(),
     },
     data: getActivateDeviceInstructionDataDecoder().decode(instruction.data),
   };

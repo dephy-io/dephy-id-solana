@@ -20,15 +20,15 @@ export const DEPHY_ID_PROGRAM_ADDRESS =
   'hdMghjD73uASxgJXi6e1mGPsXqnADMsrqB1bveqABP1' as Address<'hdMghjD73uASxgJXi6e1mGPsXqnADMsrqB1bveqABP1'>;
 
 export enum DephyIdAccount {
-  DephyAccount,
+  ProgramDataAccount,
 }
 
 export function identifyDephyIdAccount(
   account: { data: Uint8Array } | Uint8Array
 ): DephyIdAccount {
   const data = account instanceof Uint8Array ? account : account.data;
-  if (containsBytes(data, getKeyEncoder().encode(Key.DephyAccount), 0)) {
-    return DephyIdAccount.DephyAccount;
+  if (containsBytes(data, getKeyEncoder().encode(Key.ProgramDataAccount), 0)) {
+    return DephyIdAccount.ProgramDataAccount;
   }
   throw new Error(
     'The provided account could not be identified as a dephyId account.'

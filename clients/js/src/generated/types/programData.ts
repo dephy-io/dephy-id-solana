@@ -17,18 +17,18 @@ import {
   getU8Encoder,
 } from '@solana/web3.js';
 
-export type DephyData = { bump: number };
+export type ProgramData = { bump: number };
 
-export type DephyDataArgs = DephyData;
+export type ProgramDataArgs = ProgramData;
 
-export function getDephyDataEncoder(): Encoder<DephyDataArgs> {
+export function getProgramDataEncoder(): Encoder<ProgramDataArgs> {
   return getStructEncoder([['bump', getU8Encoder()]]);
 }
 
-export function getDephyDataDecoder(): Decoder<DephyData> {
+export function getProgramDataDecoder(): Decoder<ProgramData> {
   return getStructDecoder([['bump', getU8Decoder()]]);
 }
 
-export function getDephyDataCodec(): Codec<DephyDataArgs, DephyData> {
-  return combineCodec(getDephyDataEncoder(), getDephyDataDecoder());
+export function getProgramDataCodec(): Codec<ProgramDataArgs, ProgramData> {
+  return combineCodec(getProgramDataEncoder(), getProgramDataDecoder());
 }

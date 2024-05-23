@@ -19,20 +19,20 @@ use spl_token_metadata_interface::state::{Field, TokenMetadata};
 
 use crate::{
     assertions::{
-        assert_pda, assert_pda_without_bump, assert_program_owner, assert_same_pubkeys,
-        assert_signer, assert_writable,
+        assert_pda, assert_pda_without_bump, assert_same_pubkeys, assert_signer, assert_writable,
     },
     instruction::{
         accounts::{
-            ActivateDeviceAccounts, CreateDeviceAccounts,
-            CreateProductAccounts, CreateVendorAccounts,
-            InitializeAccounts,
+            ActivateDeviceAccounts, CreateDeviceAccounts, CreateProductAccounts,
+            CreateVendorAccounts, InitializeAccounts,
         },
-        ActivateDeviceArgs, InitializeArgs, CreateDeviceArgs, CreateProductArgs, CreateVendorArgs,
-        Instruction, KeyType,
+        ActivateDeviceArgs, CreateDeviceArgs, CreateProductArgs, CreateVendorArgs,
+        DeviceSigningAlgorithm, InitializeArgs, Instruction,
     },
-    state::{DephyAccount, DephyData, Key},
+    state::{Key, ProgramData, ProgramDataAccount},
     utils::create_account,
+    DEVICE_MINT_SEED_PREFIX, PRODUCT_MINT_SEED_PREFIX, PROGRAM_PDA_SEED_PREFIX,
+    VENDOR_MINT_SEED_PREFIX,
 };
 
 pub fn process_instruction<'a>(
@@ -44,7 +44,7 @@ pub fn process_instruction<'a>(
 
     match instruction {
         Instruction::Initialize(args) => {
-            msg!("Instruction: Initialize DePHY Id program");
+            msg!("Instruction: Initialize the program");
             initialize(program_id, accounts, args)
         }
         Instruction::CreateVendor(args) => {
@@ -75,11 +75,16 @@ fn initialize<'a>(
     let ctx = InitializeAccounts::context(accounts)?;
 
     // Guards
-    let (dephy_pubkey, _bump) = Pubkey::find_program_address(&[b"DePHY"], program_id);
-    assert_same_pubkeys("dephy", ctx.accounts.dephy, &dephy_pubkey)?;
+    let (program_pda_pubkey, _bump) =
+        Pubkey::find_program_address(&[PROGRAM_PDA_SEED_PREFIX], program_id);
+    assert_same_pubkeys(
+        "program_pda",
+        ctx.accounts.program_data,
+        &program_pda_pubkey,
+    )?;
 
-    let seeds: &[&[u8]] = &[b"DePHY", &[args.bump]];
-    assert_pda("DePHY", ctx.accounts.dephy, program_id, seeds)?;
+    let seeds: &[&[u8]] = &[PROGRAM_PDA_SEED_PREFIX, &[args.bump]];
+    assert_pda("program_pda", ctx.accounts.program_data, program_id, seeds)?;
     assert_signer("authority", ctx.accounts.authority)?;
     assert_same_pubkeys(
         "system_program",
@@ -88,24 +93,24 @@ fn initialize<'a>(
     )?;
 
     // CPIs
-    // Create DePHYIdAccount
+    // Create PDA
     create_account(
-        ctx.accounts.dephy,
+        ctx.accounts.program_data,
         ctx.accounts.payer,
         ctx.accounts.system_program,
-        DephyAccount::LEN,
+        ProgramDataAccount::LEN,
         None,
         program_id,
         &[seeds],
     )?;
 
-    let dephy_account = DephyAccount {
-        key: Key::DephyAccount,
+    let program_pda = ProgramDataAccount {
+        key: Key::ProgramDataAccount,
         authority: *ctx.accounts.authority.key,
-        data: DephyData { bump: args.bump },
+        data: ProgramData { bump: args.bump },
     };
 
-    dephy_account.save(ctx.accounts.dephy)
+    program_pda.save(ctx.accounts.program_data)
 }
 
 fn create_vendor<'a>(
@@ -120,10 +125,6 @@ fn create_vendor<'a>(
     let vendor_pubkey = ctx.accounts.vendor.key;
 
     // Guards
-    assert_program_owner("Dephy owner", ctx.accounts.dephy, program_id)?;
-    let (dephy_pubkey, _bump) = Pubkey::find_program_address(&[b"DePHY"], program_id);
-    assert_same_pubkeys("dephy", ctx.accounts.dephy, &dephy_pubkey)?;
-
     assert_same_pubkeys(
         "system_program",
         ctx.accounts.system_program,
@@ -131,23 +132,31 @@ fn create_vendor<'a>(
     )?;
 
     assert_same_pubkeys(
-        "token_program_2022",
-        ctx.accounts.token_program_2022,
+        "token_2022_program",
+        ctx.accounts.token_2022_program,
         &token_program_id,
     )?;
 
-    let mint_seeds: &[&[u8]] = &[b"DePHY VENDOR", vendor_pubkey.as_ref(), &[args.bump]];
-    let mint_pubkey = Pubkey::create_program_address(mint_seeds, program_id)?;
-    assert_same_pubkeys("vendor_mint", ctx.accounts.vendor_mint, &mint_pubkey)?;
+    let vendor_mint_seeds: &[&[u8]] = &[
+        VENDOR_MINT_SEED_PREFIX,
+        vendor_pubkey.as_ref(),
+        &[args.bump],
+    ];
+    let vendor_mint_pubkey = Pubkey::create_program_address(vendor_mint_seeds, program_id)?;
+    assert_same_pubkeys("vendor_mint", ctx.accounts.vendor_mint, &vendor_mint_pubkey)?;
     assert_writable("vendor_mint", ctx.accounts.vendor_mint)?;
 
-    let atoken_pubkey = spl_associated_token_account::get_associated_token_address_with_program_id(
+    let vendor_ata_pubkey = get_associated_token_address_with_program_id(
         vendor_pubkey,
-        &mint_pubkey,
+        &vendor_mint_pubkey,
         &token_program_id,
     );
-    assert_same_pubkeys("vendor_atoken", ctx.accounts.vendor_atoken, &atoken_pubkey)?;
-    assert_writable("vendor_atoken", ctx.accounts.vendor_atoken)?;
+    assert_same_pubkeys(
+        "vendor_ata",
+        ctx.accounts.vendor_associated_token,
+        &vendor_ata_pubkey,
+    )?;
+    assert_writable("vendor_ata", ctx.accounts.vendor_associated_token)?;
 
     // calc account size
     let base_size = ExtensionType::try_calculate_account_len::<Mint>(&[
@@ -165,7 +174,7 @@ fn create_vendor<'a>(
     let metadata_size = metadata.tlv_size_of()?;
 
     // CPIs
-    // create mint account
+    // Create mint account
     create_account(
         ctx.accounts.vendor_mint,
         ctx.accounts.payer,
@@ -173,17 +182,17 @@ fn create_vendor<'a>(
         base_size,
         Some(base_size + metadata_size),
         &token_program_id,
-        &[&mint_seeds],
+        &[&vendor_mint_seeds],
     )?;
 
     // init non-transferable mint
     invoke(
         &spl_token_2022::instruction::initialize_non_transferable_mint(
             &token_program_id,
-            &mint_pubkey,
+            &vendor_mint_pubkey,
         )?,
         &[
-            // 0. `[writable]`  The mint account to initialize.
+            // 0. `[writable]` The mint account to initialize.
             ctx.accounts.vendor_mint.clone(),
         ],
     )?;
@@ -192,9 +201,9 @@ fn create_vendor<'a>(
     invoke(
         &metadata_pointer::instruction::initialize(
             &token_program_id,
-            &mint_pubkey,
+            &vendor_mint_pubkey,
             Some(*vendor_pubkey),
-            Some(mint_pubkey),
+            Some(vendor_mint_pubkey),
         )?,
         &[
             // 0. `[writable]` The mint to initialize.
@@ -206,25 +215,25 @@ fn create_vendor<'a>(
     invoke_signed(
         &spl_token_2022::instruction::initialize_mint2(
             &token_program_id,
-            &mint_pubkey,
+            &vendor_mint_pubkey,
             vendor_pubkey,
             Some(vendor_pubkey),
             0,
         )?,
         &[
-            // [writable] The mint to initialize.
+            // [writable] The mint account to initialize.
             ctx.accounts.vendor_mint.clone(),
         ],
-        &[mint_seeds],
+        &[vendor_mint_seeds],
     )?;
 
     // init metadata
     invoke(
         &spl_token_metadata_interface::instruction::initialize(
             &token_program_id,
-            &mint_pubkey,
+            &vendor_mint_pubkey,
             vendor_pubkey,
-            &mint_pubkey,
+            &vendor_mint_pubkey,
             vendor_pubkey,
             metadata.name,
             metadata.symbol,
@@ -246,7 +255,7 @@ fn create_vendor<'a>(
         invoke(
             &spl_token_metadata_interface::instruction::update_field(
                 &token_program_id,
-                &mint_pubkey,
+                &vendor_mint_pubkey,
                 vendor_pubkey,
                 Field::Key(field),
                 value,
@@ -265,14 +274,14 @@ fn create_vendor<'a>(
         &spl_associated_token_account::instruction::create_associated_token_account(
             payer_pubkey,
             vendor_pubkey,
-            &mint_pubkey,
+            &vendor_mint_pubkey,
             &token_program_id,
         ),
         &[
             // 0. `[writeable,signer]` Funding account (must be a system account)
             ctx.accounts.payer.clone(),
             // 1. `[writeable]` Associated token account address to be created
-            ctx.accounts.vendor_atoken.clone(),
+            ctx.accounts.vendor_associated_token.clone(),
             // 2. `[]` Wallet address for the new associated token account
             ctx.accounts.vendor.clone(),
             // 3. `[]` The token mint for the new associated token account
@@ -280,7 +289,7 @@ fn create_vendor<'a>(
             // 4. `[]` System program
             ctx.accounts.system_program.clone(),
             // 5. `[]` SPL Token program
-            ctx.accounts.token_program_2022.clone(),
+            ctx.accounts.token_2022_program.clone(),
         ],
     )?;
 
@@ -288,8 +297,8 @@ fn create_vendor<'a>(
     invoke(
         &spl_token_2022::instruction::mint_to(
             &token_program_id,
-            &mint_pubkey,
-            &atoken_pubkey,
+            &vendor_mint_pubkey,
+            &vendor_ata_pubkey,
             vendor_pubkey,
             &[vendor_pubkey],
             1,
@@ -298,7 +307,7 @@ fn create_vendor<'a>(
             // [writable] The mint.
             ctx.accounts.vendor_mint.clone(),
             // [writable] The account to mint tokens to.
-            ctx.accounts.vendor_atoken.clone(),
+            ctx.accounts.vendor_associated_token.clone(),
             // [signer] The mint's minting authority.
             ctx.accounts.vendor.clone(),
         ],
@@ -308,7 +317,7 @@ fn create_vendor<'a>(
     invoke(
         &spl_token_2022::instruction::set_authority(
             &token_program_id,
-            &mint_pubkey,
+            &vendor_mint_pubkey,
             None,
             spl_token_2022::instruction::AuthorityType::MintTokens,
             vendor_pubkey,
@@ -338,17 +347,23 @@ fn create_product<'a>(
     // Guards
     assert_signer("vendor", ctx.accounts.vendor)?;
 
-    let mint_seeds: &[&[u8]] = &[
-        b"DePHY PRODUCT",
+    let product_mint_seeds: &[&[u8]] = &[
+        PRODUCT_MINT_SEED_PREFIX,
         vendor_pubkey.as_ref(),
         args.name.as_ref(),
         &[args.bump],
     ];
-    let product_mint_pubkey = Pubkey::create_program_address(mint_seeds, program_id)?;
-    assert_same_pubkeys("product_mint", ctx.accounts.product_mint, &product_mint_pubkey)?;
+    let product_mint_pubkey = Pubkey::create_program_address(product_mint_seeds, program_id)?;
+    assert_same_pubkeys(
+        "product_mint",
+        ctx.accounts.product_mint,
+        &product_mint_pubkey,
+    )?;
 
-    let (vendor_mint_pubkey, _) =
-        Pubkey::find_program_address(&[b"DePHY VENDOR", vendor_pubkey.as_ref()], program_id);
+    let (vendor_mint_pubkey, _) = Pubkey::find_program_address(
+        &[VENDOR_MINT_SEED_PREFIX, vendor_pubkey.as_ref()],
+        program_id,
+    );
     assert_same_pubkeys("vendor_mint", ctx.accounts.vendor_mint, &vendor_mint_pubkey)?;
 
     {
@@ -357,7 +372,7 @@ fn create_product<'a>(
         assert!(vendor_mint_state.base.is_initialized);
         assert!(vendor_mint_state.base.mint_authority.is_none());
 
-        let vendor_atoken_data = ctx.accounts.vendor_atoken.data.borrow();
+        let vendor_atoken_data = ctx.accounts.vendor_associated_token.data.borrow();
         let vendor_atoken_state =
             StateWithExtensions::<spl_token_2022::state::Account>::unpack(&vendor_atoken_data)?;
         assert_eq!(vendor_atoken_state.base.amount, 1);
@@ -387,7 +402,7 @@ fn create_product<'a>(
         base_size,
         Some(base_size + metadata_size),
         &token_program_id,
-        &[&mint_seeds],
+        &[&product_mint_seeds],
     )?;
 
     // init non-transferable mint
@@ -397,7 +412,7 @@ fn create_product<'a>(
             &product_mint_pubkey,
         )?,
         &[
-            // 0. `[writable]`  The mint account to initialize.
+            // 0. `[writable]` The mint account to initialize.
             ctx.accounts.product_mint.clone(),
         ],
     )?;
@@ -479,26 +494,26 @@ fn create_device<'a>(
     let token_program_id = spl_token_2022::id();
     let payer_pubkey = ctx.accounts.payer.key;
     let vendor_pubkey = ctx.accounts.vendor.key;
-    let mint_pubkey = ctx.accounts.product_mint.key;
+    let product_mint_pubkey = ctx.accounts.product_mint.key;
     let device_pubkey = ctx.accounts.device.key;
 
     // Guards
     assert_same_pubkeys(
-        "token_program_2022",
-        ctx.accounts.token_program_2022,
+        "token_2022_program",
+        ctx.accounts.token_2022_program,
         &token_program_id,
     )?;
 
-    let atoken_pubkey = get_associated_token_address_with_program_id(
+    let product_ata_pubkey = get_associated_token_address_with_program_id(
         &device_pubkey,
-        &mint_pubkey,
+        &product_mint_pubkey,
         &token_program_id,
     );
 
     assert_same_pubkeys(
-        "atoken_account",
-        ctx.accounts.product_atoken,
-        &atoken_pubkey,
+        "product_ata",
+        ctx.accounts.product_associated_token,
+        &product_ata_pubkey,
     )?;
 
     // TODO: check account pubkeys
@@ -506,7 +521,10 @@ fn create_device<'a>(
         let product_mint_data = ctx.accounts.product_mint.data.borrow();
         let product_mint_state = StateWithExtensions::<Mint>::unpack(&product_mint_data)?;
         assert_eq!(product_mint_state.base.decimals, 0);
-        assert!(product_mint_state.base.mint_authority.contains(vendor_pubkey));
+        assert!(product_mint_state
+            .base
+            .mint_authority
+            .contains(vendor_pubkey));
     }
 
     // create atoken for device
@@ -514,14 +532,14 @@ fn create_device<'a>(
         &spl_associated_token_account::instruction::create_associated_token_account(
             payer_pubkey,
             &device_pubkey,
-            &mint_pubkey,
+            &product_mint_pubkey,
             &token_program_id,
         ),
         &[
-            // 0. `[writeable,signer]` Funding account (must be a system account)
+            // 0. `[writable,signer]` Funding account (must be a system account)
             ctx.accounts.payer.clone(),
-            // 1. `[writeable]` Associated token account address to be created
-            ctx.accounts.product_atoken.clone(),
+            // 1. `[writable]` Associated token account address to be created
+            ctx.accounts.product_associated_token.clone(),
             // 2. `[]` Wallet address for the new associated token account
             ctx.accounts.device.clone(),
             // 3. `[]` The token mint for the new associated token account
@@ -529,7 +547,7 @@ fn create_device<'a>(
             // 4. `[]` System program
             ctx.accounts.system_program.clone(),
             // 5. `[]` SPL Token program
-            ctx.accounts.token_program_2022.clone(),
+            ctx.accounts.token_2022_program.clone(),
         ],
     )?;
 
@@ -537,8 +555,8 @@ fn create_device<'a>(
     invoke(
         &spl_token_2022::instruction::mint_to(
             &token_program_id,
-            &mint_pubkey,
-            &atoken_pubkey,
+            &product_mint_pubkey,
+            &product_ata_pubkey,
             vendor_pubkey,
             &[vendor_pubkey],
             1,
@@ -547,21 +565,20 @@ fn create_device<'a>(
             // [writable] The mint.
             ctx.accounts.product_mint.clone(),
             // [writable] The account to mint tokens to.
-            ctx.accounts.product_atoken.clone(),
+            ctx.accounts.product_associated_token.clone(),
             // [signer] The mint's minting authority.
             ctx.accounts.vendor.clone(),
         ],
     )?;
 
-
     // Create the DID token
-    let did_mint_seeds: &[&[u8]] = &[
-        b"DePHY DID",
+    let device_mint_seeds: &[&[u8]] = &[
+        DEVICE_MINT_SEED_PREFIX,
         device_pubkey.as_ref(),
         &[args.bump],
     ];
-    let mint_pubkey = Pubkey::create_program_address(did_mint_seeds, program_id)?;
-    assert_same_pubkeys("did_mint", ctx.accounts.did_mint, &mint_pubkey)?;
+    let device_mint_pubkey = Pubkey::create_program_address(device_mint_seeds, program_id)?;
+    assert_same_pubkeys("device_mint", ctx.accounts.device_mint, &device_mint_pubkey)?;
 
     // calc account size
     let base_size = ExtensionType::try_calculate_account_len::<Mint>(&[
@@ -580,24 +597,24 @@ fn create_device<'a>(
 
     // create DID mint account
     create_account(
-        ctx.accounts.did_mint,
+        ctx.accounts.device_mint,
         ctx.accounts.payer,
         ctx.accounts.system_program,
         base_size,
         Some(base_size + metadata_size),
         &token_program_id,
-        &[&did_mint_seeds],
+        &[&device_mint_seeds],
     )?;
 
     // init non-transferable mint
     invoke(
         &spl_token_2022::instruction::initialize_non_transferable_mint(
             &token_program_id,
-            &mint_pubkey,
+            &device_mint_pubkey,
         )?,
         &[
-            // 0. `[writable]`  The mint account to initialize.
-            ctx.accounts.did_mint.clone(),
+            // 0. `[writable]` The mint account to initialize.
+            ctx.accounts.device_mint.clone(),
         ],
     )?;
 
@@ -605,13 +622,13 @@ fn create_device<'a>(
     invoke(
         &metadata_pointer::instruction::initialize(
             &token_program_id,
-            &mint_pubkey,
-            Some(mint_pubkey),
-            Some(mint_pubkey),
+            &device_mint_pubkey,
+            Some(device_mint_pubkey),
+            Some(device_mint_pubkey),
         )?,
         &[
             // 0. `[writable]` The mint to initialize.
-            ctx.accounts.did_mint.clone(),
+            ctx.accounts.device_mint.clone(),
         ],
     )?;
 
@@ -619,59 +636,59 @@ fn create_device<'a>(
     invoke_signed(
         &spl_token_2022::instruction::initialize_mint2(
             &token_program_id,
-            &mint_pubkey,
-            &mint_pubkey,
-            Some(&mint_pubkey),
+            &device_mint_pubkey,
+            &device_mint_pubkey,
+            Some(&device_mint_pubkey),
             0,
         )?,
         &[
             // [writable] The mint to initialize.
-            ctx.accounts.did_mint.clone(),
+            ctx.accounts.device_mint.clone(),
         ],
-        &[did_mint_seeds],
+        &[device_mint_seeds],
     )?;
 
     // init metadata
     invoke_signed(
         &spl_token_metadata_interface::instruction::initialize(
             &token_program_id,
-            &mint_pubkey,
-            &mint_pubkey,
-            &mint_pubkey,
-            &mint_pubkey,
+            &device_mint_pubkey,
+            &device_mint_pubkey,
+            &device_mint_pubkey,
+            &device_mint_pubkey,
             metadata.name,
             metadata.symbol,
             metadata.uri,
         ),
         &[
             // [w] Metadata
-            ctx.accounts.did_mint.clone(),
+            ctx.accounts.device_mint.clone(),
             // [] Update authority
-            ctx.accounts.did_mint.clone(),
+            ctx.accounts.device_mint.clone(),
             // [] Mint
-            ctx.accounts.did_mint.clone(),
+            ctx.accounts.device_mint.clone(),
             // [s] Mint authority
-            ctx.accounts.did_mint.clone(),
+            ctx.accounts.device_mint.clone(),
         ],
-        &[did_mint_seeds],
+        &[device_mint_seeds],
     )?;
 
     for (field, value) in metadata.additional_metadata {
         invoke_signed(
             &spl_token_metadata_interface::instruction::update_field(
                 &token_program_id,
-                &mint_pubkey,
-                &mint_pubkey,
+                &device_mint_pubkey,
+                &device_mint_pubkey,
                 Field::Key(field),
                 value,
             ),
             &[
                 // 0. `[w]` Metadata account
-                ctx.accounts.did_mint.clone(),
+                ctx.accounts.device_mint.clone(),
                 // 1. `[s]` Update authority
-                ctx.accounts.did_mint.clone(),
+                ctx.accounts.device_mint.clone(),
             ],
-            &[did_mint_seeds],
+            &[device_mint_seeds],
         )?;
     }
 
@@ -689,32 +706,32 @@ fn activate_device<'a>(
     let payer_pubkey = ctx.accounts.payer.key;
     let vendor_pubkey = ctx.accounts.vendor.key;
     let product_mint_pubkey = ctx.accounts.product_mint.key;
-    let product_atoken_pubkey = ctx.accounts.product_atoken.key;
+    let product_ata_pubkey = ctx.accounts.product_associated_token.key;
     let device_pubkey = ctx.accounts.device.key;
-    let user_pubkey = ctx.accounts.user.key;
+    let owner_pubkey = ctx.accounts.owner.key;
 
     // Guards
-    assert_signer("user", ctx.accounts.user)?;
+    assert_signer("owner", ctx.accounts.owner)?;
 
     // ed25519 or secp256k1 program should be called to verify signature
     let sign_ix = get_instruction_relative(-1, ctx.accounts.instructions)?;
-    let (key, message) = match args.key_type {
-        KeyType::Ed25519 => {
+    let (key, message) = match args.signing_alg {
+        DeviceSigningAlgorithm::Ed25519 => {
             if sign_ix.program_id != solana_program::ed25519_program::id() {
                 return Err(ProgramError::IncorrectProgramId);
             }
-            args.key_type.decode(&sign_ix.data)?
+            args.signing_alg.decode(&sign_ix.data)?
         }
-        KeyType::Secp256k1 => {
+        DeviceSigningAlgorithm::Secp256k1 => {
             if sign_ix.program_id != solana_program::secp256k1_program::id() {
                 return Err(ProgramError::IncorrectProgramId);
             }
-            args.key_type.decode(&sign_ix.data)?
+            args.signing_alg.decode(&sign_ix.data)?
         }
     };
     assert_eq!(key, device_pubkey.to_bytes());
-    assert_eq!(message[0..32], product_atoken_pubkey.to_bytes());
-    assert_eq!(message[32..64], user_pubkey.to_bytes());
+    assert_eq!(message[0..32], product_ata_pubkey.to_bytes());
+    assert_eq!(message[32..64], owner_pubkey.to_bytes());
     let clock = Clock::get()?;
     let slot = u64::from_le_bytes(message[64..72].try_into().unwrap());
     assert!(clock.slot >= slot);
@@ -722,9 +739,13 @@ fn activate_device<'a>(
 
     // TODO: verify Device/Product/Vendor
     {
-        let device_account_data = ctx.accounts.product_atoken.data.borrow();
+        let device_account_data = ctx.accounts.product_associated_token.data.borrow();
         let product_device_account = StateWithExtensions::<Account>::unpack(&device_account_data)?;
-        assert_same_pubkeys("Device Owner", ctx.accounts.device, &product_device_account.base.owner)?;
+        assert_same_pubkeys(
+            "device_owner",
+            ctx.accounts.device,
+            &product_device_account.base.owner,
+        )?;
     }
 
     let product_mint_data = ctx.accounts.product_mint.data.borrow();
@@ -733,11 +754,11 @@ fn activate_device<'a>(
 
     // Product from Vendor
     assert_pda_without_bump(
-        "Product Mint",
+        "product_mint",
         ctx.accounts.product_mint,
         program_id,
         &[
-            b"DePHY PRODUCT",
+            PRODUCT_MINT_SEED_PREFIX,
             vendor_pubkey.as_ref(),
             product_mint_metadata.name.as_ref(),
         ],
@@ -745,8 +766,8 @@ fn activate_device<'a>(
 
     // Device from Product
     assert_same_pubkeys(
-        "Product AToken",
-        ctx.accounts.product_atoken,
+        "product_ata",
+        ctx.accounts.product_associated_token,
         &get_associated_token_address_with_program_id(
             device_pubkey,
             product_mint_pubkey,
@@ -754,21 +775,25 @@ fn activate_device<'a>(
         ),
     )?;
 
-    // Mint DID
-    let did_mint_seeds: &[&[u8]] = &[
-        b"DePHY DID",
+    // Mint Device
+    let device_mint_seeds: &[&[u8]] = &[
+        DEVICE_MINT_SEED_PREFIX,
         device_pubkey.as_ref(),
         &[args.bump],
     ];
-    let mint_pubkey = Pubkey::create_program_address(did_mint_seeds, program_id)?;
-    assert_same_pubkeys("did_mint", ctx.accounts.did_mint, &mint_pubkey)?;
+    let device_mint_pubkey = Pubkey::create_program_address(device_mint_seeds, program_id)?;
+    assert_same_pubkeys("device_mint", ctx.accounts.device_mint, &device_mint_pubkey)?;
 
-    let atoken_pubkey = spl_associated_token_account::get_associated_token_address_with_program_id(
-        user_pubkey,
-        &mint_pubkey,
+    let device_ata_pubkey = get_associated_token_address_with_program_id(
+        owner_pubkey,
+        &device_mint_pubkey,
         &token_program_id,
     );
-    assert_same_pubkeys("did_atoken", ctx.accounts.did_atoken, &atoken_pubkey)?;
+    assert_same_pubkeys(
+        "device_ata",
+        ctx.accounts.device_associated_token,
+        &device_ata_pubkey,
+    )?;
 
     // CPIs
 
@@ -776,23 +801,23 @@ fn activate_device<'a>(
     invoke(
         &spl_associated_token_account::instruction::create_associated_token_account(
             payer_pubkey,
-            user_pubkey,
-            &mint_pubkey,
+            owner_pubkey,
+            &device_mint_pubkey,
             &token_program_id,
         ),
         &[
             // 0. `[writeable,signer]` Funding account (must be a system account)
             ctx.accounts.payer.clone(),
             // 1. `[writeable]` Associated token account address to be created
-            ctx.accounts.did_atoken.clone(),
+            ctx.accounts.device_associated_token.clone(),
             // 2. `[]` Wallet address for the new associated token account
-            ctx.accounts.user.clone(),
+            ctx.accounts.owner.clone(),
             // 3. `[]` The token mint for the new associated token account
-            ctx.accounts.did_mint.clone(),
+            ctx.accounts.device_mint.clone(),
             // 4. `[]` System program
             ctx.accounts.system_program.clone(),
             // 5. `[]` SPL Token program
-            ctx.accounts.token_program_2022.clone(),
+            ctx.accounts.token_2022_program.clone(),
         ],
     )?;
 
@@ -800,40 +825,40 @@ fn activate_device<'a>(
     invoke_signed(
         &spl_token_2022::instruction::mint_to(
             &token_program_id,
-            &mint_pubkey,
-            &atoken_pubkey,
-            &mint_pubkey,
-            &[&mint_pubkey],
+            &device_mint_pubkey,
+            &device_ata_pubkey,
+            &device_mint_pubkey,
+            &[&device_mint_pubkey],
             1,
         )?,
         &[
             // [writable] The mint.
-            ctx.accounts.did_mint.clone(),
+            ctx.accounts.device_mint.clone(),
             // [writable] The account to mint tokens to.
-            ctx.accounts.did_atoken.clone(),
+            ctx.accounts.device_associated_token.clone(),
             // [signer] The mint's minting authority.
-            ctx.accounts.did_mint.clone(),
+            ctx.accounts.device_mint.clone(),
         ],
-        &[did_mint_seeds],
+        &[device_mint_seeds],
     )?;
 
     // disable mint
     invoke_signed(
         &spl_token_2022::instruction::set_authority(
             &token_program_id,
-            &mint_pubkey,
+            &device_mint_pubkey,
             None,
             spl_token_2022::instruction::AuthorityType::MintTokens,
-            &mint_pubkey,
-            &[&mint_pubkey],
+            &device_mint_pubkey,
+            &[&device_mint_pubkey],
         )?,
         &[
             // [writable] The mint or account to change the authority of.
-            ctx.accounts.did_mint.clone(),
+            ctx.accounts.device_mint.clone(),
             // [signer] The current authority of the mint or account.
-            ctx.accounts.did_mint.clone(),
+            ctx.accounts.device_mint.clone(),
         ],
-        &[did_mint_seeds],
+        &[device_mint_seeds],
     )?;
 
     Ok(())

@@ -33,3 +33,6 @@ solana-program-test = { workspace = true }
 solana-sdk = { workspace = true }
 ed25519-dalek = { workspace = true }
 libsecp256k1 = { workspace = true }
+
+[features]
+test-sbf = []

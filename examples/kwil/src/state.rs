@@ -52,7 +52,6 @@ impl PublisherData {
     pub const LEN: usize = 1 + 20;
 }
 
-
 #[repr(C)]
 #[derive(Clone, BorshSerialize, BorshDeserialize, Debug, ShankAccount)]
 pub struct LinkedAccount {
@@ -89,7 +88,6 @@ pub struct LinkedData {
 impl LinkedData {
     pub const LEN: usize = 1 + 20;
 }
-
 
 #[repr(C)]
 #[derive(Clone, BorshSerialize, BorshDeserialize, Debug, ShankAccount)]
@@ -128,4 +126,3 @@ pub struct SubscriberData {
 impl SubscriberData {
     pub const LEN: usize = 1 + 32 + 32;
 }
-

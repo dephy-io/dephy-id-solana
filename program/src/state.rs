@@ -10,23 +10,23 @@ use crate::error::Error;
 #[derive(Clone, BorshSerialize, BorshDeserialize, Debug)]
 pub enum Key {
     Uninitialized,
-    DephyAccount,
+    ProgramDataAccount,
 }
 
 #[repr(C)]
 #[derive(Clone, BorshSerialize, BorshDeserialize, Debug, ShankAccount)]
-pub struct DephyAccount {
+pub struct ProgramDataAccount {
     pub key: Key,
     pub authority: Pubkey,
-    pub data: DephyData,
+    pub data: ProgramData,
 }
 
-impl DephyAccount {
-    pub const LEN: usize = 1 + 32 + DephyData::LEN;
+impl ProgramDataAccount {
+    pub const LEN: usize = 1 + 32 + ProgramData::LEN;
 
     pub fn load(account: &AccountInfo) -> Result<Self, ProgramError> {
         let mut bytes: &[u8] = &(*account.data).borrow();
-        DephyAccount::deserialize(&mut bytes).map_err(|error| {
+        ProgramDataAccount::deserialize(&mut bytes).map_err(|error| {
             msg!("Error: {}", error);
             Error::DeserializationError.into()
         })
@@ -42,10 +42,10 @@ impl DephyAccount {
 
 ///
 #[derive(Clone, BorshSerialize, BorshDeserialize, Debug)]
-pub struct DephyData {
+pub struct ProgramData {
     pub bump: u8,
 }
 
-impl DephyData {
+impl ProgramData {
     pub const LEN: usize = 1;
 }

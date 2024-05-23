@@ -4,26 +4,26 @@ import { Indexer } from "./src/indexer"
 try {
     const { values: config } = parseArgs({
         options: {
-            rpc_url: {
+            rpcUrl: {
                 type: 'string',
                 short: 'r',
                 default: 'http://127.0.0.1:8899',
             },
-            pubsub_url: {
+            pubSubUrl: {
                 type: 'string',
                 short: 's',
                 default: 'ws://127.0.0.1:8900',
             },
-            database_url: {
+            databaseUrl: {
                 type: 'string',
                 short: 'd'
             },
-            program_id: {
+            programId: {
                 type: 'string',
                 short: 'p',
                 default: 'hdMghjD73uASxgJXi6e1mGPsXqnADMsrqB1bveqABP1'
             },
-            plugins_dir: {
+            pluginsDir: {
                 type: 'string',
                 default: './src/plugins'
             }
@@ -34,7 +34,7 @@ try {
     await indexer.ensureConnected()
     console.log('Connected')
 
-    await indexer.run(config.program_id!, 'confirmed')
+    await indexer.run(config.programId!, 'confirmed')
 
     // [ABORTED] Reaching this line means the subscription was aborted — i.e. unsubscribed.
 } catch (e) {

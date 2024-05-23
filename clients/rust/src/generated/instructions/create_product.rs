@@ -13,17 +13,17 @@ pub struct CreateProduct {
     /// The system program
     pub system_program: solana_program::pubkey::Pubkey,
     /// The SPL Token 2022 program
-    pub token_program2022: solana_program::pubkey::Pubkey,
+    pub token2022_program: solana_program::pubkey::Pubkey,
     /// The account paying for the storage fees
     pub payer: solana_program::pubkey::Pubkey,
-    /// The Vendor pubkey
+    /// The vendor
     pub vendor: solana_program::pubkey::Pubkey,
-    /// The product mint account
-    pub product_mint: solana_program::pubkey::Pubkey,
-    /// The Vendor mint
+    /// The mint account of the vendor
     pub vendor_mint: solana_program::pubkey::Pubkey,
-    /// The atoken account for vendor
-    pub vendor_atoken: solana_program::pubkey::Pubkey,
+    /// The associated token account of the vendor
+    pub vendor_associated_token: solana_program::pubkey::Pubkey,
+    /// The mint account of the product
+    pub product_mint: solana_program::pubkey::Pubkey,
 }
 
 impl CreateProduct {
@@ -45,7 +45,7 @@ impl CreateProduct {
             false,
         ));
         accounts.push(solana_program::instruction::AccountMeta::new_readonly(
-            self.token_program2022,
+            self.token2022_program,
             false,
         ));
         accounts.push(solana_program::instruction::AccountMeta::new(
@@ -55,16 +55,16 @@ impl CreateProduct {
             self.vendor,
             true,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
-            self.product_mint,
-            false,
-        ));
         accounts.push(solana_program::instruction::AccountMeta::new_readonly(
             self.vendor_mint,
             false,
         ));
         accounts.push(solana_program::instruction::AccountMeta::new_readonly(
-            self.vendor_atoken,
+            self.vendor_associated_token,
+            false,
+        ));
+        accounts.push(solana_program::instruction::AccountMeta::new(
+            self.product_mint,
             false,
         ));
         accounts.extend_from_slice(remaining_accounts);
@@ -112,21 +112,21 @@ pub struct CreateProductInstructionArgs {
 /// ### Accounts:
 ///
 ///   0. `[optional]` system_program (default to `11111111111111111111111111111111`)
-///   1. `[]` token_program2022
+///   1. `[]` token2022_program
 ///   2. `[writable, signer]` payer
 ///   3. `[signer]` vendor
-///   4. `[writable]` product_mint
-///   5. `[]` vendor_mint
-///   6. `[]` vendor_atoken
+///   4. `[]` vendor_mint
+///   5. `[]` vendor_associated_token
+///   6. `[writable]` product_mint
 #[derive(Clone, Debug, Default)]
 pub struct CreateProductBuilder {
     system_program: Option<solana_program::pubkey::Pubkey>,
-    token_program2022: Option<solana_program::pubkey::Pubkey>,
+    token2022_program: Option<solana_program::pubkey::Pubkey>,
     payer: Option<solana_program::pubkey::Pubkey>,
     vendor: Option<solana_program::pubkey::Pubkey>,
-    product_mint: Option<solana_program::pubkey::Pubkey>,
     vendor_mint: Option<solana_program::pubkey::Pubkey>,
-    vendor_atoken: Option<solana_program::pubkey::Pubkey>,
+    vendor_associated_token: Option<solana_program::pubkey::Pubkey>,
+    product_mint: Option<solana_program::pubkey::Pubkey>,
     bump: Option<u8>,
     name: Option<String>,
     symbol: Option<String>,
@@ -148,11 +148,11 @@ impl CreateProductBuilder {
     }
     /// The SPL Token 2022 program
     #[inline(always)]
-    pub fn token_program2022(
+    pub fn token2022_program(
         &mut self,
-        token_program2022: solana_program::pubkey::Pubkey,
+        token2022_program: solana_program::pubkey::Pubkey,
     ) -> &mut Self {
-        self.token_program2022 = Some(token_program2022);
+        self.token2022_program = Some(token2022_program);
         self
     }
     /// The account paying for the storage fees
@@ -161,28 +161,31 @@ impl CreateProductBuilder {
         self.payer = Some(payer);
         self
     }
-    /// The Vendor pubkey
+    /// The vendor
     #[inline(always)]
     pub fn vendor(&mut self, vendor: solana_program::pubkey::Pubkey) -> &mut Self {
         self.vendor = Some(vendor);
         self
     }
-    /// The product mint account
-    #[inline(always)]
-    pub fn product_mint(&mut self, product_mint: solana_program::pubkey::Pubkey) -> &mut Self {
-        self.product_mint = Some(product_mint);
-        self
-    }
-    /// The Vendor mint
+    /// The mint account of the vendor
     #[inline(always)]
     pub fn vendor_mint(&mut self, vendor_mint: solana_program::pubkey::Pubkey) -> &mut Self {
         self.vendor_mint = Some(vendor_mint);
         self
     }
-    /// The atoken account for vendor
+    /// The associated token account of the vendor
     #[inline(always)]
-    pub fn vendor_atoken(&mut self, vendor_atoken: solana_program::pubkey::Pubkey) -> &mut Self {
-        self.vendor_atoken = Some(vendor_atoken);
+    pub fn vendor_associated_token(
+        &mut self,
+        vendor_associated_token: solana_program::pubkey::Pubkey,
+    ) -> &mut Self {
+        self.vendor_associated_token = Some(vendor_associated_token);
+        self
+    }
+    /// The mint account of the product
+    #[inline(always)]
+    pub fn product_mint(&mut self, product_mint: solana_program::pubkey::Pubkey) -> &mut Self {
+        self.product_mint = Some(product_mint);
         self
     }
     #[inline(always)]
@@ -234,14 +237,16 @@ impl CreateProductBuilder {
             system_program: self
                 .system_program
                 .unwrap_or(solana_program::pubkey!("11111111111111111111111111111111")),
-            token_program2022: self
-                .token_program2022
-                .expect("token_program2022 is not set"),
+            token2022_program: self
+                .token2022_program
+                .expect("token2022_program is not set"),
             payer: self.payer.expect("payer is not set"),
             vendor: self.vendor.expect("vendor is not set"),
-            product_mint: self.product_mint.expect("product_mint is not set"),
             vendor_mint: self.vendor_mint.expect("vendor_mint is not set"),
-            vendor_atoken: self.vendor_atoken.expect("vendor_atoken is not set"),
+            vendor_associated_token: self
+                .vendor_associated_token
+                .expect("vendor_associated_token is not set"),
+            product_mint: self.product_mint.expect("product_mint is not set"),
         };
         let args = CreateProductInstructionArgs {
             bump: self.bump.clone().expect("bump is not set"),
@@ -263,17 +268,17 @@ pub struct CreateProductCpiAccounts<'a, 'b> {
     /// The system program
     pub system_program: &'b solana_program::account_info::AccountInfo<'a>,
     /// The SPL Token 2022 program
-    pub token_program2022: &'b solana_program::account_info::AccountInfo<'a>,
+    pub token2022_program: &'b solana_program::account_info::AccountInfo<'a>,
     /// The account paying for the storage fees
     pub payer: &'b solana_program::account_info::AccountInfo<'a>,
-    /// The Vendor pubkey
+    /// The vendor
     pub vendor: &'b solana_program::account_info::AccountInfo<'a>,
-    /// The product mint account
-    pub product_mint: &'b solana_program::account_info::AccountInfo<'a>,
-    /// The Vendor mint
+    /// The mint account of the vendor
     pub vendor_mint: &'b solana_program::account_info::AccountInfo<'a>,
-    /// The atoken account for vendor
-    pub vendor_atoken: &'b solana_program::account_info::AccountInfo<'a>,
+    /// The associated token account of the vendor
+    pub vendor_associated_token: &'b solana_program::account_info::AccountInfo<'a>,
+    /// The mint account of the product
+    pub product_mint: &'b solana_program::account_info::AccountInfo<'a>,
 }
 
 /// `create_product` CPI instruction.
@@ -283,17 +288,17 @@ pub struct CreateProductCpi<'a, 'b> {
     /// The system program
     pub system_program: &'b solana_program::account_info::AccountInfo<'a>,
     /// The SPL Token 2022 program
-    pub token_program2022: &'b solana_program::account_info::AccountInfo<'a>,
+    pub token2022_program: &'b solana_program::account_info::AccountInfo<'a>,
     /// The account paying for the storage fees
     pub payer: &'b solana_program::account_info::AccountInfo<'a>,
-    /// The Vendor pubkey
+    /// The vendor
     pub vendor: &'b solana_program::account_info::AccountInfo<'a>,
-    /// The product mint account
-    pub product_mint: &'b solana_program::account_info::AccountInfo<'a>,
-    /// The Vendor mint
+    /// The mint account of the vendor
     pub vendor_mint: &'b solana_program::account_info::AccountInfo<'a>,
-    /// The atoken account for vendor
-    pub vendor_atoken: &'b solana_program::account_info::AccountInfo<'a>,
+    /// The associated token account of the vendor
+    pub vendor_associated_token: &'b solana_program::account_info::AccountInfo<'a>,
+    /// The mint account of the product
+    pub product_mint: &'b solana_program::account_info::AccountInfo<'a>,
     /// The arguments for the instruction.
     pub __args: CreateProductInstructionArgs,
 }
@@ -307,12 +312,12 @@ impl<'a, 'b> CreateProductCpi<'a, 'b> {
         Self {
             __program: program,
             system_program: accounts.system_program,
-            token_program2022: accounts.token_program2022,
+            token2022_program: accounts.token2022_program,
             payer: accounts.payer,
             vendor: accounts.vendor,
-            product_mint: accounts.product_mint,
             vendor_mint: accounts.vendor_mint,
-            vendor_atoken: accounts.vendor_atoken,
+            vendor_associated_token: accounts.vendor_associated_token,
+            product_mint: accounts.product_mint,
             __args: args,
         }
     }
@@ -355,7 +360,7 @@ impl<'a, 'b> CreateProductCpi<'a, 'b> {
             false,
         ));
         accounts.push(solana_program::instruction::AccountMeta::new_readonly(
-            *self.token_program2022.key,
+            *self.token2022_program.key,
             false,
         ));
         accounts.push(solana_program::instruction::AccountMeta::new(
@@ -366,16 +371,16 @@ impl<'a, 'b> CreateProductCpi<'a, 'b> {
             *self.vendor.key,
             true,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
-            *self.product_mint.key,
-            false,
-        ));
         accounts.push(solana_program::instruction::AccountMeta::new_readonly(
             *self.vendor_mint.key,
             false,
         ));
         accounts.push(solana_program::instruction::AccountMeta::new_readonly(
-            *self.vendor_atoken.key,
+            *self.vendor_associated_token.key,
+            false,
+        ));
+        accounts.push(solana_program::instruction::AccountMeta::new(
+            *self.product_mint.key,
             false,
         ));
         remaining_accounts.iter().for_each(|remaining_account| {
@@ -397,12 +402,12 @@ impl<'a, 'b> CreateProductCpi<'a, 'b> {
         let mut account_infos = Vec::with_capacity(7 + 1 + remaining_accounts.len());
         account_infos.push(self.__program.clone());
         account_infos.push(self.system_program.clone());
-        account_infos.push(self.token_program2022.clone());
+        account_infos.push(self.token2022_program.clone());
         account_infos.push(self.payer.clone());
         account_infos.push(self.vendor.clone());
-        account_infos.push(self.product_mint.clone());
         account_infos.push(self.vendor_mint.clone());
-        account_infos.push(self.vendor_atoken.clone());
+        account_infos.push(self.vendor_associated_token.clone());
+        account_infos.push(self.product_mint.clone());
         remaining_accounts
             .iter()
             .for_each(|remaining_account| account_infos.push(remaining_account.0.clone()));
@@ -420,12 +425,12 @@ impl<'a, 'b> CreateProductCpi<'a, 'b> {
 /// ### Accounts:
 ///
 ///   0. `[]` system_program
-///   1. `[]` token_program2022
+///   1. `[]` token2022_program
 ///   2. `[writable, signer]` payer
 ///   3. `[signer]` vendor
-///   4. `[writable]` product_mint
-///   5. `[]` vendor_mint
-///   6. `[]` vendor_atoken
+///   4. `[]` vendor_mint
+///   5. `[]` vendor_associated_token
+///   6. `[writable]` product_mint
 #[derive(Clone, Debug)]
 pub struct CreateProductCpiBuilder<'a, 'b> {
     instruction: Box<CreateProductCpiBuilderInstruction<'a, 'b>>,
@@ -436,12 +441,12 @@ impl<'a, 'b> CreateProductCpiBuilder<'a, 'b> {
         let instruction = Box::new(CreateProductCpiBuilderInstruction {
             __program: program,
             system_program: None,
-            token_program2022: None,
+            token2022_program: None,
             payer: None,
             vendor: None,
-            product_mint: None,
             vendor_mint: None,
-            vendor_atoken: None,
+            vendor_associated_token: None,
+            product_mint: None,
             bump: None,
             name: None,
             symbol: None,
@@ -462,11 +467,11 @@ impl<'a, 'b> CreateProductCpiBuilder<'a, 'b> {
     }
     /// The SPL Token 2022 program
     #[inline(always)]
-    pub fn token_program2022(
+    pub fn token2022_program(
         &mut self,
-        token_program2022: &'b solana_program::account_info::AccountInfo<'a>,
+        token2022_program: &'b solana_program::account_info::AccountInfo<'a>,
     ) -> &mut Self {
-        self.instruction.token_program2022 = Some(token_program2022);
+        self.instruction.token2022_program = Some(token2022_program);
         self
     }
     /// The account paying for the storage fees
@@ -475,7 +480,7 @@ impl<'a, 'b> CreateProductCpiBuilder<'a, 'b> {
         self.instruction.payer = Some(payer);
         self
     }
-    /// The Vendor pubkey
+    /// The vendor
     #[inline(always)]
     pub fn vendor(
         &mut self,
@@ -484,16 +489,7 @@ impl<'a, 'b> CreateProductCpiBuilder<'a, 'b> {
         self.instruction.vendor = Some(vendor);
         self
     }
-    /// The product mint account
-    #[inline(always)]
-    pub fn product_mint(
-        &mut self,
-        product_mint: &'b solana_program::account_info::AccountInfo<'a>,
-    ) -> &mut Self {
-        self.instruction.product_mint = Some(product_mint);
-        self
-    }
-    /// The Vendor mint
+    /// The mint account of the vendor
     #[inline(always)]
     pub fn vendor_mint(
         &mut self,
@@ -502,13 +498,22 @@ impl<'a, 'b> CreateProductCpiBuilder<'a, 'b> {
         self.instruction.vendor_mint = Some(vendor_mint);
         self
     }
-    /// The atoken account for vendor
+    /// The associated token account of the vendor
     #[inline(always)]
-    pub fn vendor_atoken(
+    pub fn vendor_associated_token(
         &mut self,
-        vendor_atoken: &'b solana_program::account_info::AccountInfo<'a>,
+        vendor_associated_token: &'b solana_program::account_info::AccountInfo<'a>,
     ) -> &mut Self {
-        self.instruction.vendor_atoken = Some(vendor_atoken);
+        self.instruction.vendor_associated_token = Some(vendor_associated_token);
+        self
+    }
+    /// The mint account of the product
+    #[inline(always)]
+    pub fn product_mint(
+        &mut self,
+        product_mint: &'b solana_program::account_info::AccountInfo<'a>,
+    ) -> &mut Self {
+        self.instruction.product_mint = Some(product_mint);
         self
     }
     #[inline(always)]
@@ -596,29 +601,29 @@ impl<'a, 'b> CreateProductCpiBuilder<'a, 'b> {
                 .system_program
                 .expect("system_program is not set"),
 
-            token_program2022: self
+            token2022_program: self
                 .instruction
-                .token_program2022
-                .expect("token_program2022 is not set"),
+                .token2022_program
+                .expect("token2022_program is not set"),
 
             payer: self.instruction.payer.expect("payer is not set"),
 
             vendor: self.instruction.vendor.expect("vendor is not set"),
-
-            product_mint: self
-                .instruction
-                .product_mint
-                .expect("product_mint is not set"),
 
             vendor_mint: self
                 .instruction
                 .vendor_mint
                 .expect("vendor_mint is not set"),
 
-            vendor_atoken: self
+            vendor_associated_token: self
                 .instruction
-                .vendor_atoken
-                .expect("vendor_atoken is not set"),
+                .vendor_associated_token
+                .expect("vendor_associated_token is not set"),
+
+            product_mint: self
+                .instruction
+                .product_mint
+                .expect("product_mint is not set"),
             __args: args,
         };
         instruction.invoke_signed_with_remaining_accounts(
@@ -632,12 +637,12 @@ impl<'a, 'b> CreateProductCpiBuilder<'a, 'b> {
 struct CreateProductCpiBuilderInstruction<'a, 'b> {
     __program: &'b solana_program::account_info::AccountInfo<'a>,
     system_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    token_program2022: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    token2022_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     payer: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     vendor: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    product_mint: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     vendor_mint: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    vendor_atoken: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    vendor_associated_token: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    product_mint: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     bump: Option<u8>,
     name: Option<String>,
     symbol: Option<String>,
