@@ -517,10 +517,17 @@ fn create_device<'a>(
     )?;
 
     // TODO: check account pubkeys
-    let product_mint_data = ctx.accounts.product_mint.data.borrow();
-    let product_mint_state = StateWithExtensions::<Mint>::unpack(&product_mint_data)?;
-    assert_eq!(product_mint_state.base.decimals, 0);
-    assert!(product_mint_state.base.mint_authority.contains(vendor_pubkey));
+    let product_metadata = {
+        let product_mint_data = ctx.accounts.product_mint.data.borrow();
+        let product_mint_state = StateWithExtensions::<Mint>::unpack(&product_mint_data)?;
+        assert_eq!(product_mint_state.base.decimals, 0);
+        assert!(product_mint_state
+            .base
+            .mint_authority
+            .contains(vendor_pubkey));
+
+        product_mint_state.get_variable_len_extension::<TokenMetadata>()?
+    };
 
     // create atoken for device
     invoke(
@@ -566,7 +573,7 @@ fn create_device<'a>(
         ],
     )?;
 
-    // Create the DID token
+    // Create the Device token
     let device_mint_seeds: &[&[u8]] = &[
         DEVICE_MINT_SEED_PREFIX,
         device_pubkey.as_ref(),
@@ -580,8 +587,6 @@ fn create_device<'a>(
         ExtensionType::NonTransferable,
         ExtensionType::MetadataPointer,
     ])?;
-
-    let product_metadata = product_mint_state.get_variable_len_extension::<TokenMetadata>()?;
 
     let metadata = TokenMetadata {
         name: product_metadata.name,
