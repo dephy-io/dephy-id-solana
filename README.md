@@ -48,8 +48,10 @@ This template should help get you started developing Solana programs. Let's walk
 
 1. Compile program
 
+   > Note: Use `1.18` or later
+
    ```sh
-   cargo-build-sbf --tools-version v1.41
+   cargo-build-sbf
    ```
 
 2. Run validator
