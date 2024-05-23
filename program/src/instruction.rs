@@ -146,8 +146,6 @@ impl DeviceSigningAlgorithm {
 pub struct CreateDeviceArgs {
     pub bump: u8,
     pub signing_alg: DeviceSigningAlgorithm,
-    pub name: String,
-    pub symbol: String,
     pub uri: String,
     pub additional_metadata: Vec<(String, String)>,
 }

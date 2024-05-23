@@ -115,8 +115,6 @@ impl Default for CreateDeviceInstructionData {
 pub struct CreateDeviceInstructionArgs {
     pub bump: u8,
     pub signing_alg: DeviceSigningAlgorithm,
-    pub name: String,
-    pub symbol: String,
     pub uri: String,
     pub additional_metadata: Vec<(String, String)>,
 }
@@ -147,8 +145,6 @@ pub struct CreateDeviceBuilder {
     device_mint: Option<solana_program::pubkey::Pubkey>,
     bump: Option<u8>,
     signing_alg: Option<DeviceSigningAlgorithm>,
-    name: Option<String>,
-    symbol: Option<String>,
     uri: Option<String>,
     additional_metadata: Option<Vec<(String, String)>>,
     __remaining_accounts: Vec<solana_program::instruction::AccountMeta>,
@@ -231,16 +227,6 @@ impl CreateDeviceBuilder {
         self
     }
     #[inline(always)]
-    pub fn name(&mut self, name: String) -> &mut Self {
-        self.name = Some(name);
-        self
-    }
-    #[inline(always)]
-    pub fn symbol(&mut self, symbol: String) -> &mut Self {
-        self.symbol = Some(symbol);
-        self
-    }
-    #[inline(always)]
     pub fn uri(&mut self, uri: String) -> &mut Self {
         self.uri = Some(uri);
         self
@@ -292,8 +278,6 @@ impl CreateDeviceBuilder {
         let args = CreateDeviceInstructionArgs {
             bump: self.bump.clone().expect("bump is not set"),
             signing_alg: self.signing_alg.clone().expect("signing_alg is not set"),
-            name: self.name.clone().expect("name is not set"),
-            symbol: self.symbol.clone().expect("symbol is not set"),
             uri: self.uri.clone().expect("uri is not set"),
             additional_metadata: self
                 .additional_metadata
@@ -515,8 +499,6 @@ impl<'a, 'b> CreateDeviceCpiBuilder<'a, 'b> {
             device_mint: None,
             bump: None,
             signing_alg: None,
-            name: None,
-            symbol: None,
             uri: None,
             additional_metadata: None,
             __remaining_accounts: Vec::new(),
@@ -612,16 +594,6 @@ impl<'a, 'b> CreateDeviceCpiBuilder<'a, 'b> {
         self
     }
     #[inline(always)]
-    pub fn name(&mut self, name: String) -> &mut Self {
-        self.instruction.name = Some(name);
-        self
-    }
-    #[inline(always)]
-    pub fn symbol(&mut self, symbol: String) -> &mut Self {
-        self.instruction.symbol = Some(symbol);
-        self
-    }
-    #[inline(always)]
     pub fn uri(&mut self, uri: String) -> &mut Self {
         self.instruction.uri = Some(uri);
         self
@@ -679,8 +651,6 @@ impl<'a, 'b> CreateDeviceCpiBuilder<'a, 'b> {
                 .signing_alg
                 .clone()
                 .expect("signing_alg is not set"),
-            name: self.instruction.name.clone().expect("name is not set"),
-            symbol: self.instruction.symbol.clone().expect("symbol is not set"),
             uri: self.instruction.uri.clone().expect("uri is not set"),
             additional_metadata: self
                 .instruction
@@ -749,8 +719,6 @@ struct CreateDeviceCpiBuilderInstruction<'a, 'b> {
     device_mint: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     bump: Option<u8>,
     signing_alg: Option<DeviceSigningAlgorithm>,
-    name: Option<String>,
-    symbol: Option<String>,
     uri: Option<String>,
     additional_metadata: Option<Vec<(String, String)>>,
     /// Additional instruction accounts `(AccountInfo, is_writable, is_signer)`.

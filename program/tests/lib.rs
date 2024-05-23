@@ -341,8 +341,6 @@ async fn test_create_device(
             &Instruction::CreateDevice(CreateDeviceArgs {
                 signing_alg,
                 bump: did_mint_bump,
-                name: "DePHY Device DID".to_string(),
-                symbol: "DDID".to_string(),
                 uri: "https://example.com".to_string(),
                 additional_metadata: vec![
                     ("description".to_string(), "Example DID Device".to_string()),

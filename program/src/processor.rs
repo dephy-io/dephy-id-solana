@@ -517,15 +517,10 @@ fn create_device<'a>(
     )?;
 
     // TODO: check account pubkeys
-    {
-        let product_mint_data = ctx.accounts.product_mint.data.borrow();
-        let product_mint_state = StateWithExtensions::<Mint>::unpack(&product_mint_data)?;
-        assert_eq!(product_mint_state.base.decimals, 0);
-        assert!(product_mint_state
-            .base
-            .mint_authority
-            .contains(vendor_pubkey));
-    }
+    let product_mint_data = ctx.accounts.product_mint.data.borrow();
+    let product_mint_state = StateWithExtensions::<Mint>::unpack(&product_mint_data)?;
+    assert_eq!(product_mint_state.base.decimals, 0);
+    assert!(product_mint_state.base.mint_authority.contains(vendor_pubkey));
 
     // create atoken for device
     invoke(
@@ -586,9 +581,11 @@ fn create_device<'a>(
         ExtensionType::MetadataPointer,
     ])?;
 
+    let product_metadata = product_mint_state.get_variable_len_extension::<TokenMetadata>()?;
+
     let metadata = TokenMetadata {
-        name: args.name,
-        symbol: args.symbol,
+        name: product_metadata.name,
+        symbol: product_metadata.symbol,
         uri: args.uri,
         additional_metadata: args.additional_metadata,
         ..Default::default()
