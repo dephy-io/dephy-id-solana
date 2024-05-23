@@ -8,4 +8,4 @@
 use solana_program::{pubkey, pubkey::Pubkey};
 
 /// `dephy_id` program ID.
-pub const DEPHY_ID_ID: Pubkey = pubkey!("hdMghjD73uASxgJXi6e1mGPsXqnADMsrqB1bveqABP1");
+pub const DEPHY_ID_ID: Pubkey = pubkey!("DiSU1nme5VJvMdry5FYhfw6LLFb3HUFLkCLZDe53x3PV");

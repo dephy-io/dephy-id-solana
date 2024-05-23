@@ -11,7 +11,7 @@ edition = "2021"
 publish = false
 
 [package.metadata.solana]
-program-id = "hdMghjD73uASxgJXi6e1mGPsXqnADMsrqB1bveqABP1"
+program-id = "DiSU1nme5VJvMdry5FYhfw6LLFb3HUFLkCLZDe53x3PV"
 program-dependencies = []
 
 [lib]

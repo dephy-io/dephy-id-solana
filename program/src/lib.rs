@@ -13,4 +13,4 @@ mod secp256k1;
 pub use constants::*;
 pub use solana_program;
 
-solana_program::declare_id!("hdMghjD73uASxgJXi6e1mGPsXqnADMsrqB1bveqABP1");
+solana_program::declare_id!("DiSU1nme5VJvMdry5FYhfw6LLFb3HUFLkCLZDe53x3PV");
