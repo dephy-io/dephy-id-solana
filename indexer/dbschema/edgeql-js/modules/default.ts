@@ -7,7 +7,7 @@ export type $DeviceSigningAlgorithm = {
   "Ed25519": $.$expr_Literal<$DeviceSigningAlgorithm>;
   "Secp256k1": $.$expr_Literal<$DeviceSigningAlgorithm>;
 } & $.EnumType<"default::DeviceSigningAlgorithm", ["Ed25519", "Secp256k1"]>;
-const DeviceSigningAlgorithm: $DeviceSigningAlgorithm = $.makeType<$DeviceSigningAlgorithm>(_.spec, "ae434a3c-1842-11ef-9f20-dfb2a13ed6dd", _.syntax.literal);
+const DeviceSigningAlgorithm: $DeviceSigningAlgorithm = $.makeType<$DeviceSigningAlgorithm>(_.spec, "e213957c-1920-11ef-be7a-05aacd1577e4", _.syntax.literal);
 
 export type $SolanaAccountλShape = $.typeutil.flatten<_std.$Object_8ce8c71ee4fa5f73840c22d7eaa58588λShape & {
   "pubkey": $.PropertyDesc<_std.$str, $.Cardinality.One, true, false, false, false>;
@@ -16,7 +16,7 @@ type $SolanaAccount = $.ObjectType<"default::SolanaAccount", $SolanaAccountλSha
   ..._std.$Object_8ce8c71ee4fa5f73840c22d7eaa58588['__exclusives__'],
   {pubkey: {__element__: _std.$str, __cardinality__: $.Cardinality.One | $.Cardinality.AtMostOne },},
 ]>;
-const $SolanaAccount = $.makeType<$SolanaAccount>(_.spec, "ae39b3e6-1842-11ef-841a-eb48747fa740", _.syntax.literal);
+const $SolanaAccount = $.makeType<$SolanaAccount>(_.spec, "e2060d80-1920-11ef-ad22-9f9fa487ac5d", _.syntax.literal);
 
 const SolanaAccount: $.$expr_PathNode<$.TypeSet<$SolanaAccount, $.Cardinality.Many>, null> = _.syntax.$PathNode($.$toSet($SolanaAccount, $.Cardinality.Many), null);
 
@@ -27,7 +27,7 @@ export type $AdminλShape = $.typeutil.flatten<$SolanaAccountλShape & {
 type $Admin = $.ObjectType<"default::Admin", $AdminλShape, null, [
   ...$SolanaAccount['__exclusives__'],
 ]>;
-const $Admin = $.makeType<$Admin>(_.spec, "ae3aabe8-1842-11ef-9c61-976d7ef8e953", _.syntax.literal);
+const $Admin = $.makeType<$Admin>(_.spec, "e2070a5a-1920-11ef-b271-03ec869dd088", _.syntax.literal);
 
 const Admin: $.$expr_PathNode<$.TypeSet<$Admin, $.Cardinality.Many>, null> = _.syntax.$PathNode($.$toSet($Admin, $.Cardinality.Many), null);
 
@@ -40,7 +40,7 @@ type $SplMint = $.ObjectType<"default::SplMint", $SplMintλShape, null, [
   ..._std.$Object_8ce8c71ee4fa5f73840c22d7eaa58588['__exclusives__'],
   {mint_account: {__element__: _std.$str, __cardinality__: $.Cardinality.One | $.Cardinality.AtMostOne },},
 ]>;
-const $SplMint = $.makeType<$SplMint>(_.spec, "ae40382e-1842-11ef-acc0-7b88be3b1580", _.syntax.literal);
+const $SplMint = $.makeType<$SplMint>(_.spec, "e2107202-1920-11ef-b29f-6ba84af57f84", _.syntax.literal);
 
 const SplMint: $.$expr_PathNode<$.TypeSet<$SplMint, $.Cardinality.Many>, null> = _.syntax.$PathNode($.$toSet($SplMint, $.Cardinality.Many), null);
 
@@ -51,7 +51,7 @@ type $SplAccount = $.ObjectType<"default::SplAccount", $SplAccountλShape, null,
   ..._std.$Object_8ce8c71ee4fa5f73840c22d7eaa58588['__exclusives__'],
   {token_account: {__element__: _std.$str, __cardinality__: $.Cardinality.One | $.Cardinality.AtMostOne },},
 ]>;
-const $SplAccount = $.makeType<$SplAccount>(_.spec, "ae3f47ac-1842-11ef-a522-732a7a81f16f", _.syntax.literal);
+const $SplAccount = $.makeType<$SplAccount>(_.spec, "e20f82c0-1920-11ef-a8a5-67ce4518de86", _.syntax.literal);
 
 const SplAccount: $.$expr_PathNode<$.TypeSet<$SplAccount, $.Cardinality.Many>, null> = _.syntax.$PathNode($.$toSet($SplAccount, $.Cardinality.Many), null);
 
@@ -63,7 +63,7 @@ export type $WithIxλShape = $.typeutil.flatten<_std.$Object_8ce8c71ee4fa5f73840
 type $WithIx = $.ObjectType<"default::WithIx", $WithIxλShape, null, [
   ..._std.$Object_8ce8c71ee4fa5f73840c22d7eaa58588['__exclusives__'],
 ]>;
-const $WithIx = $.makeType<$WithIx>(_.spec, "ae3cf7b8-1842-11ef-b490-bf98e6ac3ddd", _.syntax.literal);
+const $WithIx = $.makeType<$WithIx>(_.spec, "e20d26a6-1920-11ef-899f-d722d22fdf5f", _.syntax.literal);
 
 const WithIx: $.$expr_PathNode<$.TypeSet<$WithIx, $.Cardinality.Many>, null> = _.syntax.$PathNode($.$toSet($WithIx, $.Cardinality.Many), null);
 
@@ -81,7 +81,7 @@ type $DID = $.ObjectType<"default::DID", $DIDλShape, null, [
   ...$WithIx['__exclusives__'],
   {device: {__element__: $Device, __cardinality__: $.Cardinality.One | $.Cardinality.AtMostOne },},
 ]>;
-const $DID = $.makeType<$DID>(_.spec, "ae4169ec-1842-11ef-9d60-6d689606aea9", _.syntax.literal);
+const $DID = $.makeType<$DID>(_.spec, "e211b248-1920-11ef-9c03-ebb008c296b9", _.syntax.literal);
 
 const DID: $.$expr_PathNode<$.TypeSet<$DID, $.Cardinality.Many>, null> = _.syntax.$PathNode($.$toSet($DID, $.Cardinality.Many), null);
 
@@ -101,7 +101,7 @@ type $Device = $.ObjectType<"default::Device", $DeviceλShape, null, [
   ...$WithIx['__exclusives__'],
   {token_account: {__element__: _std.$str, __cardinality__: $.Cardinality.One | $.Cardinality.AtMostOne },},
 ]>;
-const $Device = $.makeType<$Device>(_.spec, "ae435694-1842-11ef-9260-992ac56e3626", _.syntax.literal);
+const $Device = $.makeType<$Device>(_.spec, "e213a06c-1920-11ef-b818-975d485acb80", _.syntax.literal);
 
 const Device: $.$expr_PathNode<$.TypeSet<$Device, $.Cardinality.Many>, null> = _.syntax.$PathNode($.$toSet($Device, $.Cardinality.Many), null);
 
@@ -117,7 +117,7 @@ type $Product = $.ObjectType<"default::Product", $ProductλShape, null, [
   ...$SplMint['__exclusives__'],
   ...$WithIx['__exclusives__'],
 ]>;
-const $Product = $.makeType<$Product>(_.spec, "ae481058-1842-11ef-a971-0794f5e002ab", _.syntax.literal);
+const $Product = $.makeType<$Product>(_.spec, "e21878da-1920-11ef-84a3-b5e89e32a936", _.syntax.literal);
 
 const Product: $.$expr_PathNode<$.TypeSet<$Product, $.Cardinality.Many>, null> = _.syntax.$PathNode($.$toSet($Product, $.Cardinality.Many), null);
 
@@ -128,14 +128,14 @@ type $Program = $.ObjectType<"default::Program", $ProgramλShape, null, [
   ...$SolanaAccount['__exclusives__'],
   ...$WithIx['__exclusives__'],
 ]>;
-const $Program = $.makeType<$Program>(_.spec, "ae3dcea4-1842-11ef-813b-4def551ccf1b", _.syntax.literal);
+const $Program = $.makeType<$Program>(_.spec, "e20e024c-1920-11ef-89b4-2be31480597e", _.syntax.literal);
 
 const Program: $.$expr_PathNode<$.TypeSet<$Program, $.Cardinality.Many>, null> = _.syntax.$PathNode($.$toSet($Program, $.Cardinality.Many), null);
 
 export type $TokenMetadataλShape = $.typeutil.flatten<_std.$Object_8ce8c71ee4fa5f73840c22d7eaa58588λShape & {
   "additional": $.PropertyDesc<$.ArrayType<$.TupleType<[_std.$str, _std.$str]>>, $.Cardinality.One, false, false, false, false>;
-  "name": $.PropertyDesc<_std.$str, $.Cardinality.One, false, false, false, false>;
-  "symbol": $.PropertyDesc<_std.$str, $.Cardinality.One, false, false, false, false>;
+  "name": $.PropertyDesc<_std.$str, $.Cardinality.AtMostOne, false, false, false, false>;
+  "symbol": $.PropertyDesc<_std.$str, $.Cardinality.AtMostOne, false, false, false, false>;
   "uri": $.PropertyDesc<_std.$str, $.Cardinality.One, false, false, false, false>;
   "<metadata[is SplMint]": $.LinkDesc<$SplMint, $.Cardinality.Many, {}, false, false,  false, false>;
   "<metadata[is DID]": $.LinkDesc<$DID, $.Cardinality.Many, {}, false, false,  false, false>;
@@ -146,7 +146,7 @@ export type $TokenMetadataλShape = $.typeutil.flatten<_std.$Object_8ce8c71ee4fa
 type $TokenMetadata = $.ObjectType<"default::TokenMetadata", $TokenMetadataλShape, null, [
   ..._std.$Object_8ce8c71ee4fa5f73840c22d7eaa58588['__exclusives__'],
 ]>;
-const $TokenMetadata = $.makeType<$TokenMetadata>(_.spec, "ae38a334-1842-11ef-b4e6-b7e7c96e2aa3", _.syntax.literal);
+const $TokenMetadata = $.makeType<$TokenMetadata>(_.spec, "e2052168-1920-11ef-9d00-3f75e798ae1e", _.syntax.literal);
 
 const TokenMetadata: $.$expr_PathNode<$.TypeSet<$TokenMetadata, $.Cardinality.Many>, null> = _.syntax.$PathNode($.$toSet($TokenMetadata, $.Cardinality.Many), null);
 
@@ -168,7 +168,7 @@ type $Transaction = $.ObjectType<"default::Transaction", $TransactionλShape, nu
   ..._std.$Object_8ce8c71ee4fa5f73840c22d7eaa58588['__exclusives__'],
   {signature: {__element__: _std.$str, __cardinality__: $.Cardinality.One | $.Cardinality.AtMostOne },},
 ]>;
-const $Transaction = $.makeType<$Transaction>(_.spec, "ae3bb36c-1842-11ef-bf92-f5bafd4692b9", _.syntax.literal);
+const $Transaction = $.makeType<$Transaction>(_.spec, "e20bdbe8-1920-11ef-9801-71a94e224d34", _.syntax.literal);
 
 const Transaction: $.$expr_PathNode<$.TypeSet<$Transaction, $.Cardinality.Many>, null> = _.syntax.$PathNode($.$toSet($Transaction, $.Cardinality.Many), null);
 
@@ -180,7 +180,7 @@ export type $UserλShape = $.typeutil.flatten<$SolanaAccountλShape & {
 type $User = $.ObjectType<"default::User", $UserλShape, null, [
   ...$SolanaAccount['__exclusives__'],
 ]>;
-const $User = $.makeType<$User>(_.spec, "ae463e54-1842-11ef-953c-c1e04eb5016d", _.syntax.literal);
+const $User = $.makeType<$User>(_.spec, "e216a078-1920-11ef-b635-6be881b4b460", _.syntax.literal);
 
 const User: $.$expr_PathNode<$.TypeSet<$User, $.Cardinality.Many>, null> = _.syntax.$PathNode($.$toSet($User, $.Cardinality.Many), null);
 
@@ -197,7 +197,7 @@ type $Vendor = $.ObjectType<"default::Vendor", $VendorλShape, null, [
   ...$WithIx['__exclusives__'],
   {token_account: {__element__: _std.$str, __cardinality__: $.Cardinality.One | $.Cardinality.AtMostOne },},
 ]>;
-const $Vendor = $.makeType<$Vendor>(_.spec, "ae4a65ba-1842-11ef-a9f2-7d5d9b521c55", _.syntax.literal);
+const $Vendor = $.makeType<$Vendor>(_.spec, "e21ac11c-1920-11ef-84d6-41e7411bea45", _.syntax.literal);
 
 const Vendor: $.$expr_PathNode<$.TypeSet<$Vendor, $.Cardinality.Many>, null> = _.syntax.$PathNode($.$toSet($Vendor, $.Cardinality.Many), null);
 
