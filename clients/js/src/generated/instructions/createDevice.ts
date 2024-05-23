@@ -104,8 +104,6 @@ export type CreateDeviceInstructionData = {
   discriminator: number;
   bump: number;
   signingAlg: DeviceSigningAlgorithm;
-  name: string;
-  symbol: string;
   uri: string;
   additionalMetadata: Array<readonly [string, string]>;
 };
@@ -113,8 +111,6 @@ export type CreateDeviceInstructionData = {
 export type CreateDeviceInstructionDataArgs = {
   bump: number;
   signingAlg: DeviceSigningAlgorithmArgs;
-  name: string;
-  symbol: string;
   uri: string;
   additionalMetadata: Array<readonly [string, string]>;
 };
@@ -125,8 +121,6 @@ export function getCreateDeviceInstructionDataEncoder(): Encoder<CreateDeviceIns
       ['discriminator', getU8Encoder()],
       ['bump', getU8Encoder()],
       ['signingAlg', getDeviceSigningAlgorithmEncoder()],
-      ['name', addEncoderSizePrefix(getUtf8Encoder(), getU32Encoder())],
-      ['symbol', addEncoderSizePrefix(getUtf8Encoder(), getU32Encoder())],
       ['uri', addEncoderSizePrefix(getUtf8Encoder(), getU32Encoder())],
       [
         'additionalMetadata',
@@ -147,8 +141,6 @@ export function getCreateDeviceInstructionDataDecoder(): Decoder<CreateDeviceIns
     ['discriminator', getU8Decoder()],
     ['bump', getU8Decoder()],
     ['signingAlg', getDeviceSigningAlgorithmDecoder()],
-    ['name', addDecoderSizePrefix(getUtf8Decoder(), getU32Decoder())],
-    ['symbol', addDecoderSizePrefix(getUtf8Decoder(), getU32Decoder())],
     ['uri', addDecoderSizePrefix(getUtf8Decoder(), getU32Decoder())],
     [
       'additionalMetadata',
@@ -203,8 +195,6 @@ export type CreateDeviceInput<
   deviceMint: Address<TAccountDeviceMint>;
   bump: CreateDeviceInstructionDataArgs['bump'];
   signingAlg: CreateDeviceInstructionDataArgs['signingAlg'];
-  name: CreateDeviceInstructionDataArgs['name'];
-  symbol: CreateDeviceInstructionDataArgs['symbol'];
   uri: CreateDeviceInstructionDataArgs['uri'];
   additionalMetadata: CreateDeviceInstructionDataArgs['additionalMetadata'];
 };
