@@ -121,9 +121,10 @@ impl DeviceSigningAlgorithm {
 #[repr(C)]
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
 pub struct CreateDeviceArgs {
-    pub signing_alg: DeviceSigningAlgorithm,
+    pub name: String,
     pub uri: String,
     pub additional_metadata: Vec<(String, String)>,
+    pub signing_alg: DeviceSigningAlgorithm,
 }
 
 #[repr(C)]

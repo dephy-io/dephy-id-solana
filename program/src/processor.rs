@@ -264,6 +264,9 @@ fn create_device<'a>(
     let vendor_pubkey = ctx.accounts.vendor.key;
     let device_pubkey = ctx.accounts.device.key;
 
+    // Pre-check
+    // TODO: Check args.name not blank and length
+
     // Guards
     assert_same_pubkeys(
         "token_2022_program",
@@ -376,7 +379,7 @@ fn create_device<'a>(
     ])?;
 
     let metadata = TokenMetadata {
-        name: product_metadata.name + " DID",
+        name: args.name,
         symbol: product_metadata.symbol,
         uri: args.uri,
         additional_metadata: args.additional_metadata,

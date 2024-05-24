@@ -102,22 +102,24 @@ export type CreateDeviceInstruction<
 
 export type CreateDeviceInstructionData = {
   discriminator: number;
-  signingAlg: DeviceSigningAlgorithm;
+  name: string;
   uri: string;
   additionalMetadata: Array<readonly [string, string]>;
+  signingAlg: DeviceSigningAlgorithm;
 };
 
 export type CreateDeviceInstructionDataArgs = {
-  signingAlg: DeviceSigningAlgorithmArgs;
+  name: string;
   uri: string;
   additionalMetadata: Array<readonly [string, string]>;
+  signingAlg: DeviceSigningAlgorithmArgs;
 };
 
 export function getCreateDeviceInstructionDataEncoder(): Encoder<CreateDeviceInstructionDataArgs> {
   return transformEncoder(
     getStructEncoder([
       ['discriminator', getU8Encoder()],
-      ['signingAlg', getDeviceSigningAlgorithmEncoder()],
+      ['name', addEncoderSizePrefix(getUtf8Encoder(), getU32Encoder())],
       ['uri', addEncoderSizePrefix(getUtf8Encoder(), getU32Encoder())],
       [
         'additionalMetadata',
@@ -128,6 +130,7 @@ export function getCreateDeviceInstructionDataEncoder(): Encoder<CreateDeviceIns
           ])
         ),
       ],
+      ['signingAlg', getDeviceSigningAlgorithmEncoder()],
     ]),
     (value) => ({ ...value, discriminator: 2 })
   );
@@ -136,7 +139,7 @@ export function getCreateDeviceInstructionDataEncoder(): Encoder<CreateDeviceIns
 export function getCreateDeviceInstructionDataDecoder(): Decoder<CreateDeviceInstructionData> {
   return getStructDecoder([
     ['discriminator', getU8Decoder()],
-    ['signingAlg', getDeviceSigningAlgorithmDecoder()],
+    ['name', addDecoderSizePrefix(getUtf8Decoder(), getU32Decoder())],
     ['uri', addDecoderSizePrefix(getUtf8Decoder(), getU32Decoder())],
     [
       'additionalMetadata',
@@ -147,6 +150,7 @@ export function getCreateDeviceInstructionDataDecoder(): Decoder<CreateDeviceIns
         ])
       ),
     ],
+    ['signingAlg', getDeviceSigningAlgorithmDecoder()],
   ]);
 }
 
@@ -189,9 +193,10 @@ export type CreateDeviceInput<
   device: Address<TAccountDevice>;
   /** The mint account of the device */
   deviceMint: Address<TAccountDeviceMint>;
-  signingAlg: CreateDeviceInstructionDataArgs['signingAlg'];
+  name: CreateDeviceInstructionDataArgs['name'];
   uri: CreateDeviceInstructionDataArgs['uri'];
   additionalMetadata: CreateDeviceInstructionDataArgs['additionalMetadata'];
+  signingAlg: CreateDeviceInstructionDataArgs['signingAlg'];
 };
 
 export function getCreateDeviceInstruction<

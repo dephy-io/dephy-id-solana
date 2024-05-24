@@ -387,10 +387,8 @@
         "kind": "struct",
         "fields": [
           {
-            "name": "signingAlg",
-            "type": {
-              "defined": "DeviceSigningAlgorithm"
-            }
+            "name": "name",
+            "type": "string"
           },
           {
             "name": "uri",
@@ -405,6 +403,12 @@
                   "string"
                 ]
               }
+            }
+          },
+          {
+            "name": "signingAlg",
+            "type": {
+              "defined": "DeviceSigningAlgorithm"
             }
           }
         ]

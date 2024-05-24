@@ -113,9 +113,10 @@ impl Default for CreateDeviceInstructionData {
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct CreateDeviceInstructionArgs {
-    pub signing_alg: DeviceSigningAlgorithm,
+    pub name: String,
     pub uri: String,
     pub additional_metadata: Vec<(String, String)>,
+    pub signing_alg: DeviceSigningAlgorithm,
 }
 
 /// Instruction builder for `CreateDevice`.
@@ -142,9 +143,10 @@ pub struct CreateDeviceBuilder {
     product_associated_token: Option<solana_program::pubkey::Pubkey>,
     device: Option<solana_program::pubkey::Pubkey>,
     device_mint: Option<solana_program::pubkey::Pubkey>,
-    signing_alg: Option<DeviceSigningAlgorithm>,
+    name: Option<String>,
     uri: Option<String>,
     additional_metadata: Option<Vec<(String, String)>>,
+    signing_alg: Option<DeviceSigningAlgorithm>,
     __remaining_accounts: Vec<solana_program::instruction::AccountMeta>,
 }
 
@@ -215,8 +217,8 @@ impl CreateDeviceBuilder {
         self
     }
     #[inline(always)]
-    pub fn signing_alg(&mut self, signing_alg: DeviceSigningAlgorithm) -> &mut Self {
-        self.signing_alg = Some(signing_alg);
+    pub fn name(&mut self, name: String) -> &mut Self {
+        self.name = Some(name);
         self
     }
     #[inline(always)]
@@ -227,6 +229,11 @@ impl CreateDeviceBuilder {
     #[inline(always)]
     pub fn additional_metadata(&mut self, additional_metadata: Vec<(String, String)>) -> &mut Self {
         self.additional_metadata = Some(additional_metadata);
+        self
+    }
+    #[inline(always)]
+    pub fn signing_alg(&mut self, signing_alg: DeviceSigningAlgorithm) -> &mut Self {
+        self.signing_alg = Some(signing_alg);
         self
     }
     /// Add an aditional account to the instruction.
@@ -269,12 +276,13 @@ impl CreateDeviceBuilder {
             device_mint: self.device_mint.expect("device_mint is not set"),
         };
         let args = CreateDeviceInstructionArgs {
-            signing_alg: self.signing_alg.clone().expect("signing_alg is not set"),
+            name: self.name.clone().expect("name is not set"),
             uri: self.uri.clone().expect("uri is not set"),
             additional_metadata: self
                 .additional_metadata
                 .clone()
                 .expect("additional_metadata is not set"),
+            signing_alg: self.signing_alg.clone().expect("signing_alg is not set"),
         };
 
         accounts.instruction_with_remaining_accounts(args, &self.__remaining_accounts)
@@ -489,9 +497,10 @@ impl<'a, 'b> CreateDeviceCpiBuilder<'a, 'b> {
             product_associated_token: None,
             device: None,
             device_mint: None,
-            signing_alg: None,
+            name: None,
             uri: None,
             additional_metadata: None,
+            signing_alg: None,
             __remaining_accounts: Vec::new(),
         });
         Self { instruction }
@@ -575,8 +584,8 @@ impl<'a, 'b> CreateDeviceCpiBuilder<'a, 'b> {
         self
     }
     #[inline(always)]
-    pub fn signing_alg(&mut self, signing_alg: DeviceSigningAlgorithm) -> &mut Self {
-        self.instruction.signing_alg = Some(signing_alg);
+    pub fn name(&mut self, name: String) -> &mut Self {
+        self.instruction.name = Some(name);
         self
     }
     #[inline(always)]
@@ -587,6 +596,11 @@ impl<'a, 'b> CreateDeviceCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn additional_metadata(&mut self, additional_metadata: Vec<(String, String)>) -> &mut Self {
         self.instruction.additional_metadata = Some(additional_metadata);
+        self
+    }
+    #[inline(always)]
+    pub fn signing_alg(&mut self, signing_alg: DeviceSigningAlgorithm) -> &mut Self {
+        self.instruction.signing_alg = Some(signing_alg);
         self
     }
     /// Add an additional account to the instruction.
@@ -631,17 +645,18 @@ impl<'a, 'b> CreateDeviceCpiBuilder<'a, 'b> {
         signers_seeds: &[&[&[u8]]],
     ) -> solana_program::entrypoint::ProgramResult {
         let args = CreateDeviceInstructionArgs {
-            signing_alg: self
-                .instruction
-                .signing_alg
-                .clone()
-                .expect("signing_alg is not set"),
+            name: self.instruction.name.clone().expect("name is not set"),
             uri: self.instruction.uri.clone().expect("uri is not set"),
             additional_metadata: self
                 .instruction
                 .additional_metadata
                 .clone()
                 .expect("additional_metadata is not set"),
+            signing_alg: self
+                .instruction
+                .signing_alg
+                .clone()
+                .expect("signing_alg is not set"),
         };
         let instruction = CreateDeviceCpi {
             __program: self.instruction.__program,
@@ -702,9 +717,10 @@ struct CreateDeviceCpiBuilderInstruction<'a, 'b> {
     product_associated_token: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     device: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     device_mint: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    signing_alg: Option<DeviceSigningAlgorithm>,
+    name: Option<String>,
     uri: Option<String>,
     additional_metadata: Option<Vec<(String, String)>>,
+    signing_alg: Option<DeviceSigningAlgorithm>,
     /// Additional instruction accounts `(AccountInfo, is_writable, is_signer)`.
     __remaining_accounts: Vec<(
         &'b solana_program::account_info::AccountInfo<'a>,

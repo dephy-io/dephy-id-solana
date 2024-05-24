@@ -91,7 +91,7 @@ This template should help get you started developing Solana programs. Let's walk
 1. Create Product
 
    ```sh
-   cargo run create-product --vendor ./tmp/keys/vendor1.json 'Product 1' 'V1P1' 'https://example.com' -m desc="First Product by Example Vendor"
+   cargo run create-product --vendor ./tmp/keys/vendor1.json 'Product 1' 'SYMBOL' 'METADATA_URI' -m desc="First Product by Example Vendor"
    ```
 
 2. Create Device
@@ -99,7 +99,7 @@ This template should help get you started developing Solana programs. Let's walk
    ```sh
    # the PRODUCT_PUBKEY is from "Create Product" step's command output
    # the DEVICE_PUBKEY can get by `solana address -k ./keys/device1.json`
-   cargo run create-device --vendor ./tmp/keys/vendor1.json --product <PRODUCT_PUBKEY> --device <DEVICE_PUBKEY> <METADATA_URI>
+   cargo run create-device --vendor ./tmp/keys/vendor1.json --product <PRODUCT_PUBKEY> --device <DEVICE_PUBKEY> 'Device#1' 'METADATA_URI'
    ```
 
 3. Activate Device

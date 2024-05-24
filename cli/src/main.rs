@@ -95,6 +95,7 @@ struct CreateDeviceCliArgs {
     device_pubkey: Pubkey,
     #[arg(value_enum, long, default_value_t = DeviceSigningAlgorithm::Ed25519)]
     signing_alg: DeviceSigningAlgorithm,
+    name: String,
     #[arg(default_value = "")]
     metadata_uri: String,
     #[arg(short = 'm', value_parser = parse_key_val::<String, String>)]
@@ -306,6 +307,7 @@ fn create_device(args: CreateDeviceCliArgs) {
             .product_mint(args.product_pubkey)
             .device(args.device_pubkey)
             .product_associated_token(product_atoken_pubkey)
+            .name(args.name)
             .signing_alg(args.signing_alg.into())
             .device_mint(did_mint_pubkey)
             .uri(args.metadata_uri)

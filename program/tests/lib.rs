@@ -42,7 +42,7 @@ async fn test_smoke() {
     let device2 = Keypair::new();
     let user1 = Keypair::new();
 
-    // Create DePHY account
+    // Initialize the program
     let (program_pda_pubkey, bump) =
         Pubkey::find_program_address(&[PROGRAM_PDA_SEED_PREFIX], &program_id);
 
@@ -238,12 +238,13 @@ async fn test_create_device(
         &[SolanaInstruction::new_with_borsh(
             program_id,
             &Instruction::CreateDevice(CreateDeviceArgs {
-                signing_alg,
+                name: "DePHY Device DID".to_string(),
                 uri: "https://example.com".to_string(),
                 additional_metadata: vec![
                     ("description".to_string(), "Example DID Device".to_string()),
                     ("device".to_string(), device_pubkey.to_string()),
                 ],
+                signing_alg,
             }),
             vec![
                 AccountMeta::new(system_program::id(), false),
