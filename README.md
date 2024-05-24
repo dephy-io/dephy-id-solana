@@ -48,7 +48,7 @@ This template should help get you started developing Solana programs. Let's walk
 
 1. Compile program
 
-   > Note: Use `1.18` or later
+   > Note: Use `Solana 1.18.12` or later
 
    ```sh
    cargo-build-sbf
@@ -72,7 +72,7 @@ This template should help get you started developing Solana programs. Let's walk
    solana -u l program deploy target/deploy/dephy_id_program.so --program-id ./program/keypair.json
    ```
 
-5. Init DePHY
+5. Initialize the program
 
    ```sh
    cargo run initialize --admin ./tmp/keys/admin.json
@@ -88,19 +88,13 @@ This template should help get you started developing Solana programs. Let's walk
 
 ## Cli steps
 
-1. Create Vendor
-
-   ```sh
-   cargo run create-vendor --vendor ./tmp/keys/vendor1.json 'Example Vendor' 'DV1' 'https://example.com' -m desc="An example Vendor"
-   ```
-
-2. Create Product
+1. Create Product
 
    ```sh
    cargo run create-product --vendor ./tmp/keys/vendor1.json 'Product 1' 'V1P1' 'https://example.com' -m desc="First Product by Example Vendor"
    ```
 
-3. Create Device
+2. Create Device
 
    ```sh
    # the PRODUCT_PUBKEY is from "Create Product" step's command output
@@ -108,7 +102,7 @@ This template should help get you started developing Solana programs. Let's walk
    cargo run create-device --vendor ./tmp/keys/vendor1.json --product <PRODUCT_PUBKEY> --device <DEVICE_PUBKEY> <METADATA_URI>
    ```
 
-4. Activate Device
+3. Activate Device
 
    ```sh
    # the VENDOR_PUBKEY is from "Create Vendor" step's command output
