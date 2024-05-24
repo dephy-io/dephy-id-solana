@@ -1,4 +1,4 @@
-CREATE MIGRATION m1uuxpqprznewreyhkjdq6yapxom6euzj72dkfrcnzodehpbvic2oq
+CREATE MIGRATION m1r56uiyf3evxkharcfm5ohxytt4l27epqwbxghc4grliqnr56taga
     ONTO initial
 {
   CREATE EXTENSION graphql VERSION '1.0';
@@ -6,7 +6,7 @@ CREATE MIGRATION m1uuxpqprznewreyhkjdq6yapxom6euzj72dkfrcnzodehpbvic2oq
       CREATE REQUIRED PROPERTY additional: array<tuple<std::str, std::str>>;
       CREATE PROPERTY name: std::str;
       CREATE PROPERTY symbol: std::str;
-      CREATE REQUIRED PROPERTY uri: std::str;
+      CREATE PROPERTY uri: std::str;
   };
   CREATE ABSTRACT TYPE default::SolanaAccount {
       CREATE REQUIRED PROPERTY pubkey: std::str {

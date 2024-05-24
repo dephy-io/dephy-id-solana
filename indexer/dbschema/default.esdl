@@ -16,7 +16,7 @@ module default {
     type TokenMetadata {
         name: str;
         symbol: str;
-        required uri: str;
+        uri: str;
         required additional: array<tuple<str, str>>;
     }
 
