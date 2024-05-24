@@ -11,7 +11,6 @@ import {
   ParsedActivateDeviceInstruction,
   ParsedCreateDeviceInstruction,
   ParsedCreateProductInstruction,
-  ParsedCreateVendorInstruction,
   ParsedInitializeInstruction,
 } from '../instructions';
 import { Key, getKeyEncoder } from '../types';
@@ -37,7 +36,6 @@ export function identifyDephyIdAccount(
 
 export enum DephyIdInstruction {
   Initialize,
-  CreateVendor,
   CreateProduct,
   CreateDevice,
   ActivateDevice,
@@ -52,15 +50,12 @@ export function identifyDephyIdInstruction(
     return DephyIdInstruction.Initialize;
   }
   if (containsBytes(data, getU8Encoder().encode(1), 0)) {
-    return DephyIdInstruction.CreateVendor;
-  }
-  if (containsBytes(data, getU8Encoder().encode(2), 0)) {
     return DephyIdInstruction.CreateProduct;
   }
-  if (containsBytes(data, getU8Encoder().encode(3), 0)) {
+  if (containsBytes(data, getU8Encoder().encode(2), 0)) {
     return DephyIdInstruction.CreateDevice;
   }
-  if (containsBytes(data, getU8Encoder().encode(4), 0)) {
+  if (containsBytes(data, getU8Encoder().encode(3), 0)) {
     return DephyIdInstruction.ActivateDevice;
   }
   throw new Error(
@@ -74,9 +69,6 @@ export type ParsedDephyIdInstruction<
   | ({
       instructionType: DephyIdInstruction.Initialize;
     } & ParsedInitializeInstruction<TProgram>)
-  | ({
-      instructionType: DephyIdInstruction.CreateVendor;
-    } & ParsedCreateVendorInstruction<TProgram>)
   | ({
       instructionType: DephyIdInstruction.CreateProduct;
     } & ParsedCreateProductInstruction<TProgram>)

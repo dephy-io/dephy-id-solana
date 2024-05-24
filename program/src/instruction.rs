@@ -129,6 +129,5 @@ pub struct CreateDeviceArgs {
 #[repr(C)]
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
 pub struct ActivateDeviceArgs {
-    pub bump: u8,
     pub signing_alg: DeviceSigningAlgorithm,
 }

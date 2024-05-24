@@ -19,7 +19,7 @@ use spl_token_metadata_interface::state::{Field, TokenMetadata};
 
 use crate::{
     assertions::{
-        assert_pda, assert_pda_without_bump, assert_same_pubkeys, assert_signer,
+        assert_pda, assert_same_pubkeys, assert_signer,
     },
     instruction::{
         accounts::{
@@ -358,11 +358,13 @@ fn create_device<'a>(
     // Create the Device token
     let (device_mint_pubkey, device_mint_bump) = Pubkey::find_program_address(&[
         DEVICE_MINT_SEED_PREFIX,
+        product_mint_pubkey.as_ref(),
         device_pubkey.as_ref(),
     ], program_id);
     assert_same_pubkeys("device_mint", ctx.accounts.device_mint, &device_mint_pubkey)?;
     let device_mint_seeds: &[&[u8]] = &[
         DEVICE_MINT_SEED_PREFIX,
+        product_mint_pubkey.as_ref(),
         device_pubkey.as_ref(),
         &[device_mint_bump],
     ];
@@ -374,7 +376,7 @@ fn create_device<'a>(
     ])?;
 
     let metadata = TokenMetadata {
-        name: product_metadata.name,
+        name: product_metadata.name + " DID",
         symbol: product_metadata.symbol,
         uri: args.uri,
         additional_metadata: args.additional_metadata,
@@ -491,7 +493,6 @@ fn activate_device<'a>(
     let ctx = ActivateDeviceAccounts::context(accounts)?;
     let token_program_id = spl_token_2022::id();
     let payer_pubkey = ctx.accounts.payer.key;
-    let vendor_pubkey = ctx.accounts.vendor.key;
     let product_mint_pubkey = ctx.accounts.product_mint.key;
     let product_ata_pubkey = ctx.accounts.product_associated_token.key;
     let device_pubkey = ctx.accounts.device.key;
@@ -537,19 +538,7 @@ fn activate_device<'a>(
 
     let product_mint_data = ctx.accounts.product_mint.data.borrow();
     let product_mint = StateWithExtensions::<Mint>::unpack(&product_mint_data)?;
-    let product_mint_metadata = product_mint.get_variable_len_extension::<TokenMetadata>()?;
-
-    // Product from Vendor
-    assert_pda_without_bump(
-        "product_mint",
-        ctx.accounts.product_mint,
-        program_id,
-        &[
-            PRODUCT_MINT_SEED_PREFIX,
-            vendor_pubkey.as_ref(),
-            product_mint_metadata.name.as_ref(),
-        ],
-    )?;
+    let _product_mint_metadata = product_mint.get_variable_len_extension::<TokenMetadata>()?;
 
     // Device from Product
     assert_same_pubkeys(
@@ -563,13 +552,18 @@ fn activate_device<'a>(
     )?;
 
     // Mint Device
+    let (device_mint_pubkey, device_mint_bump) = Pubkey::find_program_address(&[
+        DEVICE_MINT_SEED_PREFIX,
+        product_mint_pubkey.as_ref(),
+        device_pubkey.as_ref(),
+    ], program_id);
+    assert_same_pubkeys("device_mint", ctx.accounts.device_mint, &device_mint_pubkey)?;
     let device_mint_seeds: &[&[u8]] = &[
         DEVICE_MINT_SEED_PREFIX,
+        product_mint_pubkey.as_ref(),
         device_pubkey.as_ref(),
-        &[args.bump],
+        &[device_mint_bump],
     ];
-    let device_mint_pubkey = Pubkey::create_program_address(device_mint_seeds, program_id)?;
-    assert_same_pubkeys("device_mint", ctx.accounts.device_mint, &device_mint_pubkey)?;
 
     let device_ata_pubkey = get_associated_token_address_with_program_id(
         owner_pubkey,

@@ -1,4 +1,4 @@
-CREATE MIGRATION m1ueh3q4f4p4eldsqnh2mx576od3muqerl5awn7odw424e64p66xda
+CREATE MIGRATION m1uuxpqprznewreyhkjdq6yapxom6euzj72dkfrcnzodehpbvic2oq
     ONTO initial
 {
   CREATE EXTENSION graphql VERSION '1.0';
@@ -80,16 +80,7 @@ CREATE MIGRATION m1ueh3q4f4p4eldsqnh2mx576od3muqerl5awn7odw424e64p66xda
   ALTER TYPE default::Product {
       CREATE MULTI LINK devices := (.<product[IS default::Device]);
   };
-  CREATE TYPE default::Vendor EXTENDING default::SolanaAccount, default::SplMint, default::SplAccount, default::WithIx {
-      ALTER PROPERTY token_account {
-          SET OWNED;
-          SET REQUIRED;
-          SET TYPE std::str;
-          ALTER CONSTRAINT std::exclusive {
-              SET OWNED;
-          };
-      };
-  };
+  CREATE TYPE default::Vendor EXTENDING default::SolanaAccount;
   ALTER TYPE default::Product {
       CREATE REQUIRED LINK vendor: default::Vendor;
   };

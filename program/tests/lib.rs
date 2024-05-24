@@ -232,7 +232,7 @@ async fn test_create_device(
 
     let device_pubkey = get_device_pubkey(device, signing_alg.clone());
     let (device_mint_pubkey, _did_mint_bump) = Pubkey::find_program_address(
-        &[DEVICE_MINT_SEED_PREFIX, device_pubkey.as_ref()],
+        &[DEVICE_MINT_SEED_PREFIX, product_mint_pubkey.as_ref(), device_pubkey.as_ref()],
         &program_id,
     );
 
@@ -302,8 +302,8 @@ async fn test_activate_device(
 
     let device_pubkey = get_device_pubkey(device, key_type.clone());
 
-    let (device_mint_pubkey, device_mint_bump) = Pubkey::find_program_address(
-        &[DEVICE_MINT_SEED_PREFIX, device_pubkey.as_ref()],
+    let (device_mint_pubkey, _device_mint_bump) = Pubkey::find_program_address(
+        &[DEVICE_MINT_SEED_PREFIX, product_mint_pubkey.as_ref(), device_pubkey.as_ref()],
         &program_id,
     );
 
@@ -324,7 +324,6 @@ async fn test_activate_device(
     let activate_device_ix = SolanaInstruction::new_with_borsh(
         program_id,
         &Instruction::ActivateDevice(ActivateDeviceArgs {
-            bump: device_mint_bump,
             signing_alg: key_type.clone(),
         }),
         vec![

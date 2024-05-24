@@ -3,11 +3,10 @@ use std::{error::Error, time::Duration};
 use clap::{Args, Parser, Subcommand, ValueEnum};
 use dephy_id_program_client::{
     instructions::{
-        ActivateDeviceBuilder, CreateDeviceBuilder, CreateProductBuilder, CreateVendorBuilder,
-        InitializeBuilder,
+        ActivateDeviceBuilder, CreateDeviceBuilder, CreateProductBuilder, InitializeBuilder,
     },
     types, DEVICE_MESSAGE_PREFIX, DEVICE_MINT_SEED_PREFIX, ID as PROGRAM_ID,
-    PRODUCT_MINT_SEED_PREFIX, PROGRAM_PDA_SEED_PREFIX, VENDOR_MINT_SEED_PREFIX,
+    PRODUCT_MINT_SEED_PREFIX, PROGRAM_PDA_SEED_PREFIX,
 };
 use solana_client::rpc_client::RpcClient;
 use solana_sdk::{
@@ -32,7 +31,6 @@ struct Cli {
 #[derive(Debug, Subcommand)]
 enum Commands {
     Initialize(InitializeCliArgs),
-    CreateVendor(CreateVendorCliArgs),
     CreateProduct(CreateProductCliArgs),
     CreateDevice(CreateDeviceCliArgs),
     ActivateDevice(ActivateDeviceCliArgs),
@@ -55,19 +53,6 @@ struct CommonArgs {
 struct InitializeCliArgs {
     #[arg(long = "admin")]
     admin_keypair: String,
-    #[command(flatten)]
-    common: CommonArgs,
-}
-
-#[derive(Debug, Args)]
-struct CreateVendorCliArgs {
-    #[arg(long = "vendor")]
-    vendor_keypair: String,
-    name: String,
-    symbol: String,
-    uri: String,
-    #[arg(short = 'm', value_parser = parse_key_val::<String, String>)]
-    additional_metadata: Vec<(String, String)>,
     #[command(flatten)]
     common: CommonArgs,
 }
@@ -165,7 +150,6 @@ fn main() {
 
     match args.command {
         Commands::Initialize(args) => initialize_program(args),
-        Commands::CreateVendor(args) => create_vendor(args),
         Commands::CreateProduct(args) => create_product(args),
         Commands::CreateDevice(args) => create_device(args),
         Commands::GenerateMessage(args) => generate_message(args),
@@ -232,55 +216,6 @@ fn initialize_program(args: InitializeCliArgs) {
     };
 }
 
-fn create_vendor(args: CreateVendorCliArgs) {
-    let client = get_client(&args.common.url);
-    let program_id = args.common.program_id.unwrap_or(PROGRAM_ID);
-    let token_program_id = spl_token_2022::ID;
-
-    let vendor = read_key(&args.vendor_keypair);
-    let payer = read_key_or(args.common.payer, &args.vendor_keypair);
-
-    let (vendor_mint_pubkey, bump) = Pubkey::find_program_address(
-        &[VENDOR_MINT_SEED_PREFIX, vendor.pubkey().as_ref()],
-        &program_id,
-    );
-
-    let vendor_atoken_pubkey =
-        spl_associated_token_account::get_associated_token_address_with_program_id(
-            &vendor.pubkey(),
-            &vendor_mint_pubkey,
-            &token_program_id,
-        );
-
-    let latest_block = client.get_latest_blockhash().unwrap();
-    let transaction = Transaction::new_signed_with_payer(
-        &[CreateVendorBuilder::new()
-            .token2022_program(token_program_id)
-            .payer(payer.pubkey())
-            .vendor(vendor.pubkey())
-            .vendor_mint(vendor_mint_pubkey)
-            .vendor_associated_token(vendor_atoken_pubkey)
-            .bump(bump)
-            .name(args.name)
-            .symbol(args.symbol)
-            .uri(args.uri)
-            .additional_metadata(args.additional_metadata)
-            .instruction()],
-        Some(&payer.pubkey()),
-        &[&vendor, &payer],
-        latest_block,
-    );
-
-    match client.send_and_confirm_transaction(&transaction) {
-        Ok(sig) => {
-            println!("Success: {:?}", sig);
-            println!("Vendor Token Created: {}", vendor_mint_pubkey);
-        }
-        Err(err) => {
-            eprintln!("Error: {:?}", err);
-        }
-    };
-}
 
 fn create_product(args: CreateProductCliArgs) {
     let client = get_client(&args.common.url);
@@ -290,7 +225,7 @@ fn create_product(args: CreateProductCliArgs) {
     let vendor = read_key(&args.vendor_keypair);
     let payer = read_key_or(args.common.payer, &args.vendor_keypair);
 
-    let (product_mint_pubkey, bump) = Pubkey::find_program_address(
+    let (product_mint_pubkey, _bump) = Pubkey::find_program_address(
         &[
             PRODUCT_MINT_SEED_PREFIX,
             vendor.pubkey().as_ref(),
@@ -299,18 +234,6 @@ fn create_product(args: CreateProductCliArgs) {
         &program_id,
     );
 
-    let (vendor_mint_pubkey, _) = Pubkey::find_program_address(
-        &[VENDOR_MINT_SEED_PREFIX, &vendor.pubkey().to_bytes()],
-        &program_id,
-    );
-
-    let vendor_atoken_pubkey =
-        spl_associated_token_account::get_associated_token_address_with_program_id(
-            &vendor.pubkey(),
-            &vendor_mint_pubkey,
-            &spl_token_2022::id(),
-        );
-
     let latest_block = client.get_latest_blockhash().unwrap();
     let transaction = Transaction::new_signed_with_payer(
         &[CreateProductBuilder::new()
@@ -318,9 +241,6 @@ fn create_product(args: CreateProductCliArgs) {
             .payer(payer.pubkey())
             .vendor(vendor.pubkey())
             .product_mint(product_mint_pubkey)
-            .vendor_mint(vendor_mint_pubkey)
-            .vendor_associated_token(vendor_atoken_pubkey)
-            .bump(bump)
             .name(args.name)
             .symbol(args.symbol)
             .uri(args.uri)
@@ -369,7 +289,7 @@ fn create_device(args: CreateDeviceCliArgs) {
             &token_program_id,
         );
 
-    let (did_mint_pubkey, bump) = Pubkey::find_program_address(
+    let (did_mint_pubkey, _bump) = Pubkey::find_program_address(
         &[DEVICE_MINT_SEED_PREFIX, args.device_pubkey.as_ref()],
         &program_id,
     );
@@ -385,7 +305,6 @@ fn create_device(args: CreateDeviceCliArgs) {
             .product_associated_token(product_atoken_pubkey)
             .signing_alg(args.signing_alg.into())
             .device_mint(did_mint_pubkey)
-            .bump(bump)
             .uri(args.metadata_uri)
             .additional_metadata(args.additional_metadata)
             .instruction()],
@@ -423,7 +342,7 @@ fn activate_device(args: ActivateDeviceCliArgs) {
             &token_program_id,
         );
 
-    let (did_mint_pubkey, bump) = Pubkey::find_program_address(
+    let (did_mint_pubkey, _did_mint_bump) = Pubkey::find_program_address(
         &[DEVICE_MINT_SEED_PREFIX, device_pubkey.as_ref()],
         &program_id,
     );
@@ -476,7 +395,6 @@ fn activate_device(args: ActivateDeviceCliArgs) {
                 .owner(user.pubkey())
                 .device_mint(did_mint_pubkey)
                 .device_associated_token(did_atoken_pubkey)
-                .bump(bump)
                 .signing_alg(args.signing_alg.into())
                 .instruction(),
         ],
