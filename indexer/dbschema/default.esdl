@@ -56,11 +56,7 @@ module default {
         required authority: Admin;
     }
 
-    type Vendor extending SolanaAccount, SplMint, SplAccount, WithIx {
-        overloaded required token_account: str {
-            constraint exclusive;
-        };
-
+    type Vendor extending SolanaAccount {
         multi products := .<vendor[is Product];
     }
 

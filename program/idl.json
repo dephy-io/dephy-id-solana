@@ -52,79 +52,6 @@
       }
     },
     {
-      "name": "CreateVendor",
-      "accounts": [
-        {
-          "name": "systemProgram",
-          "isMut": false,
-          "isSigner": false,
-          "docs": [
-            "The system program"
-          ]
-        },
-        {
-          "name": "token2022Program",
-          "isMut": false,
-          "isSigner": false,
-          "docs": [
-            "The token 2022 program"
-          ]
-        },
-        {
-          "name": "ataProgram",
-          "isMut": false,
-          "isSigner": false,
-          "docs": [
-            "The associated token program"
-          ]
-        },
-        {
-          "name": "payer",
-          "isMut": true,
-          "isSigner": true,
-          "docs": [
-            "The account paying for the storage fees"
-          ]
-        },
-        {
-          "name": "vendor",
-          "isMut": false,
-          "isSigner": true,
-          "docs": [
-            "The vendor"
-          ]
-        },
-        {
-          "name": "vendorMint",
-          "isMut": true,
-          "isSigner": false,
-          "docs": [
-            "The mint account of the vendor"
-          ]
-        },
-        {
-          "name": "vendorAssociatedToken",
-          "isMut": true,
-          "isSigner": false,
-          "docs": [
-            "The associated token account of the vendor"
-          ]
-        }
-      ],
-      "args": [
-        {
-          "name": "createVendorArgs",
-          "type": {
-            "defined": "CreateVendorArgs"
-          }
-        }
-      ],
-      "discriminant": {
-        "type": "u8",
-        "value": 1
-      }
-    },
-    {
       "name": "CreateProduct",
       "accounts": [
         {
@@ -160,22 +87,6 @@
           ]
         },
         {
-          "name": "vendorMint",
-          "isMut": false,
-          "isSigner": false,
-          "docs": [
-            "The mint account of the vendor"
-          ]
-        },
-        {
-          "name": "vendorAssociatedToken",
-          "isMut": false,
-          "isSigner": false,
-          "docs": [
-            "The associated token account of the vendor"
-          ]
-        },
-        {
           "name": "productMint",
           "isMut": true,
           "isSigner": false,
@@ -194,7 +105,7 @@
       ],
       "discriminant": {
         "type": "u8",
-        "value": 2
+        "value": 1
       }
     },
     {
@@ -283,7 +194,7 @@
       ],
       "discriminant": {
         "type": "u8",
-        "value": 3
+        "value": 2
       }
     },
     {
@@ -396,7 +307,7 @@
       ],
       "discriminant": {
         "type": "u8",
-        "value": 4
+        "value": 3
       }
     }
   ],
@@ -440,49 +351,10 @@
       }
     },
     {
-      "name": "CreateVendorArgs",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "bump",
-            "type": "u8"
-          },
-          {
-            "name": "name",
-            "type": "string"
-          },
-          {
-            "name": "symbol",
-            "type": "string"
-          },
-          {
-            "name": "uri",
-            "type": "string"
-          },
-          {
-            "name": "additionalMetadata",
-            "type": {
-              "vec": {
-                "tuple": [
-                  "string",
-                  "string"
-                ]
-              }
-            }
-          }
-        ]
-      }
-    },
-    {
       "name": "CreateProductArgs",
       "type": {
         "kind": "struct",
         "fields": [
-          {
-            "name": "bump",
-            "type": "u8"
-          },
           {
             "name": "name",
             "type": "string"
@@ -515,10 +387,6 @@
         "kind": "struct",
         "fields": [
           {
-            "name": "bump",
-            "type": "u8"
-          },
-          {
             "name": "signingAlg",
             "type": {
               "defined": "DeviceSigningAlgorithm"
@@ -547,10 +415,6 @@
       "type": {
         "kind": "struct",
         "fields": [
-          {
-            "name": "bump",
-            "type": "u8"
-          },
           {
             "name": "signingAlg",
             "type": {

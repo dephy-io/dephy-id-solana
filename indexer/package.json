@@ -1,7 +1,7 @@
 {
   "scripts": {
     "generate:edgeql": "generate edgeql-js --target ts",
-    "dephy-indexer": "bun run --preload ./env.ts ./main.ts"
+    "dephy-indexer": "bun run ./main.ts"
   },
   "dependencies": {
     "@noble/hashes": "^1.4.0",

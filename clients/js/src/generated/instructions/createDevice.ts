@@ -102,14 +102,12 @@ export type CreateDeviceInstruction<
 
 export type CreateDeviceInstructionData = {
   discriminator: number;
-  bump: number;
   signingAlg: DeviceSigningAlgorithm;
   uri: string;
   additionalMetadata: Array<readonly [string, string]>;
 };
 
 export type CreateDeviceInstructionDataArgs = {
-  bump: number;
   signingAlg: DeviceSigningAlgorithmArgs;
   uri: string;
   additionalMetadata: Array<readonly [string, string]>;
@@ -119,7 +117,6 @@ export function getCreateDeviceInstructionDataEncoder(): Encoder<CreateDeviceIns
   return transformEncoder(
     getStructEncoder([
       ['discriminator', getU8Encoder()],
-      ['bump', getU8Encoder()],
       ['signingAlg', getDeviceSigningAlgorithmEncoder()],
       ['uri', addEncoderSizePrefix(getUtf8Encoder(), getU32Encoder())],
       [
@@ -132,14 +129,13 @@ export function getCreateDeviceInstructionDataEncoder(): Encoder<CreateDeviceIns
         ),
       ],
     ]),
-    (value) => ({ ...value, discriminator: 3 })
+    (value) => ({ ...value, discriminator: 2 })
   );
 }
 
 export function getCreateDeviceInstructionDataDecoder(): Decoder<CreateDeviceInstructionData> {
   return getStructDecoder([
     ['discriminator', getU8Decoder()],
-    ['bump', getU8Decoder()],
     ['signingAlg', getDeviceSigningAlgorithmDecoder()],
     ['uri', addDecoderSizePrefix(getUtf8Decoder(), getU32Decoder())],
     [
@@ -193,7 +189,6 @@ export type CreateDeviceInput<
   device: Address<TAccountDevice>;
   /** The mint account of the device */
   deviceMint: Address<TAccountDeviceMint>;
-  bump: CreateDeviceInstructionDataArgs['bump'];
   signingAlg: CreateDeviceInstructionDataArgs['signingAlg'];
   uri: CreateDeviceInstructionDataArgs['uri'];
   additionalMetadata: CreateDeviceInstructionDataArgs['additionalMetadata'];

@@ -15,25 +15,13 @@ pub enum Instruction {
     #[account(3, signer, name="authority", desc="The authority account of the program")]
     Initialize(InitializeArgs),
 
-    /// Register a vendor
-    #[account(0, name="system_program", desc="The system program")]
-    #[account(1, name="token_2022_program", desc="The token 2022 program")]
-    #[account(2, name="ata_program", desc="The associated token program")]
-    #[account(3, writable, signer, name="payer", desc="The account paying for the storage fees")]
-    #[account(4, signer, name="vendor", desc="The vendor")]
-    #[account(5, writable, name="vendor_mint", desc="The mint account of the vendor")]
-    #[account(6, writable, name="vendor_associated_token", desc="The associated token account of the vendor")]
-    CreateVendor(CreateVendorArgs),
-
     /// Vendor register a Product
     // TODO: PDA authority
     #[account(0, name="system_program", desc="The system program")]
     #[account(1, name="token_2022_program", desc="The SPL Token 2022 program")]
     #[account(2, writable, signer, name="payer", desc="The account paying for the storage fees")]
     #[account(3, signer, name="vendor", desc="The vendor")]
-    #[account(4, name="vendor_mint", desc="The mint account of the vendor")]
-    #[account(5, name="vendor_associated_token", desc="The associated token account of the vendor")]
-    #[account(6, writable, name="product_mint", desc="The mint account of the product")]
+    #[account(4, writable, name="product_mint", desc="The mint account of the product")]
     CreateProduct(CreateProductArgs),
 
     /// Vendor register a Device
@@ -73,18 +61,7 @@ pub struct InitializeArgs {
 
 #[repr(C)]
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
-pub struct CreateVendorArgs {
-    pub bump: u8,
-    pub name: String,
-    pub symbol: String,
-    pub uri: String,
-    pub additional_metadata: Vec<(String, String)>,
-}
-
-#[repr(C)]
-#[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
 pub struct CreateProductArgs {
-    pub bump: u8,
     pub name: String,
     pub symbol: String,
     pub uri: String,
@@ -144,7 +121,6 @@ impl DeviceSigningAlgorithm {
 #[repr(C)]
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
 pub struct CreateDeviceArgs {
-    pub bump: u8,
     pub signing_alg: DeviceSigningAlgorithm,
     pub uri: String,
     pub additional_metadata: Vec<(String, String)>,
@@ -153,6 +129,5 @@ pub struct CreateDeviceArgs {
 #[repr(C)]
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
 pub struct ActivateDeviceArgs {
-    pub bump: u8,
     pub signing_alg: DeviceSigningAlgorithm,
 }

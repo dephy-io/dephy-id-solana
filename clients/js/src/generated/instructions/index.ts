@@ -9,5 +9,4 @@
 export * from './activateDevice';
 export * from './createDevice';
 export * from './createProduct';
-export * from './createVendor';
 export * from './initialize';

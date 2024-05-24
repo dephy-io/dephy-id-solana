@@ -102,12 +102,10 @@ export type ActivateDeviceInstruction<
 
 export type ActivateDeviceInstructionData = {
   discriminator: number;
-  bump: number;
   signingAlg: DeviceSigningAlgorithm;
 };
 
 export type ActivateDeviceInstructionDataArgs = {
-  bump: number;
   signingAlg: DeviceSigningAlgorithmArgs;
 };
 
@@ -115,17 +113,15 @@ export function getActivateDeviceInstructionDataEncoder(): Encoder<ActivateDevic
   return transformEncoder(
     getStructEncoder([
       ['discriminator', getU8Encoder()],
-      ['bump', getU8Encoder()],
       ['signingAlg', getDeviceSigningAlgorithmEncoder()],
     ]),
-    (value) => ({ ...value, discriminator: 4 })
+    (value) => ({ ...value, discriminator: 3 })
   );
 }
 
 export function getActivateDeviceInstructionDataDecoder(): Decoder<ActivateDeviceInstructionData> {
   return getStructDecoder([
     ['discriminator', getU8Decoder()],
-    ['bump', getU8Decoder()],
     ['signingAlg', getDeviceSigningAlgorithmDecoder()],
   ]);
 }
@@ -178,7 +174,6 @@ export type ActivateDeviceInput<
   deviceAssociatedToken: Address<TAccountDeviceAssociatedToken>;
   /** The device's owner */
   owner: Address<TAccountOwner>;
-  bump: ActivateDeviceInstructionDataArgs['bump'];
   signingAlg: ActivateDeviceInstructionDataArgs['signingAlg'];
 };
 

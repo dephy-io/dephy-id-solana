@@ -42,7 +42,7 @@ pub fn assert_pda(
     Ok(())
 }
 
-/// Assert the derivation of the seeds against the given account and return the bump seed.
+/// Assert the derivation of the seeds against the given account
 pub fn assert_pda_without_bump(
     account_name: &str,
     account: &AccountInfo,

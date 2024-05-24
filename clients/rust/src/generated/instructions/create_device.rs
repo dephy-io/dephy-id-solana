@@ -100,7 +100,7 @@ pub struct CreateDeviceInstructionData {
 
 impl CreateDeviceInstructionData {
     pub fn new() -> Self {
-        Self { discriminator: 3 }
+        Self { discriminator: 2 }
     }
 }
 
@@ -113,7 +113,6 @@ impl Default for CreateDeviceInstructionData {
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct CreateDeviceInstructionArgs {
-    pub bump: u8,
     pub signing_alg: DeviceSigningAlgorithm,
     pub uri: String,
     pub additional_metadata: Vec<(String, String)>,
@@ -143,7 +142,6 @@ pub struct CreateDeviceBuilder {
     product_associated_token: Option<solana_program::pubkey::Pubkey>,
     device: Option<solana_program::pubkey::Pubkey>,
     device_mint: Option<solana_program::pubkey::Pubkey>,
-    bump: Option<u8>,
     signing_alg: Option<DeviceSigningAlgorithm>,
     uri: Option<String>,
     additional_metadata: Option<Vec<(String, String)>>,
@@ -217,11 +215,6 @@ impl CreateDeviceBuilder {
         self
     }
     #[inline(always)]
-    pub fn bump(&mut self, bump: u8) -> &mut Self {
-        self.bump = Some(bump);
-        self
-    }
-    #[inline(always)]
     pub fn signing_alg(&mut self, signing_alg: DeviceSigningAlgorithm) -> &mut Self {
         self.signing_alg = Some(signing_alg);
         self
@@ -276,7 +269,6 @@ impl CreateDeviceBuilder {
             device_mint: self.device_mint.expect("device_mint is not set"),
         };
         let args = CreateDeviceInstructionArgs {
-            bump: self.bump.clone().expect("bump is not set"),
             signing_alg: self.signing_alg.clone().expect("signing_alg is not set"),
             uri: self.uri.clone().expect("uri is not set"),
             additional_metadata: self
@@ -497,7 +489,6 @@ impl<'a, 'b> CreateDeviceCpiBuilder<'a, 'b> {
             product_associated_token: None,
             device: None,
             device_mint: None,
-            bump: None,
             signing_alg: None,
             uri: None,
             additional_metadata: None,
@@ -584,11 +575,6 @@ impl<'a, 'b> CreateDeviceCpiBuilder<'a, 'b> {
         self
     }
     #[inline(always)]
-    pub fn bump(&mut self, bump: u8) -> &mut Self {
-        self.instruction.bump = Some(bump);
-        self
-    }
-    #[inline(always)]
     pub fn signing_alg(&mut self, signing_alg: DeviceSigningAlgorithm) -> &mut Self {
         self.instruction.signing_alg = Some(signing_alg);
         self
@@ -645,7 +631,6 @@ impl<'a, 'b> CreateDeviceCpiBuilder<'a, 'b> {
         signers_seeds: &[&[&[u8]]],
     ) -> solana_program::entrypoint::ProgramResult {
         let args = CreateDeviceInstructionArgs {
-            bump: self.instruction.bump.clone().expect("bump is not set"),
             signing_alg: self
                 .instruction
                 .signing_alg
@@ -717,7 +702,6 @@ struct CreateDeviceCpiBuilderInstruction<'a, 'b> {
     product_associated_token: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     device: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     device_mint: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    bump: Option<u8>,
     signing_alg: Option<DeviceSigningAlgorithm>,
     uri: Option<String>,
     additional_metadata: Option<Vec<(String, String)>>,

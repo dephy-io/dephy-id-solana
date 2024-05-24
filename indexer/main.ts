@@ -1,5 +1,7 @@
+import './env'
 import { parseArgs } from "util"
 import { Indexer } from "./src/indexer"
+import { DEPHY_ID_PROGRAM_ADDRESS } from './src/dephy-id'
 
 try {
     const { values: config } = parseArgs({
@@ -21,7 +23,7 @@ try {
             programId: {
                 type: 'string',
                 short: 'p',
-                default: 'hdMghjD73uASxgJXi6e1mGPsXqnADMsrqB1bveqABP1'
+                default: DEPHY_ID_PROGRAM_ADDRESS
             },
             pluginsDir: {
                 type: 'string',

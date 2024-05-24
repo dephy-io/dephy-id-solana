@@ -1,1 +1,1 @@
-globalThis.__DEV__ = true
+globalThis.__DEV__ = (() => (process as any)['en' + 'v'].NODE_ENV === 'development')();

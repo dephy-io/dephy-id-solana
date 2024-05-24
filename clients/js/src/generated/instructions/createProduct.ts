@@ -49,8 +49,6 @@ export type CreateProductInstruction<
   TAccountToken2022Program extends string | IAccountMeta<string> = string,
   TAccountPayer extends string | IAccountMeta<string> = string,
   TAccountVendor extends string | IAccountMeta<string> = string,
-  TAccountVendorMint extends string | IAccountMeta<string> = string,
-  TAccountVendorAssociatedToken extends string | IAccountMeta<string> = string,
   TAccountProductMint extends string | IAccountMeta<string> = string,
   TRemainingAccounts extends readonly IAccountMeta<string>[] = [],
 > = IInstruction<TProgram> &
@@ -71,12 +69,6 @@ export type CreateProductInstruction<
         ? ReadonlySignerAccount<TAccountVendor> &
             IAccountSignerMeta<TAccountVendor>
         : TAccountVendor,
-      TAccountVendorMint extends string
-        ? ReadonlyAccount<TAccountVendorMint>
-        : TAccountVendorMint,
-      TAccountVendorAssociatedToken extends string
-        ? ReadonlyAccount<TAccountVendorAssociatedToken>
-        : TAccountVendorAssociatedToken,
       TAccountProductMint extends string
         ? WritableAccount<TAccountProductMint>
         : TAccountProductMint,
@@ -86,7 +78,6 @@ export type CreateProductInstruction<
 
 export type CreateProductInstructionData = {
   discriminator: number;
-  bump: number;
   name: string;
   symbol: string;
   uri: string;
@@ -94,7 +85,6 @@ export type CreateProductInstructionData = {
 };
 
 export type CreateProductInstructionDataArgs = {
-  bump: number;
   name: string;
   symbol: string;
   uri: string;
@@ -105,7 +95,6 @@ export function getCreateProductInstructionDataEncoder(): Encoder<CreateProductI
   return transformEncoder(
     getStructEncoder([
       ['discriminator', getU8Encoder()],
-      ['bump', getU8Encoder()],
       ['name', addEncoderSizePrefix(getUtf8Encoder(), getU32Encoder())],
       ['symbol', addEncoderSizePrefix(getUtf8Encoder(), getU32Encoder())],
       ['uri', addEncoderSizePrefix(getUtf8Encoder(), getU32Encoder())],
@@ -119,14 +108,13 @@ export function getCreateProductInstructionDataEncoder(): Encoder<CreateProductI
         ),
       ],
     ]),
-    (value) => ({ ...value, discriminator: 2 })
+    (value) => ({ ...value, discriminator: 1 })
   );
 }
 
 export function getCreateProductInstructionDataDecoder(): Decoder<CreateProductInstructionData> {
   return getStructDecoder([
     ['discriminator', getU8Decoder()],
-    ['bump', getU8Decoder()],
     ['name', addDecoderSizePrefix(getUtf8Decoder(), getU32Decoder())],
     ['symbol', addDecoderSizePrefix(getUtf8Decoder(), getU32Decoder())],
     ['uri', addDecoderSizePrefix(getUtf8Decoder(), getU32Decoder())],
@@ -157,8 +145,6 @@ export type CreateProductInput<
   TAccountToken2022Program extends string = string,
   TAccountPayer extends string = string,
   TAccountVendor extends string = string,
-  TAccountVendorMint extends string = string,
-  TAccountVendorAssociatedToken extends string = string,
   TAccountProductMint extends string = string,
 > = {
   /** The system program */
@@ -169,13 +155,8 @@ export type CreateProductInput<
   payer: TransactionSigner<TAccountPayer>;
   /** The vendor */
   vendor: TransactionSigner<TAccountVendor>;
-  /** The mint account of the vendor */
-  vendorMint: Address<TAccountVendorMint>;
-  /** The associated token account of the vendor */
-  vendorAssociatedToken: Address<TAccountVendorAssociatedToken>;
   /** The mint account of the product */
   productMint: Address<TAccountProductMint>;
-  bump: CreateProductInstructionDataArgs['bump'];
   name: CreateProductInstructionDataArgs['name'];
   symbol: CreateProductInstructionDataArgs['symbol'];
   uri: CreateProductInstructionDataArgs['uri'];
@@ -187,8 +168,6 @@ export function getCreateProductInstruction<
   TAccountToken2022Program extends string,
   TAccountPayer extends string,
   TAccountVendor extends string,
-  TAccountVendorMint extends string,
-  TAccountVendorAssociatedToken extends string,
   TAccountProductMint extends string,
 >(
   input: CreateProductInput<
@@ -196,8 +175,6 @@ export function getCreateProductInstruction<
     TAccountToken2022Program,
     TAccountPayer,
     TAccountVendor,
-    TAccountVendorMint,
-    TAccountVendorAssociatedToken,
     TAccountProductMint
   >
 ): CreateProductInstruction<
@@ -206,8 +183,6 @@ export function getCreateProductInstruction<
   TAccountToken2022Program,
   TAccountPayer,
   TAccountVendor,
-  TAccountVendorMint,
-  TAccountVendorAssociatedToken,
   TAccountProductMint
 > {
   // Program address.
@@ -222,11 +197,6 @@ export function getCreateProductInstruction<
     },
     payer: { value: input.payer ?? null, isWritable: true },
     vendor: { value: input.vendor ?? null, isWritable: false },
-    vendorMint: { value: input.vendorMint ?? null, isWritable: false },
-    vendorAssociatedToken: {
-      value: input.vendorAssociatedToken ?? null,
-      isWritable: false,
-    },
     productMint: { value: input.productMint ?? null, isWritable: true },
   };
   const accounts = originalAccounts as Record<
@@ -250,8 +220,6 @@ export function getCreateProductInstruction<
       getAccountMeta(accounts.token2022Program),
       getAccountMeta(accounts.payer),
       getAccountMeta(accounts.vendor),
-      getAccountMeta(accounts.vendorMint),
-      getAccountMeta(accounts.vendorAssociatedToken),
       getAccountMeta(accounts.productMint),
     ],
     programAddress,
@@ -264,8 +232,6 @@ export function getCreateProductInstruction<
     TAccountToken2022Program,
     TAccountPayer,
     TAccountVendor,
-    TAccountVendorMint,
-    TAccountVendorAssociatedToken,
     TAccountProductMint
   >;
 
@@ -286,12 +252,8 @@ export type ParsedCreateProductInstruction<
     payer: TAccountMetas[2];
     /** The vendor */
     vendor: TAccountMetas[3];
-    /** The mint account of the vendor */
-    vendorMint: TAccountMetas[4];
-    /** The associated token account of the vendor */
-    vendorAssociatedToken: TAccountMetas[5];
     /** The mint account of the product */
-    productMint: TAccountMetas[6];
+    productMint: TAccountMetas[4];
   };
   data: CreateProductInstructionData;
 };
@@ -304,7 +266,7 @@ export function parseCreateProductInstruction<
     IInstructionWithAccounts<TAccountMetas> &
     IInstructionWithData<Uint8Array>
 ): ParsedCreateProductInstruction<TProgram, TAccountMetas> {
-  if (instruction.accounts.length < 7) {
+  if (instruction.accounts.length < 5) {
     // TODO: Coded error.
     throw new Error('Not enough accounts');
   }
@@ -321,8 +283,6 @@ export function parseCreateProductInstruction<
       token2022Program: getNextAccount(),
       payer: getNextAccount(),
       vendor: getNextAccount(),
-      vendorMint: getNextAccount(),
-      vendorAssociatedToken: getNextAccount(),
       productMint: getNextAccount(),
     },
     data: getCreateProductInstructionDataDecoder().decode(instruction.data),
