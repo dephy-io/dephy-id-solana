@@ -145,6 +145,7 @@ fn create_product<'a>(
     let base_size = ExtensionType::try_calculate_account_len::<Mint>(&[
         ExtensionType::NonTransferable,
         ExtensionType::MetadataPointer,
+        ExtensionType::PermanentDelegate,
     ])?;
 
     let metadata = TokenMetadata {
@@ -167,6 +168,19 @@ fn create_product<'a>(
         &[&product_mint_seeds],
     )?;
 
+    // init Permanent Delegate
+    invoke(
+        &spl_token_2022::instruction::initialize_permanent_delegate(
+            &token_program_id,
+            &product_mint_pubkey,
+            &product_mint_pubkey,
+        )?,
+        &[
+            // 0. `[writable]` The mint account to initialize.
+            ctx.accounts.product_mint.clone(),
+        ],
+    )?;
+
     // init non-transferable mint
     invoke(
         &spl_token_2022::instruction::initialize_non_transferable_mint(
@@ -184,7 +198,7 @@ fn create_product<'a>(
         &metadata_pointer::instruction::initialize(
             &token_program_id,
             &product_mint_pubkey,
-            Some(*vendor_pubkey),
+            None,
             Some(product_mint_pubkey),
         )?,
         &[
@@ -198,7 +212,7 @@ fn create_product<'a>(
             &token_program_id,
             &product_mint_pubkey,
             &product_mint_pubkey,
-            Some(&product_mint_pubkey),
+            None,
             0,
         )?,
         &[ctx.accounts.product_mint.clone()],
@@ -376,6 +390,7 @@ fn create_device<'a>(
     let base_size = ExtensionType::try_calculate_account_len::<Mint>(&[
         ExtensionType::NonTransferable,
         ExtensionType::MetadataPointer,
+        ExtensionType::MintCloseAuthority,
     ])?;
 
     let metadata = TokenMetadata {
@@ -398,6 +413,19 @@ fn create_device<'a>(
         &[&device_mint_seeds],
     )?;
 
+    // init Mint Close Authroity
+    invoke(
+        &spl_token_2022::instruction::initialize_mint_close_authority(
+            &token_program_id,
+            &device_mint_pubkey,
+            Some(&device_mint_pubkey),
+        )?,
+        &[
+            // 0. `[writable]` The mint account to initialize.
+            ctx.accounts.device_mint.clone(),
+        ],
+    )?;
+
     // init non-transferable mint
     invoke(
         &spl_token_2022::instruction::initialize_non_transferable_mint(
@@ -415,7 +443,7 @@ fn create_device<'a>(
         &metadata_pointer::instruction::initialize(
             &token_program_id,
             &device_mint_pubkey,
-            Some(device_mint_pubkey),
+            None,
             Some(device_mint_pubkey),
         )?,
         &[
@@ -430,7 +458,7 @@ fn create_device<'a>(
             &token_program_id,
             &device_mint_pubkey,
             &device_mint_pubkey,
-            Some(&device_mint_pubkey),
+            None,
             0,
         )?,
         &[
