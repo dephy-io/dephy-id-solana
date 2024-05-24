@@ -149,6 +149,8 @@ where
 fn main() {
     let args = Cli::parse();
 
+    println!("DePHY ID program id: {PROGRAM_ID}");
+
     match args.command {
         Commands::Initialize(args) => initialize_program(args),
         Commands::CreateProduct(args) => create_product(args),
