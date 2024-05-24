@@ -290,7 +290,7 @@ fn create_device(args: CreateDeviceCliArgs) {
         );
 
     let (did_mint_pubkey, _bump) = Pubkey::find_program_address(
-        &[DEVICE_MINT_SEED_PREFIX, args.device_pubkey.as_ref()],
+        &[DEVICE_MINT_SEED_PREFIX, args.product_pubkey.as_ref(), args.device_pubkey.as_ref()],
         &program_id,
     );
 
@@ -317,6 +317,7 @@ fn create_device(args: CreateDeviceCliArgs) {
         Ok(sig) => {
             println!("Success: {:?}", sig);
             println!("Device Token: {}", product_atoken_pubkey);
+            println!("DID Mint: {}", did_mint_pubkey);
         }
         Err(err) => {
             eprintln!("Error: {:?}", err);
@@ -343,7 +344,7 @@ fn activate_device(args: ActivateDeviceCliArgs) {
         );
 
     let (did_mint_pubkey, _did_mint_bump) = Pubkey::find_program_address(
-        &[DEVICE_MINT_SEED_PREFIX, device_pubkey.as_ref()],
+        &[DEVICE_MINT_SEED_PREFIX, args.product_pubkey.as_ref(), device_pubkey.as_ref()],
         &program_id,
     );
 
@@ -406,13 +407,10 @@ fn activate_device(args: ActivateDeviceCliArgs) {
     match client.send_and_confirm_transaction(&transaction) {
         Ok(sig) => {
             println!("Success: {:?}", sig);
-            println!(
-                "User {} activated Device {}, Mint: {}, AToken: {}",
-                user.pubkey(),
-                device_pubkey,
-                did_mint_pubkey,
-                did_atoken_pubkey,
-            );
+            println!("User   {}", user.pubkey());
+            println!("Device {}", device_pubkey);
+            println!("Mint   {}", did_mint_pubkey);
+            println!("AToken {}", did_atoken_pubkey);
         }
         Err(err) => {
             eprintln!("Error: {:?}", err);
