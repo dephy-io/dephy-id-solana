@@ -95,6 +95,7 @@ struct CreateDeviceCliArgs {
     device_pubkey: Pubkey,
     #[arg(value_enum, long, default_value_t = DeviceSigningAlgorithm::Ed25519)]
     signing_alg: DeviceSigningAlgorithm,
+    #[arg(default_value = "")]
     metadata_uri: String,
     #[arg(short = 'm', value_parser = parse_key_val::<String, String>)]
     additional_metadata: Vec<(String, String)>,
