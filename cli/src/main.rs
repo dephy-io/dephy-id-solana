@@ -110,7 +110,7 @@ struct CreateDeviceCliArgs {
     device_pubkey: Pubkey,
     #[arg(value_enum, long, default_value_t = DeviceSigningAlgorithm::Ed25519)]
     signing_alg: DeviceSigningAlgorithm,
-    uri: String,
+    metadata_uri: String,
     #[arg(short = 'm', value_parser = parse_key_val::<String, String>)]
     additional_metadata: Vec<(String, String)>,
     #[command(flatten)]
@@ -386,7 +386,7 @@ fn create_device(args: CreateDeviceCliArgs) {
             .signing_alg(args.signing_alg.into())
             .device_mint(did_mint_pubkey)
             .bump(bump)
-            .uri(args.uri)
+            .uri(args.metadata_uri)
             .additional_metadata(args.additional_metadata)
             .instruction()],
         Some(&payer.pubkey()),
