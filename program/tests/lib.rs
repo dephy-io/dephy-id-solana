@@ -1,4 +1,4 @@
-// #![cfg(feature = "test-sbf")]
+#![cfg(feature = "test-sbf")]
 
 use dephy_id_program::{
     instruction::{
@@ -73,8 +73,6 @@ async fn test_smoke() {
         .expect("get_account")
         .expect("Account not none");
     assert_eq!(allocated_account.data.len(), ProgramDataAccount::LEN);
-
-    // test_create_vendor(program_id, &mut ctx, &vendor).await;
 
     let product_name = "Example Product 1".to_string();
 
@@ -404,3 +402,4 @@ async fn test_activate_device(
     let device_ata_data = StateWithExtensions::<Account>::unpack(device_ata.data()).unwrap();
     assert_eq!(device_ata_data.base.amount, 1, "Token amount is 1");
 }
+
