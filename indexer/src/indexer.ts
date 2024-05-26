@@ -261,14 +261,29 @@ export class Indexer {
     }
 
     async handleCreateProduct(dbTx: Executor, createProduct: ParsedCreateProductInstruction<string, readonly IAccountMeta[]>, meta: IxMeta) {
+        const vendor = await e.select(e.Vendor, () => ({
+            filter_single: {
+                pubkey: createProduct.accounts.vendor.address
+            }
+        })).run(dbTx)
+
+        let vendorQuery
+        if (vendor) {
+            vendorQuery = e.select(e.Vendor, () => ({
+                filter_single: {
+                    pubkey: createProduct.accounts.vendor.address
+                }
+            }))
+        } else {
+            vendorQuery = e.insert(e.Vendor, {
+                pubkey: createProduct.accounts.vendor.address,
+            })
+        }
+
         await e.insert(e.Product, {
             mint_account: createProduct.accounts.productMint.address,
             mint_authority: createProduct.accounts.vendor.address,
-            vendor: e.insert(e.Vendor, {
-                pubkey: createProduct.accounts.vendor.address,
-            }).unlessConflict(v => ({
-                on: v.pubkey
-            })),
+            vendor: vendorQuery,
             metadata: e.insert(e.TokenMetadata, {
                 name: createProduct.data.name,
                 symbol: createProduct.data.symbol,
