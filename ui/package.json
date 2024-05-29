@@ -1,0 +1,18 @@
+{
+  "scripts": {
+    "dephy-ui": "imba run -w --esm app.imba --"
+  },
+  "dependencies": {
+    "@metaplex-foundation/umi": "^0.9.1",
+    "@metaplex-foundation/umi-bundle-defaults": "^0.9.1",
+    "@metaplex-foundation/umi-signer-wallet-adapters": "^0.9.1",
+    "@metaplex-foundation/umi-web3js-adapters": "^0.9.1",
+    "@solana/wallet-adapter-phantom": "^0.9.24",
+    "@solana/web3.js": "^1.91.8",
+    "edgedb": "^1.5.7",
+    "express": "^4.19.2"
+  },
+  "devDependencies": {
+    "imba": "^2.0.0-alpha.235"
+  }
+}

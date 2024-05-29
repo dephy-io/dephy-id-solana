@@ -46,7 +46,9 @@ export type CreateProductInstruction<
   TAccountSystemProgram extends
     | string
     | IAccountMeta<string> = '11111111111111111111111111111111',
-  TAccountToken2022Program extends string | IAccountMeta<string> = string,
+  TAccountToken2022Program extends
+    | string
+    | IAccountMeta<string> = 'TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb',
   TAccountPayer extends string | IAccountMeta<string> = string,
   TAccountVendor extends string | IAccountMeta<string> = string,
   TAccountProductMint extends string | IAccountMeta<string> = string,
@@ -150,7 +152,7 @@ export type CreateProductInput<
   /** The system program */
   systemProgram?: Address<TAccountSystemProgram>;
   /** The SPL Token 2022 program */
-  token2022Program: Address<TAccountToken2022Program>;
+  token2022Program?: Address<TAccountToken2022Program>;
   /** The account paying for the storage fees */
   payer: TransactionSigner<TAccountPayer>;
   /** The vendor */
@@ -211,6 +213,10 @@ export function getCreateProductInstruction<
   if (!accounts.systemProgram.value) {
     accounts.systemProgram.value =
       '11111111111111111111111111111111' as Address<'11111111111111111111111111111111'>;
+  }
+  if (!accounts.token2022Program.value) {
+    accounts.token2022Program.value =
+      'TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb' as Address<'TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb'>;
   }
 
   const getAccountMeta = getAccountMetaFactory(programAddress, 'programId');

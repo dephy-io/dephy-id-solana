@@ -7,13 +7,11 @@ select default::DID {
     product: {
       mint_account,
       vendor: {
-        pubkey,
-        mint_account,
-        token_account
+        pubkey
       }
     }
   },
-  user: {
+  owner: {
     pubkey
   }
 }
