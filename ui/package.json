@@ -1,6 +1,7 @@
 {
   "scripts": {
-    "dephy-ui": "imba run -w --esm app.imba --"
+    "dephy-ui-dev": "imba run -w --esm app.imba --",
+    "dephy-ui-prod": "imba run -p -S --esm app.imba --"
   },
   "dependencies": {
     "@metaplex-foundation/umi": "^0.9.1",
