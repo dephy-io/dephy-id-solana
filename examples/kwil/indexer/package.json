@@ -4,6 +4,7 @@
     "dephy-indexer": "bun run --preload ./env.ts ./main.ts"
   },
   "dependencies": {
+    "@dephy-io/dephy-id-program-client": "file:../../../clients/js",
     "@kwilteam/kwil-js": "^0.6.3",
     "@noble/hashes": "^1.4.0",
     "@solana/rpc-graphql": "^2.0.0-preview.3",

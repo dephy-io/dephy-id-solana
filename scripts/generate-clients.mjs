@@ -4,7 +4,7 @@ import * as k from "kinobi";
 import {rootNodeFromAnchor} from "@kinobi-so/nodes-from-anchor";
 import {renderVisitor as renderJavaScriptVisitor} from "@kinobi-so/renderers-js";
 import {renderVisitor as renderRustVisitor} from "@kinobi-so/renderers-rust";
-import {getAllProgramIdls} from "./utils.mjs";
+import {getAllProgramIdls, workingDirectory} from "./utils.mjs";
 
 // Instanciate Kinobi.
 const [idl, ...additionalIdls] = getAllProgramIdls().map(idl => rootNodeFromAnchor(require(idl)))
@@ -57,14 +57,6 @@ kinobi.update(
     })
 );
 
-// Render JavaScript.
-const jsClient = path.join(__dirname, "..", "clients", "js");
-await kinobi.accept(
-    renderJavaScriptVisitor(path.join(jsClient, "src", "generated"), {
-        prettier: require(path.join(jsClient, ".prettierrc.json"))
-    })
-);
-
 // Render Rust.
 const rustClient = path.join(__dirname, "..", "clients", "rust");
 kinobi.accept(
@@ -73,3 +65,15 @@ kinobi.accept(
         crateFolder: rustClient,
     })
 );
+
+// Render JavaScript.
+const jsClient = path.join(__dirname, "..", "clients", "js");
+await kinobi.accept(
+    renderJavaScriptVisitor(path.join(jsClient, "src", "generated"), {
+        prettier: require(path.join(jsClient, ".prettierrc.json"))
+    })
+);
+
+// Prebuild dist
+cd(path.join(workingDirectory, 'clients', 'js'));
+await $`pnpm build`;

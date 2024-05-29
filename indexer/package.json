@@ -4,10 +4,11 @@
     "dephy-indexer": "bun run ./main.ts"
   },
   "dependencies": {
+    "@dephy-io/dephy-id-program-client": "file:../clients/js",
     "@noble/hashes": "^1.4.0",
     "@solana/rpc-graphql": "^2.0.0-preview.3",
     "@solana/web3.js": "^2.0.0-preview.3",
-    "edgedb": "^1.5.3"
+    "edgedb": "^1.5.7"
   },
   "devDependencies": {
     "@edgedb/generate": "^0.5.3",

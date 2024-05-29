@@ -28,7 +28,7 @@ import {
     identifyDephyIdInstruction,
     parseActivateDeviceInstruction, parseInitializeInstruction, parseCreateDeviceInstruction,
     parseCreateProductInstruction,
-} from './dephy-id';
+} from "@dephy-io/dephy-id-program-client";
 
 interface Config {
     rpcUrl?: string

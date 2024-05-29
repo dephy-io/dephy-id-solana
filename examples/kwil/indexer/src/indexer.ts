@@ -22,13 +22,13 @@ import {
     DephyIdInstruction,
     DeviceSigningAlgorithm,
     ParsedActivateDeviceInstruction, ParsedInitializeInstruction, ParsedCreateDeviceInstruction,
-    ParsedCreateProductInstruction, ParsedCreateVendorInstruction,
+    ParsedCreateProductInstruction,
     fetchProgramDataAccount,
     findProgramDataAccountPda,
     identifyDephyIdInstruction,
     parseActivateDeviceInstruction, parseInitializeInstruction, parseCreateDeviceInstruction,
-    parseCreateProductInstruction, parseCreateVendorInstruction,
-} from './dephy-id';
+    parseCreateProductInstruction,
+} from "@dephy-io/dephy-id-program-client";
 
 interface Config {
     rpcUrl?: string
@@ -70,15 +70,15 @@ export class Indexer {
     abortController: AbortController
     databaseUrl: string
     db!: Client
-    pda!: Account<ProgramDataAccount, string>
+    programPda!: Account<ProgramDataAccount, string>
     plugins: IPlugin[] = []
 
     constructor({
-        rpcUrl,
-        pubSubUrl,
-        databaseUrl,
-        pluginsDir,
-    }: Config) {
+                    rpcUrl,
+                    pubSubUrl,
+                    databaseUrl,
+                    pluginsDir,
+                }: Config) {
         this.rpc = createSolanaRpc(rpcUrl!)
         this.subscriptions = createSolanaRpcSubscriptions(pubSubUrl!)
         this.rpcGraphQL = createRpcGraphQL(this.rpc)
@@ -126,7 +126,7 @@ export class Indexer {
         assert.equal(bump, programPda.data.data.bump)
         assert.equal(false, programPda.executable)
 
-        this.program = programPda
+        this.programPda = programPda
         console.log('Program:   ', programPda.programAddress)
         console.log('Account:   ', programPda.address)
         console.log('Authority: ', programPda.data.authority)
@@ -245,8 +245,8 @@ export class Indexer {
         })).run(this.db)
     }
 
-    handleInitialize(initialize: ParsedInitializeInstruction<string, readonly IAccountMeta[]>, meta: IxMeta) {
-        return e.insert(e.Program, {
+    async handleInitialize(dbTx: Executor, initialize: ParsedInitializeInstruction<string, readonly IAccountMeta[]>, meta: IxMeta) {
+        await e.insert(e.Program, {
             pubkey: initialize.accounts.programData.address,
             authority: e.insert(e.Admin, {
                 pubkey: initialize.accounts.authority.address
@@ -257,37 +257,33 @@ export class Indexer {
                 },
                 "@ix_index": e.int16(meta.index),
             })),
-        })
+        }).run(dbTx)
     }
 
-    handleCreateVendor(createVendor: ParsedCreateVendorInstruction<string, readonly IAccountMeta[]>, meta: IxMeta) {
-        return e.insert(e.Vendor, {
-            pubkey: createVendor.accounts.vendor.address,
-            mint_account: createVendor.accounts.vendorMint.address,
-            mint_authority: null,
-            token_account: createVendor.accounts.vendorAssociatedToken.address,
-            metadata: e.insert(e.TokenMetadata, {
-                name: createVendor.data.name,
-                symbol: createVendor.data.symbol,
-                uri: createVendor.data.uri,
-                additional: createVendor.data.additionalMetadata as [string, string][],
-            }),
-            tx: e.select(e.Transaction, () => ({
+    async handleCreateProduct(dbTx: Executor, createProduct: ParsedCreateProductInstruction<string, readonly IAccountMeta[]>, meta: IxMeta) {
+        const vendor = await e.select(e.Vendor, () => ({
+            filter_single: {
+                pubkey: createProduct.accounts.vendor.address
+            }
+        })).run(dbTx)
+
+        let vendorQuery
+        if (vendor) {
+            vendorQuery = e.select(e.Vendor, () => ({
                 filter_single: {
-                    signature: meta.tx,
-                },
-                "@ix_index": e.int16(meta.index),
-            })),
-        })
-    }
+                    pubkey: createProduct.accounts.vendor.address
+                }
+            }))
+        } else {
+            vendorQuery = e.insert(e.Vendor, {
+                pubkey: createProduct.accounts.vendor.address,
+            })
+        }
 
-    handleCreateProduct(createProduct: ParsedCreateProductInstruction<string, readonly IAccountMeta[]>, meta: IxMeta) {
-        return e.insert(e.Product, {
+        await e.insert(e.Product, {
             mint_account: createProduct.accounts.productMint.address,
             mint_authority: createProduct.accounts.vendor.address,
-            vendor: e.select(e.Vendor, () => ({
-                filter_single: { pubkey: createProduct.accounts.vendor.address }
-            })),
+            vendor: vendorQuery,
             metadata: e.insert(e.TokenMetadata, {
                 name: createProduct.data.name,
                 symbol: createProduct.data.symbol,
@@ -300,10 +296,20 @@ export class Indexer {
                 },
                 "@ix_index": e.int16(meta.index),
             })),
-        })
+        }).run(dbTx)
     }
 
     async handleCreateDevice(dbTx: Executor, createDevice: ParsedCreateDeviceInstruction<string, readonly IAccountMeta[]>, meta: IxMeta) {
+        const product = await e.select(e.Product, () => ({
+            metadata: {
+                name: true,
+                symbol: true,
+            },
+            filter_single: {
+                mint_account: createDevice.accounts.productMint.address,
+            }
+        })).run(dbTx)
+
         await e.insert(e.DID, {
             mint_account: createDevice.accounts.deviceMint.address,
             mint_authority: createDevice.accounts.deviceMint.address,
@@ -330,8 +336,8 @@ export class Indexer {
                 signing_alg: e.cast(e.DeviceSigningAlgorithm, e.str(DeviceSigningAlgorithm[createDevice.data.signingAlg])),
             }),
             metadata: e.insert(e.TokenMetadata, {
-                name: createDevice.data.name,
-                symbol: createDevice.data.symbol,
+                name: product?.metadata?.name + ' DID',
+                symbol: product?.metadata?.symbol,
                 uri: createDevice.data.uri,
                 additional: createDevice.data.additionalMetadata as [string, string][],
             }),
@@ -380,17 +386,12 @@ export class Indexer {
         switch (identifyDephyIdInstruction(programIx)) {
             case DephyIdInstruction.Initialize:
                 let initialize = parseInitializeInstruction(programIx)
-                await this.handleInitialize(initialize, meta).run(dbTx)
-                break
-
-            case DephyIdInstruction.CreateVendor:
-                let createVendor = parseCreateVendorInstruction(programIx)
-                await this.handleCreateVendor(createVendor, meta).run(dbTx)
+                await this.handleInitialize(dbTx, initialize, meta)
                 break
 
             case DephyIdInstruction.CreateProduct:
                 let createProduct = parseCreateProductInstruction(programIx)
-                await this.handleCreateProduct(createProduct, meta).run(dbTx)
+                await this.handleCreateProduct(dbTx, createProduct, meta)
                 break
 
             case DephyIdInstruction.CreateDevice:
@@ -423,7 +424,7 @@ export class Indexer {
             for (const ix of tx.transaction.message.instructions) {
                 if (tx.meta && !tx.meta.err) {
                     switch (ix.programId) {
-                        case this.program.programAddress:
+                        case this.programPda.programAddress:
                             if ('data' in ix) {
                                 await this.processProgramIx(dbTx, ix, { tx: signature, index: i })
                             }

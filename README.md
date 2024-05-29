@@ -22,7 +22,11 @@ This template should help get you started developing Solana programs. Let's walk
    bun generate:edgeql
    ```
 
-3. public graphql endpoint
+3. public graphql endpoint and allow CORS
+
+   ```shell
+   edgedb configure set cors_allow_origins *
+   ```
 
    ```sh
    edgedb -I dephy-indexer
