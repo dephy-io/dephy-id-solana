@@ -6,6 +6,7 @@
  * @see https://github.com/kinobi-so/kinobi
  */
 
+export * from './deviceActivationSignature';
 export * from './deviceSigningAlgorithm';
 export * from './key';
 export * from './programData';

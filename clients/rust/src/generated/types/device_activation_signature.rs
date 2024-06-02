@@ -7,22 +7,11 @@
 
 use borsh::BorshDeserialize;
 use borsh::BorshSerialize;
-use num_derive::FromPrimitive;
 
-#[derive(
-    BorshSerialize,
-    BorshDeserialize,
-    Clone,
-    Debug,
-    Eq,
-    PartialEq,
-    Copy,
-    PartialOrd,
-    Hash,
-    FromPrimitive,
-)]
+#[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-pub enum Key {
-    Uninitialized,
-    ProgramDataAccount,
+pub enum DeviceActivationSignature {
+    Ed25519([u8; 64]),
+    Secp256k1([u8; 64], u8),
+    EthSecp256k1([u8; 64], u8),
 }

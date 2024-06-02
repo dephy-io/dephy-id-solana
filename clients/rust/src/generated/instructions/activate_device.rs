@@ -5,7 +5,7 @@
 //! <https://github.com/kinobi-so/kinobi>
 //!
 
-use crate::generated::types::DeviceSigningAlgorithm;
+use crate::generated::types::DeviceActivationSignature;
 use borsh::BorshDeserialize;
 use borsh::BorshSerialize;
 
@@ -130,7 +130,8 @@ impl Default for ActivateDeviceInstructionData {
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct ActivateDeviceInstructionArgs {
-    pub signing_alg: DeviceSigningAlgorithm,
+    pub signature: DeviceActivationSignature,
+    pub message_slot: u64,
 }
 
 /// Instruction builder for `ActivateDevice`.
@@ -163,7 +164,8 @@ pub struct ActivateDeviceBuilder {
     device_mint: Option<solana_program::pubkey::Pubkey>,
     device_associated_token: Option<solana_program::pubkey::Pubkey>,
     owner: Option<solana_program::pubkey::Pubkey>,
-    signing_alg: Option<DeviceSigningAlgorithm>,
+    signature: Option<DeviceActivationSignature>,
+    message_slot: Option<u64>,
     __remaining_accounts: Vec<solana_program::instruction::AccountMeta>,
 }
 
@@ -255,8 +257,13 @@ impl ActivateDeviceBuilder {
         self
     }
     #[inline(always)]
-    pub fn signing_alg(&mut self, signing_alg: DeviceSigningAlgorithm) -> &mut Self {
-        self.signing_alg = Some(signing_alg);
+    pub fn signature(&mut self, signature: DeviceActivationSignature) -> &mut Self {
+        self.signature = Some(signature);
+        self
+    }
+    #[inline(always)]
+    pub fn message_slot(&mut self, message_slot: u64) -> &mut Self {
+        self.message_slot = Some(message_slot);
         self
     }
     /// Add an aditional account to the instruction.
@@ -304,7 +311,8 @@ impl ActivateDeviceBuilder {
             owner: self.owner.expect("owner is not set"),
         };
         let args = ActivateDeviceInstructionArgs {
-            signing_alg: self.signing_alg.clone().expect("signing_alg is not set"),
+            signature: self.signature.clone().expect("signature is not set"),
+            message_slot: self.message_slot.clone().expect("message_slot is not set"),
         };
 
         accounts.instruction_with_remaining_accounts(args, &self.__remaining_accounts)
@@ -555,7 +563,8 @@ impl<'a, 'b> ActivateDeviceCpiBuilder<'a, 'b> {
             device_mint: None,
             device_associated_token: None,
             owner: None,
-            signing_alg: None,
+            signature: None,
+            message_slot: None,
             __remaining_accounts: Vec::new(),
         });
         Self { instruction }
@@ -663,8 +672,13 @@ impl<'a, 'b> ActivateDeviceCpiBuilder<'a, 'b> {
         self
     }
     #[inline(always)]
-    pub fn signing_alg(&mut self, signing_alg: DeviceSigningAlgorithm) -> &mut Self {
-        self.instruction.signing_alg = Some(signing_alg);
+    pub fn signature(&mut self, signature: DeviceActivationSignature) -> &mut Self {
+        self.instruction.signature = Some(signature);
+        self
+    }
+    #[inline(always)]
+    pub fn message_slot(&mut self, message_slot: u64) -> &mut Self {
+        self.instruction.message_slot = Some(message_slot);
         self
     }
     /// Add an additional account to the instruction.
@@ -709,11 +723,16 @@ impl<'a, 'b> ActivateDeviceCpiBuilder<'a, 'b> {
         signers_seeds: &[&[&[u8]]],
     ) -> solana_program::entrypoint::ProgramResult {
         let args = ActivateDeviceInstructionArgs {
-            signing_alg: self
+            signature: self
                 .instruction
-                .signing_alg
+                .signature
                 .clone()
-                .expect("signing_alg is not set"),
+                .expect("signature is not set"),
+            message_slot: self
+                .instruction
+                .message_slot
+                .clone()
+                .expect("message_slot is not set"),
         };
         let instruction = ActivateDeviceCpi {
             __program: self.instruction.__program,
@@ -789,7 +808,8 @@ struct ActivateDeviceCpiBuilderInstruction<'a, 'b> {
     device_mint: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     device_associated_token: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     owner: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    signing_alg: Option<DeviceSigningAlgorithm>,
+    signature: Option<DeviceActivationSignature>,
+    message_slot: Option<u64>,
     /// Additional instruction accounts `(AccountInfo, is_writable, is_signer)`.
     __remaining_accounts: Vec<(
         &'b solana_program::account_info::AccountInfo<'a>,
