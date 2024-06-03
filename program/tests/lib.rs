@@ -2,20 +2,21 @@
 
 use dephy_id_program::{
     instruction::{
-        ActivateDeviceArgs, CreateDeviceArgs, CreateProductArgs,
+        ActivateDeviceArgs, CreateDeviceArgs, CreateProductArgs, DeviceActivationSignature,
         DeviceSigningAlgorithm, InitializeArgs, Instruction,
     },
     state::ProgramDataAccount,
-    DEVICE_MESSAGE_PREFIX, DEVICE_MINT_SEED_PREFIX, PRODUCT_MINT_SEED_PREFIX, PROGRAM_PDA_SEED_PREFIX,
+    DEVICE_MESSAGE_PREFIX, EIP191_MESSAGE_PREFIX,
+    DEVICE_MINT_SEED_PREFIX, PRODUCT_MINT_SEED_PREFIX,
+    PROGRAM_PDA_SEED_PREFIX,
 };
+use ed25519_dalek::ed25519::signature::SignerMut;
 use solana_program::pubkey::Pubkey;
 use solana_program_test::*;
 use solana_sdk::{
     account::ReadableAccount,
-    ed25519_instruction::new_ed25519_instruction,
     instruction::{AccountMeta, Instruction as SolanaInstruction},
     keccak,
-    secp256k1_instruction::new_secp256k1_instruction,
     signature::Keypair,
     signer::Signer,
     system_program, sysvar,
@@ -123,7 +124,6 @@ async fn test_smoke() {
     .await;
 }
 
-
 async fn test_create_product(
     program_id: Pubkey,
     ctx: &mut ProgramTestContext,
@@ -197,8 +197,8 @@ fn get_device_pubkey(device: &Keypair, signing_alg: DeviceSigningAlgorithm) -> P
         DeviceSigningAlgorithm::Secp256k1 => {
             let privkey = libsecp256k1::SecretKey::parse(device.secret().as_bytes()).unwrap();
             let pubkey = libsecp256k1::PublicKey::from_secret_key(&privkey);
-            let hash = keccak::hash(&pubkey.serialize()[1..]);
-            Pubkey::new_from_array(keccak::hash(&hash.as_ref()[12..]).to_bytes())
+            let hashed_pubkey = keccak::hash(&pubkey.serialize()[1..]);
+            Pubkey::new_from_array(hashed_pubkey.to_bytes())
         }
     }
 }
@@ -228,9 +228,12 @@ async fn test_create_device(
             &spl_token_2022::id(),
         );
 
-    let device_pubkey = get_device_pubkey(device, signing_alg.clone());
     let (device_mint_pubkey, _did_mint_bump) = Pubkey::find_program_address(
-        &[DEVICE_MINT_SEED_PREFIX, product_mint_pubkey.as_ref(), device_pubkey.as_ref()],
+        &[
+            DEVICE_MINT_SEED_PREFIX,
+            product_mint_pubkey.as_ref(),
+            device_pubkey.as_ref(),
+        ],
         &program_id,
     );
 
@@ -302,7 +305,11 @@ async fn test_activate_device(
     let device_pubkey = get_device_pubkey(device, key_type.clone());
 
     let (device_mint_pubkey, _device_mint_bump) = Pubkey::find_program_address(
-        &[DEVICE_MINT_SEED_PREFIX, product_mint_pubkey.as_ref(), device_pubkey.as_ref()],
+        &[
+            DEVICE_MINT_SEED_PREFIX,
+            product_mint_pubkey.as_ref(),
+            device_pubkey.as_ref(),
+        ],
         &program_id,
     );
 
@@ -320,10 +327,43 @@ async fn test_activate_device(
             &spl_token_2022::id(),
         );
 
+    let signature = match key_type {
+        DeviceSigningAlgorithm::Ed25519 => {
+            let message = [
+                DEVICE_MESSAGE_PREFIX,
+                device_mint_pubkey.as_ref(),
+                user.pubkey().as_ref(),
+                &slot.to_le_bytes(),
+            ].concat();
+
+            let mut device_ed25519_keypair =
+                ed25519_dalek::Keypair::from_bytes(&device.to_bytes()).unwrap();
+            DeviceActivationSignature::Ed25519(device_ed25519_keypair.sign(&message).to_bytes())
+        }
+        DeviceSigningAlgorithm::Secp256k1 => {
+            let device_secp256k1_priv_key =
+                libsecp256k1::SecretKey::parse(device.secret().as_bytes()).unwrap();
+
+            let message = slot.to_le_bytes();
+            let eth_message = [
+                EIP191_MESSAGE_PREFIX,
+                message.len().to_string().as_bytes(),
+                &message
+            ].concat();
+            let message_hash = keccak::hash(&eth_message);
+            let (signature, recovery_id) = libsecp256k1::sign(
+                &libsecp256k1::Message::parse(&message_hash.to_bytes()),
+                &device_secp256k1_priv_key,
+            );
+            DeviceActivationSignature::EthSecp256k1(signature.serialize(), recovery_id.serialize())
+        }
+    };
+
     let activate_device_ix = SolanaInstruction::new_with_borsh(
         program_id,
         &Instruction::ActivateDevice(ActivateDeviceArgs {
-            signing_alg: key_type.clone(),
+            signature,
+            message_slot: slot,
         }),
         vec![
             // #[account(0, name="system_program", desc="The system program")]
@@ -356,37 +396,6 @@ async fn test_activate_device(
     let mut transaction =
         Transaction::new_with_payer(&[activate_device_ix.clone()], Some(&ctx.payer.pubkey()));
 
-    let recent_blockhash = ctx.banks_client.get_latest_blockhash().await.unwrap();
-    transaction.sign(&[&ctx.payer, &user], recent_blockhash);
-    ctx.banks_client
-        .process_transaction(transaction)
-        .await
-        .expect_err("should fail");
-
-    let message = [
-        DEVICE_MESSAGE_PREFIX,
-        product_ata_pubkey.as_ref(),
-        user.pubkey().as_ref(),
-        &slot.to_le_bytes(),
-    ]
-    .concat();
-
-    let sign_ix = match key_type {
-        DeviceSigningAlgorithm::Ed25519 => {
-            let device_ed25519_keypair =
-                ed25519_dalek::Keypair::from_bytes(&device.to_bytes()).unwrap();
-            new_ed25519_instruction(&device_ed25519_keypair, &message)
-        }
-        DeviceSigningAlgorithm::Secp256k1 => {
-            let device_secp256k1_priv_key =
-                libsecp256k1::SecretKey::parse(device.secret().as_bytes()).unwrap();
-            new_secp256k1_instruction(&device_secp256k1_priv_key, &message)
-        }
-    };
-
-    let mut transaction =
-        Transaction::new_with_payer(&[sign_ix, activate_device_ix], Some(&ctx.payer.pubkey()));
-
     ctx.warp_forward_force_reward_interval_end().unwrap();
     transaction.sign(&[&ctx.payer, &user], ctx.last_blockhash);
     ctx.banks_client
@@ -403,4 +412,3 @@ async fn test_activate_device(
     let device_ata_data = StateWithExtensions::<Account>::unpack(device_ata.data()).unwrap();
     assert_eq!(device_ata_data.base.amount, 1, "Token amount is 1");
 }
-

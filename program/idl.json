@@ -420,10 +420,14 @@
         "kind": "struct",
         "fields": [
           {
-            "name": "signingAlg",
+            "name": "signature",
             "type": {
-              "defined": "DeviceSigningAlgorithm"
+              "defined": "DeviceActivationSignature"
             }
+          },
+          {
+            "name": "messageSlot",
+            "type": "u64"
           }
         ]
       }
@@ -450,6 +454,49 @@
           },
           {
             "name": "Secp256k1"
+          }
+        ]
+      }
+    },
+    {
+      "name": "DeviceActivationSignature",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Ed25519",
+            "fields": [
+              {
+                "array": [
+                  "u8",
+                  64
+                ]
+              }
+            ]
+          },
+          {
+            "name": "Secp256k1",
+            "fields": [
+              {
+                "array": [
+                  "u8",
+                  64
+                ]
+              },
+              "u8"
+            ]
+          },
+          {
+            "name": "EthSecp256k1",
+            "fields": [
+              {
+                "array": [
+                  "u8",
+                  64
+                ]
+              },
+              "u8"
+            ]
           }
         ]
       }
@@ -529,6 +576,11 @@
       "code": 11,
       "name": "MissingInstruction",
       "msg": "Missing instruction"
+    },
+    {
+      "code": 12,
+      "name": "SignatureMismatch",
+      "msg": "Signature mismatch"
     }
   ],
   "metadata": {

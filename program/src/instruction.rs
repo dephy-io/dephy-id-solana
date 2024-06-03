@@ -1,9 +1,8 @@
 use borsh::{BorshDeserialize, BorshSerialize};
 use shank::{ShankContext, ShankInstruction};
-use solana_program::{keccak, pubkey::Pubkey};
+use solana_program::{pubkey::Pubkey, entrypoint::ProgramResult};
+use crate::{DEVICE_MESSAGE_PREFIX, EIP191_MESSAGE_PREFIX};
 
-use crate::error::Error;
-use crate::DEVICE_MESSAGE_PREFIX;
 
 #[derive(BorshDeserialize, BorshSerialize, Clone, Debug, ShankContext, ShankInstruction)]
 #[rustfmt::skip]
@@ -16,7 +15,6 @@ pub enum Instruction {
     Initialize(InitializeArgs),
 
     /// Vendor register a Product
-    // TODO: PDA authority
     #[account(0, name="system_program", desc="The system program")]
     #[account(1, name="token_2022_program", desc="The SPL Token 2022 program")]
     #[account(2, writable, signer, name="payer", desc="The account paying for the storage fees")]
@@ -25,7 +23,6 @@ pub enum Instruction {
     CreateProduct(CreateProductArgs),
 
     /// Vendor register a Device
-    // TODO: verify Vendor
     #[account(0, name="system_program", desc="The system program")]
     #[account(1, name="token_2022_program", desc="The SPL Token 2022 program")]
     #[account(2, name="ata_program", desc="The associated token program")]
@@ -53,6 +50,7 @@ pub enum Instruction {
     ActivateDevice(ActivateDeviceArgs),
 }
 
+
 #[repr(C)]
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
 pub struct InitializeArgs {
@@ -74,50 +72,6 @@ pub enum DeviceSigningAlgorithm {
     Secp256k1,
 }
 
-impl DeviceSigningAlgorithm {
-    const MESSAGE_PREFIX: [u8; 8] = *DEVICE_MESSAGE_PREFIX;
-    const ED25519_HEADER: [u8; 16] = [
-        1, 0, 48, 0, 255, 255, 16, 0, 255, 255, 112, 0, 80, 0, 255, 255,
-    ];
-    const SECP256K1_HEADER: [u8; 12] = [1, 32, 0, 0, 12, 0, 0, 97, 0, 80, 0, 0];
-
-    pub fn decode(&self, data: &[u8]) -> Result<([u8; 32], [u8; 72]), Error> {
-        match self {
-            DeviceSigningAlgorithm::Ed25519 => {
-                if data.len() != 192 {
-                    return Err(Error::DeserializationError);
-                }
-                if data[0..16] != Self::ED25519_HEADER {
-                    return Err(Error::DeserializationError);
-                }
-                if data[112..120] != Self::MESSAGE_PREFIX {
-                    return Err(Error::DeserializationError);
-                }
-
-                Ok((
-                    data[16..48].try_into().unwrap(),
-                    data[120..192].try_into().unwrap(),
-                ))
-            }
-            DeviceSigningAlgorithm::Secp256k1 => {
-                if data.len() != 177 {
-                    return Err(Error::DeserializationError);
-                }
-                if data[0..12] != Self::SECP256K1_HEADER {
-                    return Err(Error::DeserializationError);
-                }
-                if data[97..105] != Self::MESSAGE_PREFIX {
-                    return Err(Error::DeserializationError);
-                }
-
-                let pubkey = Pubkey::new_from_array(keccak::hash(&data[12..32]).to_bytes());
-
-                Ok((pubkey.to_bytes(), data[105..177].try_into().unwrap()))
-            }
-        }
-    }
-}
-
 #[repr(C)]
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
 pub struct CreateDeviceArgs {
@@ -127,8 +81,53 @@ pub struct CreateDeviceArgs {
     pub signing_alg: DeviceSigningAlgorithm,
 }
 
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
+pub enum DeviceActivationSignature {
+    Ed25519([u8; 64]),
+    Secp256k1([u8; 64], u8),
+    EthSecp256k1([u8; 64], u8),
+}
+
+impl DeviceActivationSignature {
+    pub fn verify(
+        &self,
+        device_pubkey: &Pubkey,
+        device_mint_pubkey: &Pubkey,
+        owner_pubkey: &Pubkey,
+        message_slot: u64
+    ) -> ProgramResult {
+        match self {
+            DeviceActivationSignature::Ed25519(signature) => {
+                let message = [
+                    DEVICE_MESSAGE_PREFIX,
+                    device_mint_pubkey.as_ref(),
+                    owner_pubkey.as_ref(),
+                    &message_slot.to_le_bytes(),
+                ].concat();
+                crate::ed25519::verify_signature(device_pubkey, signature, &message)
+            },
+            DeviceActivationSignature::Secp256k1(signature, recovery_id) => {
+                let message = [
+                    DEVICE_MESSAGE_PREFIX,
+                    device_mint_pubkey.as_ref(),
+                    owner_pubkey.as_ref(),
+                    &message_slot.to_le_bytes(),
+                ].concat();
+                crate::secp256k1::verify_signature(device_pubkey, signature, *recovery_id, &message)
+            },
+            DeviceActivationSignature::EthSecp256k1(signature, recovery_id) => {
+                let message = message_slot.to_le_bytes();
+                let eip191_message = [EIP191_MESSAGE_PREFIX, message.len().to_string().as_bytes(), &message].concat();
+                crate::secp256k1::verify_signature(device_pubkey, signature, *recovery_id, eip191_message.as_ref())
+            },
+        }
+    }
+}
+
 #[repr(C)]
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
 pub struct ActivateDeviceArgs {
-    pub signing_alg: DeviceSigningAlgorithm,
+    pub signature: DeviceActivationSignature,
+    pub message_slot: u64,
 }
+

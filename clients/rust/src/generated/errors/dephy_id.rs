@@ -46,6 +46,9 @@ pub enum DephyIdError {
     /// 11 - Missing instruction
     #[error("Missing instruction")]
     MissingInstruction = 0xB,
+    /// 12 - Signature mismatch
+    #[error("Signature mismatch")]
+    SignatureMismatch = 0xC,
 }
 
 impl solana_program::program_error::PrintProgramError for DephyIdError {

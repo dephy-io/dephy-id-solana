@@ -30,6 +30,8 @@ export const DEPHY_ID_ERROR__INVALID_ACCOUNT_KEY = 0x9; // 9
 export const DEPHY_ID_ERROR__NUMERICAL_OVERFLOW = 0xa; // 10
 /** MissingInstruction: Missing instruction */
 export const DEPHY_ID_ERROR__MISSING_INSTRUCTION = 0xb; // 11
+/** SignatureMismatch: Signature mismatch */
+export const DEPHY_ID_ERROR__SIGNATURE_MISMATCH = 0xc; // 12
 
 export type DephyIdError =
   | typeof DEPHY_ID_ERROR__ACCOUNT_MISMATCH
@@ -43,7 +45,8 @@ export type DephyIdError =
   | typeof DEPHY_ID_ERROR__INVALID_PROGRAM_OWNER
   | typeof DEPHY_ID_ERROR__MISSING_INSTRUCTION
   | typeof DEPHY_ID_ERROR__NUMERICAL_OVERFLOW
-  | typeof DEPHY_ID_ERROR__SERIALIZATION_ERROR;
+  | typeof DEPHY_ID_ERROR__SERIALIZATION_ERROR
+  | typeof DEPHY_ID_ERROR__SIGNATURE_MISMATCH;
 
 let dephyIdErrorMessages: Record<DephyIdError, string> | undefined;
 if (__DEV__) {
@@ -60,6 +63,7 @@ if (__DEV__) {
     [DEPHY_ID_ERROR__MISSING_INSTRUCTION]: `Missing instruction`,
     [DEPHY_ID_ERROR__NUMERICAL_OVERFLOW]: `Numerical overflow`,
     [DEPHY_ID_ERROR__SERIALIZATION_ERROR]: `Error serializing an account`,
+    [DEPHY_ID_ERROR__SIGNATURE_MISMATCH]: `Signature mismatch`,
   };
 }
 

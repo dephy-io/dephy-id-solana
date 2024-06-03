@@ -44,6 +44,9 @@ pub enum Error {
     /// 11 - Missing instruction
     #[error("Missing instruction")]
     MissingInstruction,
+    /// 12 - Signature mismatch
+    #[error("Signature mismatch")]
+    SignatureMismatch,
 }
 
 impl PrintProgramError for Error {

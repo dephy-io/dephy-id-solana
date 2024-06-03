@@ -23,6 +23,8 @@ import {
   combineCodec,
   getStructDecoder,
   getStructEncoder,
+  getU64Decoder,
+  getU64Encoder,
   getU8Decoder,
   getU8Encoder,
   transformEncoder,
@@ -30,10 +32,10 @@ import {
 import { DEPHY_ID_PROGRAM_ADDRESS } from '../programs';
 import { ResolvedAccount, getAccountMetaFactory } from '../shared';
 import {
-  DeviceSigningAlgorithm,
-  DeviceSigningAlgorithmArgs,
-  getDeviceSigningAlgorithmDecoder,
-  getDeviceSigningAlgorithmEncoder,
+  DeviceActivationSignature,
+  DeviceActivationSignatureArgs,
+  getDeviceActivationSignatureDecoder,
+  getDeviceActivationSignatureEncoder,
 } from '../types';
 
 export type ActivateDeviceInstruction<
@@ -102,18 +104,21 @@ export type ActivateDeviceInstruction<
 
 export type ActivateDeviceInstructionData = {
   discriminator: number;
-  signingAlg: DeviceSigningAlgorithm;
+  signature: DeviceActivationSignature;
+  messageSlot: bigint;
 };
 
 export type ActivateDeviceInstructionDataArgs = {
-  signingAlg: DeviceSigningAlgorithmArgs;
+  signature: DeviceActivationSignatureArgs;
+  messageSlot: number | bigint;
 };
 
 export function getActivateDeviceInstructionDataEncoder(): Encoder<ActivateDeviceInstructionDataArgs> {
   return transformEncoder(
     getStructEncoder([
       ['discriminator', getU8Encoder()],
-      ['signingAlg', getDeviceSigningAlgorithmEncoder()],
+      ['signature', getDeviceActivationSignatureEncoder()],
+      ['messageSlot', getU64Encoder()],
     ]),
     (value) => ({ ...value, discriminator: 3 })
   );
@@ -122,7 +127,8 @@ export function getActivateDeviceInstructionDataEncoder(): Encoder<ActivateDevic
 export function getActivateDeviceInstructionDataDecoder(): Decoder<ActivateDeviceInstructionData> {
   return getStructDecoder([
     ['discriminator', getU8Decoder()],
-    ['signingAlg', getDeviceSigningAlgorithmDecoder()],
+    ['signature', getDeviceActivationSignatureDecoder()],
+    ['messageSlot', getU64Decoder()],
   ]);
 }
 
@@ -174,7 +180,8 @@ export type ActivateDeviceInput<
   deviceAssociatedToken: Address<TAccountDeviceAssociatedToken>;
   /** The device's owner */
   owner: Address<TAccountOwner>;
-  signingAlg: ActivateDeviceInstructionDataArgs['signingAlg'];
+  signature: ActivateDeviceInstructionDataArgs['signature'];
+  messageSlot: ActivateDeviceInstructionDataArgs['messageSlot'];
 };
 
 export function getActivateDeviceInstruction<

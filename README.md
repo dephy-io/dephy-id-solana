@@ -113,6 +113,17 @@ This template should help get you started developing Solana programs. Let's walk
    cargo run activate-device --user ./tmp/keys/user1.json --device ./tmp/keys/device1.json --vendor <VENDOR_PUBKEY> --product <PRODUCT_PUBKEY>
    ```
 
+4. Activate Device with Signed Message
+
+   ```sh
+   cargo run generate-message --user tmp/keys/user1.json --device tmp/keys/device1.json --product <PRODUCT_PUBKEY>
+
+   # here we signed the message for demo purposes
+   # in reality one should sign this on the device
+   cargo run sign-message -k tmp/keys/device1.json <MESSAGE>
+
+   cargo run activate-device-offchain --device tmp/keys/device1.json --user tmp/keys/user1.json --product <PRODUCT_PUBKEY> --vendor tmp/keys/vendor1.json --signature <SIGNATURE> --message <MESSAGE>
+   ```
 
 ## Managing programs
 
