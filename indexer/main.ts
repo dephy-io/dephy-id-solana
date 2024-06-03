@@ -1,7 +1,7 @@
 import './env'
 import { parseArgs } from "util"
 import { Indexer } from "./src/indexer"
-import { DEPHY_ID_PROGRAM_ADDRESS } from './src/dephy-id'
+import { DEPHY_ID_PROGRAM_ADDRESS } from '@dephy-io/dephy-id-program-client'
 
 try {
     const { values: config } = parseArgs({
