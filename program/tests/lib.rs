@@ -6,7 +6,8 @@ use dephy_id_program::{
         DeviceSigningAlgorithm, InitializeArgs, Instruction,
     },
     state::ProgramDataAccount,
-    DEVICE_MESSAGE_PREFIX, DEVICE_MINT_SEED_PREFIX, PRODUCT_MINT_SEED_PREFIX,
+    DEVICE_MESSAGE_PREFIX, EIP191_MESSAGE_PREFIX,
+    DEVICE_MINT_SEED_PREFIX, PRODUCT_MINT_SEED_PREFIX,
     PROGRAM_PDA_SEED_PREFIX,
 };
 use ed25519_dalek::ed25519::signature::SignerMut;
@@ -326,16 +327,15 @@ async fn test_activate_device(
             &spl_token_2022::id(),
         );
 
-    let message = [
-        DEVICE_MESSAGE_PREFIX,
-        device_mint_pubkey.as_ref(),
-        user.pubkey().as_ref(),
-        &slot.to_le_bytes(),
-    ]
-    .concat();
-
     let signature = match key_type {
         DeviceSigningAlgorithm::Ed25519 => {
+            let message = [
+                DEVICE_MESSAGE_PREFIX,
+                device_mint_pubkey.as_ref(),
+                user.pubkey().as_ref(),
+                &slot.to_le_bytes(),
+            ].concat();
+
             let mut device_ed25519_keypair =
                 ed25519_dalek::Keypair::from_bytes(&device.to_bytes()).unwrap();
             DeviceActivationSignature::Ed25519(device_ed25519_keypair.sign(&message).to_bytes())
@@ -343,7 +343,13 @@ async fn test_activate_device(
         DeviceSigningAlgorithm::Secp256k1 => {
             let device_secp256k1_priv_key =
                 libsecp256k1::SecretKey::parse(device.secret().as_bytes()).unwrap();
-            let eth_message = [b"\x19Ethereum Signed Message:\n", message.len().to_string().as_bytes(), &message].concat();
+
+            let message = slot.to_le_bytes();
+            let eth_message = [
+                EIP191_MESSAGE_PREFIX,
+                message.len().to_string().as_bytes(),
+                &message
+            ].concat();
             let message_hash = keccak::hash(&eth_message);
             let (signature, recovery_id) = libsecp256k1::sign(
                 &libsecp256k1::Message::parse(&message_hash.to_bytes()),

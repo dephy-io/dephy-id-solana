@@ -27,7 +27,7 @@ use crate::{
     },
     state::{Key, ProgramData, ProgramDataAccount},
     utils::create_account,
-    DEVICE_MESSAGE_PREFIX, DEVICE_MINT_SEED_PREFIX, PRODUCT_MINT_SEED_PREFIX,
+    DEVICE_MINT_SEED_PREFIX, PRODUCT_MINT_SEED_PREFIX,
     PROGRAM_PDA_SEED_PREFIX,
 };
 
@@ -537,18 +537,11 @@ fn activate_device<'a>(
     // Guards
     assert_signer("owner", ctx.accounts.owner)?;
 
-    let message = [
-        DEVICE_MESSAGE_PREFIX,
-        device_mint_pubkey.as_ref(),
-        owner_pubkey.as_ref(),
-        &args.message_slot.to_le_bytes(),
-    ]
-    .concat();
-
-    args.signature.verify(device_pubkey, &message)?;
     let clock = Clock::get()?;
     assert!(clock.slot >= args.message_slot);
     assert!(clock.slot < args.message_slot + 1500); // ~10min
+
+    args.signature.verify(device_pubkey, device_mint_pubkey, owner_pubkey, args.message_slot)?;
 
     let product_ata_pubkey = get_associated_token_address_with_program_id(
         &device_pubkey,

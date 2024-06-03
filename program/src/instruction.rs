@@ -1,6 +1,7 @@
 use borsh::{BorshDeserialize, BorshSerialize};
 use shank::{ShankContext, ShankInstruction};
 use solana_program::{pubkey::Pubkey, entrypoint::ProgramResult};
+use crate::{DEVICE_MESSAGE_PREFIX, EIP191_MESSAGE_PREFIX};
 
 
 #[derive(BorshDeserialize, BorshSerialize, Clone, Debug, ShankContext, ShankInstruction)]
@@ -88,17 +89,36 @@ pub enum DeviceActivationSignature {
 }
 
 impl DeviceActivationSignature {
-    pub fn verify(&self, pubkey: &Pubkey, message: &[u8]) -> ProgramResult {
+    pub fn verify(
+        &self,
+        device_pubkey: &Pubkey,
+        device_mint_pubkey: &Pubkey,
+        owner_pubkey: &Pubkey,
+        message_slot: u64
+    ) -> ProgramResult {
         match self {
             DeviceActivationSignature::Ed25519(signature) => {
-                crate::ed25519::verify_signature(pubkey, signature, message)
+                let message = [
+                    DEVICE_MESSAGE_PREFIX,
+                    device_mint_pubkey.as_ref(),
+                    owner_pubkey.as_ref(),
+                    &message_slot.to_le_bytes(),
+                ].concat();
+                crate::ed25519::verify_signature(device_pubkey, signature, &message)
             },
             DeviceActivationSignature::Secp256k1(signature, recovery_id) => {
-                crate::secp256k1::verify_signature(pubkey, signature, *recovery_id, message)
+                let message = [
+                    DEVICE_MESSAGE_PREFIX,
+                    device_mint_pubkey.as_ref(),
+                    owner_pubkey.as_ref(),
+                    &message_slot.to_le_bytes(),
+                ].concat();
+                crate::secp256k1::verify_signature(device_pubkey, signature, *recovery_id, &message)
             },
             DeviceActivationSignature::EthSecp256k1(signature, recovery_id) => {
-                let eth_message = [b"\x19Ethereum Signed Message:\n", message.len().to_string().as_bytes(), message].concat();
-                crate::secp256k1::verify_signature(pubkey, signature, *recovery_id, eth_message.as_ref())
+                let message = message_slot.to_le_bytes();
+                let eip191_message = [EIP191_MESSAGE_PREFIX, message.len().to_string().as_bytes(), &message].concat();
+                crate::secp256k1::verify_signature(device_pubkey, signature, *recovery_id, eip191_message.as_ref())
             },
         }
     }
