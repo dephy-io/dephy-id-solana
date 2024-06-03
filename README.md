@@ -102,7 +102,7 @@ This template should help get you started developing Solana programs. Let's walk
 
    ```sh
    # the PRODUCT_PUBKEY is from "Create Product" step's command output
-   # the DEVICE_PUBKEY can get by `solana address -k ./keys/device1.json`
+   # the DEVICE_PUBKEY can get by `solana address -k ./tmp/keys/device1.json`
    cargo run create-device --vendor ./tmp/keys/vendor1.json --product <PRODUCT_PUBKEY> --device <DEVICE_PUBKEY> 'Device#1' 'METADATA_URI'
    ```
 
