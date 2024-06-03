@@ -13,10 +13,90 @@ async function findProgramDataAccountPda(config = {}) {
     seeds: [web3_js.getUtf8Encoder().encode("DePHY_ID")]
   });
 }
-var DeviceSigningAlgorithm = /* @__PURE__ */ ((DeviceSigningAlgorithm4) => {
-  DeviceSigningAlgorithm4[DeviceSigningAlgorithm4["Ed25519"] = 0] = "Ed25519";
-  DeviceSigningAlgorithm4[DeviceSigningAlgorithm4["Secp256k1"] = 1] = "Secp256k1";
-  return DeviceSigningAlgorithm4;
+function getDeviceActivationSignatureEncoder() {
+  return web3_js.getDiscriminatedUnionEncoder([
+    [
+      "Ed25519",
+      web3_js.getStructEncoder([
+        ["fields", web3_js.getTupleEncoder([web3_js.fixEncoderSize(web3_js.getBytesEncoder(), 64)])]
+      ])
+    ],
+    [
+      "Secp256k1",
+      web3_js.getStructEncoder([
+        [
+          "fields",
+          web3_js.getTupleEncoder([
+            web3_js.fixEncoderSize(web3_js.getBytesEncoder(), 64),
+            web3_js.getU8Encoder()
+          ])
+        ]
+      ])
+    ],
+    [
+      "EthSecp256k1",
+      web3_js.getStructEncoder([
+        [
+          "fields",
+          web3_js.getTupleEncoder([
+            web3_js.fixEncoderSize(web3_js.getBytesEncoder(), 64),
+            web3_js.getU8Encoder()
+          ])
+        ]
+      ])
+    ]
+  ]);
+}
+function getDeviceActivationSignatureDecoder() {
+  return web3_js.getDiscriminatedUnionDecoder([
+    [
+      "Ed25519",
+      web3_js.getStructDecoder([
+        ["fields", web3_js.getTupleDecoder([web3_js.fixDecoderSize(web3_js.getBytesDecoder(), 64)])]
+      ])
+    ],
+    [
+      "Secp256k1",
+      web3_js.getStructDecoder([
+        [
+          "fields",
+          web3_js.getTupleDecoder([
+            web3_js.fixDecoderSize(web3_js.getBytesDecoder(), 64),
+            web3_js.getU8Decoder()
+          ])
+        ]
+      ])
+    ],
+    [
+      "EthSecp256k1",
+      web3_js.getStructDecoder([
+        [
+          "fields",
+          web3_js.getTupleDecoder([
+            web3_js.fixDecoderSize(web3_js.getBytesDecoder(), 64),
+            web3_js.getU8Decoder()
+          ])
+        ]
+      ])
+    ]
+  ]);
+}
+function getDeviceActivationSignatureCodec() {
+  return web3_js.combineCodec(
+    getDeviceActivationSignatureEncoder(),
+    getDeviceActivationSignatureDecoder()
+  );
+}
+function deviceActivationSignature(kind, data) {
+  return Array.isArray(data) ? { __kind: kind, fields: data } : { __kind: kind, ...data ?? {} };
+}
+function isDeviceActivationSignature(kind, value) {
+  return value.__kind === kind;
+}
+var DeviceSigningAlgorithm = /* @__PURE__ */ ((DeviceSigningAlgorithm3) => {
+  DeviceSigningAlgorithm3[DeviceSigningAlgorithm3["Ed25519"] = 0] = "Ed25519";
+  DeviceSigningAlgorithm3[DeviceSigningAlgorithm3["Secp256k1"] = 1] = "Secp256k1";
+  return DeviceSigningAlgorithm3;
 })(DeviceSigningAlgorithm || {});
 function getDeviceSigningAlgorithmEncoder() {
   return web3_js.getEnumEncoder(DeviceSigningAlgorithm);
@@ -135,6 +215,7 @@ var DEPHY_ID_ERROR__ACCOUNT_MISMATCH = 8;
 var DEPHY_ID_ERROR__INVALID_ACCOUNT_KEY = 9;
 var DEPHY_ID_ERROR__NUMERICAL_OVERFLOW = 10;
 var DEPHY_ID_ERROR__MISSING_INSTRUCTION = 11;
+var DEPHY_ID_ERROR__SIGNATURE_MISMATCH = 12;
 var dephyIdErrorMessages;
 if (__DEV__) {
   dephyIdErrorMessages = {
@@ -149,7 +230,8 @@ if (__DEV__) {
     [DEPHY_ID_ERROR__INVALID_PROGRAM_OWNER]: `Invalid program owner. This likely mean the provided account does not exist`,
     [DEPHY_ID_ERROR__MISSING_INSTRUCTION]: `Missing instruction`,
     [DEPHY_ID_ERROR__NUMERICAL_OVERFLOW]: `Numerical overflow`,
-    [DEPHY_ID_ERROR__SERIALIZATION_ERROR]: `Error serializing an account`
+    [DEPHY_ID_ERROR__SERIALIZATION_ERROR]: `Error serializing an account`,
+    [DEPHY_ID_ERROR__SIGNATURE_MISMATCH]: `Signature mismatch`
   };
 }
 function getDephyIdErrorMessage(code) {
@@ -234,7 +316,8 @@ function getActivateDeviceInstructionDataEncoder() {
   return web3_js.transformEncoder(
     web3_js.getStructEncoder([
       ["discriminator", web3_js.getU8Encoder()],
-      ["signingAlg", getDeviceSigningAlgorithmEncoder()]
+      ["signature", getDeviceActivationSignatureEncoder()],
+      ["messageSlot", web3_js.getU64Encoder()]
     ]),
     (value) => ({ ...value, discriminator: 3 })
   );
@@ -242,7 +325,8 @@ function getActivateDeviceInstructionDataEncoder() {
 function getActivateDeviceInstructionDataDecoder() {
   return web3_js.getStructDecoder([
     ["discriminator", web3_js.getU8Decoder()],
-    ["signingAlg", getDeviceSigningAlgorithmDecoder()]
+    ["signature", getDeviceActivationSignatureDecoder()],
+    ["messageSlot", web3_js.getU64Decoder()]
   ]);
 }
 function getActivateDeviceInstructionDataCodec() {
@@ -633,12 +717,14 @@ exports.DEPHY_ID_ERROR__INVALID_PROGRAM_OWNER = DEPHY_ID_ERROR__INVALID_PROGRAM_
 exports.DEPHY_ID_ERROR__MISSING_INSTRUCTION = DEPHY_ID_ERROR__MISSING_INSTRUCTION;
 exports.DEPHY_ID_ERROR__NUMERICAL_OVERFLOW = DEPHY_ID_ERROR__NUMERICAL_OVERFLOW;
 exports.DEPHY_ID_ERROR__SERIALIZATION_ERROR = DEPHY_ID_ERROR__SERIALIZATION_ERROR;
+exports.DEPHY_ID_ERROR__SIGNATURE_MISMATCH = DEPHY_ID_ERROR__SIGNATURE_MISMATCH;
 exports.DEPHY_ID_PROGRAM_ADDRESS = DEPHY_ID_PROGRAM_ADDRESS;
 exports.DephyIdAccount = DephyIdAccount;
 exports.DephyIdInstruction = DephyIdInstruction;
 exports.DeviceSigningAlgorithm = DeviceSigningAlgorithm;
 exports.Key = Key;
 exports.decodeProgramDataAccount = decodeProgramDataAccount;
+exports.deviceActivationSignature = deviceActivationSignature;
 exports.fetchAllMaybeProgramDataAccount = fetchAllMaybeProgramDataAccount;
 exports.fetchAllProgramDataAccount = fetchAllProgramDataAccount;
 exports.fetchMaybeProgramDataAccount = fetchMaybeProgramDataAccount;
@@ -659,6 +745,9 @@ exports.getCreateProductInstructionDataCodec = getCreateProductInstructionDataCo
 exports.getCreateProductInstructionDataDecoder = getCreateProductInstructionDataDecoder;
 exports.getCreateProductInstructionDataEncoder = getCreateProductInstructionDataEncoder;
 exports.getDephyIdErrorMessage = getDephyIdErrorMessage;
+exports.getDeviceActivationSignatureCodec = getDeviceActivationSignatureCodec;
+exports.getDeviceActivationSignatureDecoder = getDeviceActivationSignatureDecoder;
+exports.getDeviceActivationSignatureEncoder = getDeviceActivationSignatureEncoder;
 exports.getDeviceSigningAlgorithmCodec = getDeviceSigningAlgorithmCodec;
 exports.getDeviceSigningAlgorithmDecoder = getDeviceSigningAlgorithmDecoder;
 exports.getDeviceSigningAlgorithmEncoder = getDeviceSigningAlgorithmEncoder;
@@ -678,6 +767,7 @@ exports.getProgramDataDecoder = getProgramDataDecoder;
 exports.getProgramDataEncoder = getProgramDataEncoder;
 exports.identifyDephyIdAccount = identifyDephyIdAccount;
 exports.identifyDephyIdInstruction = identifyDephyIdInstruction;
+exports.isDeviceActivationSignature = isDeviceActivationSignature;
 exports.parseActivateDeviceInstruction = parseActivateDeviceInstruction;
 exports.parseCreateDeviceInstruction = parseCreateDeviceInstruction;
 exports.parseCreateProductInstruction = parseCreateProductInstruction;

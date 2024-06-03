@@ -3,14 +3,9 @@ use std::{error::Error, str::FromStr, time::Duration};
 use arrayref::array_ref;
 use clap::{Args, Parser, Subcommand, ValueEnum};
 use data_encoding::HEXLOWER_PERMISSIVE;
-use dephy_id_program_client::{
-    instructions::{
-        ActivateDeviceBuilder, CreateDeviceBuilder, CreateProductBuilder, InitializeBuilder,
-    },
-    types::{self, DeviceActivationSignature},
-    DEVICE_MESSAGE_PREFIX, DEVICE_MINT_SEED_PREFIX, ID as PROGRAM_ID, PRODUCT_MINT_SEED_PREFIX,
-    PROGRAM_PDA_SEED_PREFIX,
-};
+use dephy_id_program_client::{instructions::{
+    ActivateDeviceBuilder, CreateDeviceBuilder, CreateProductBuilder, InitializeBuilder,
+}, types::{self, DeviceActivationSignature}, DEVICE_MESSAGE_PREFIX, DEVICE_MINT_SEED_PREFIX, ID as PROGRAM_ID, PRODUCT_MINT_SEED_PREFIX, PROGRAM_PDA_SEED_PREFIX, EIP191_MESSAGE_PREFIX};
 use solana_client::rpc_client::RpcClient;
 use solana_sdk::{
     commitment_config::{CommitmentConfig, CommitmentLevel}, keccak, pubkey::Pubkey, signature::{Keypair, Signature}, signer::{EncodableKey, Signer}, sysvar::instructions, transaction::Transaction
@@ -406,8 +401,7 @@ fn activate_device(args: ActivateDeviceCliArgs) {
         args.product_mint_pubkey.as_ref(),
         user.pubkey().as_ref(),
         &slot.to_le_bytes(),
-    ]
-    .concat();
+    ].concat();
 
     let latest_block = client.get_latest_blockhash().unwrap();
     let signature = sign(args.signature_type, &device, &message);
@@ -466,11 +460,10 @@ fn sign(signature_type: SignatureType, keypair: &Keypair, message: &[u8]) -> Dev
             let device_secp256k1_priv_key =
                 libsecp256k1::SecretKey::parse(keypair.secret().as_bytes()).unwrap();
             let eth_message = [
-                b"\x19Ethereum Signed Message:\n",
+                EIP191_MESSAGE_PREFIX,
                 message.len().to_string().as_bytes(),
                 message,
-            ]
-            .concat();
+            ].concat();
             let message_hash = keccak::hash(&eth_message);
             let (signature, recovery_id) = libsecp256k1::sign(
                 &libsecp256k1::Message::parse(&message_hash.to_bytes()),
@@ -508,8 +501,13 @@ fn generate_message(args: GenerateMessageCliArgs) {
         did_mint_pubkey.as_ref(),
         args.user_pubkey.as_ref(),
         &slot.to_le_bytes(),
-    ]
-    .concat();
+    ].concat();
+
+    assert_eq!(message.len(), 96);
+    assert_eq!(array_ref![message, 0, 24], DEVICE_MESSAGE_PREFIX);
+    assert_eq!(array_ref![message, 24, 32], did_mint_pubkey.as_ref());
+    assert_eq!(array_ref![message, 56, 32], args.user_pubkey.as_ref());
+    assert_eq!(array_ref![message, 88, 8], &slot.to_le_bytes());
 
     eprintln!("Device Mint: {}", did_mint_pubkey);
     eprintln!("User Pubkey: {}", args.user_pubkey);
@@ -542,11 +540,11 @@ fn sign_message(args: SignMessageCliArgs) {
         DeviceActivationSignature::Ed25519(signature_bytes) => {
             eprintln!("Pubkey: {}", keypair.pubkey());
             let signature = Signature::from(signature_bytes);
-            println!("{}", signature);
+            println!("Signature: {}", signature);
         },
         DeviceActivationSignature::Secp256k1(signature_bytes, recovery_id) |
         DeviceActivationSignature::EthSecp256k1(signature_bytes, recovery_id) => {
-            println!("{}{}", HEXLOWER_PERMISSIVE.encode(&signature_bytes), HEXLOWER_PERMISSIVE.encode(&[recovery_id]));
+            println!("Signature: {}{}", HEXLOWER_PERMISSIVE.encode(&signature_bytes), HEXLOWER_PERMISSIVE.encode(&[recovery_id]));
         },
     }
 }
@@ -588,14 +586,15 @@ fn activate_device_offchain(args: ActivateDeviceOffchainCliArgs) {
     let message = match args.signature_type {
         SignatureType::Ed25519 => decoded_message.as_slice(),
         SignatureType::Secp256k1 => decoded_message.as_slice(),
-        SignatureType::EthSecp256k1 => decoded_message.as_slice().last_chunk::<80>().unwrap(),
+        SignatureType::EthSecp256k1 => decoded_message.as_slice().last_chunk::<96>().unwrap(),
     };
 
-    assert_eq!(message.len(), 80);
-    assert_eq!(array_ref![message, 0, 8], DEVICE_MESSAGE_PREFIX);
-    assert_eq!(array_ref![message, 8, 32], did_mint_pubkey.as_ref());
-    assert_eq!(array_ref![message, 40, 32], user.pubkey().as_ref());
-    let slot = u64::from_le_bytes(*array_ref![message, 72, 8]);
+    assert_eq!(message.len(), 96);
+    assert_eq!(array_ref![message, 0, 24], DEVICE_MESSAGE_PREFIX);
+    assert_eq!(array_ref![message, 24, 32], did_mint_pubkey.as_ref());
+    assert_eq!(array_ref![message, 56, 32], user.pubkey().as_ref());
+
+    let slot = u64::from_le_bytes(*array_ref![message, 88, 8]);
 
     let signature = match args.signature_type {
         SignatureType::Ed25519 => {
