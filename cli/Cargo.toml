@@ -20,4 +20,4 @@ ed25519-dalek = { workspace = true }
 libsecp256k1 = { workspace = true }
 clap = { workspace = true, features = ["derive"] }
 arrayref = { workspace = true }
-data-encoding = "2.6"
+hex = { workspace = true }
