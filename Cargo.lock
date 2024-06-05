@@ -1226,9 +1226,9 @@ version = "0.0.1"
 dependencies = [
  "arrayref",
  "clap 4.5.4",
- "data-encoding",
  "dephy-id-program-client",
  "ed25519-dalek",
+ "hex",
  "libsecp256k1 0.7.1",
  "solana-client",
  "solana-sdk",

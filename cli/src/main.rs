@@ -2,7 +2,6 @@ use std::{error::Error, str::FromStr, time::Duration};
 
 use arrayref::array_ref;
 use clap::{Args, Parser, Subcommand, ValueEnum};
-use data_encoding::HEXLOWER_PERMISSIVE;
 use dephy_id_program_client::{instructions::{
     ActivateDeviceBuilder, CreateDeviceBuilder, CreateProductBuilder, InitializeBuilder,
 }, types::{self, DeviceActivationSignature}, DEVICE_MESSAGE_PREFIX, DEVICE_MINT_SEED_PREFIX, ID as PROGRAM_ID, PRODUCT_MINT_SEED_PREFIX, PROGRAM_PDA_SEED_PREFIX, EIP191_MESSAGE_PREFIX};
@@ -513,7 +512,7 @@ fn generate_message(args: GenerateMessageCliArgs) {
     eprintln!("User Pubkey: {}", args.user_pubkey);
     eprintln!("CurrentSlot: {}", slot);
 
-    let msg = HEXLOWER_PERMISSIVE.encode(&message);
+    let msg = hex::encode(&message);
 
     if args.no_prefix {
         println!("{}", msg);
@@ -524,11 +523,9 @@ fn generate_message(args: GenerateMessageCliArgs) {
 
 fn decode_hex(hex_string: String) -> Vec<u8> {
     if hex_string.starts_with("0x") {
-        HEXLOWER_PERMISSIVE
-            .decode(&hex_string.as_bytes()[2..])
-            .unwrap()
+        hex::decode(&hex_string.as_bytes()[2..]).unwrap()
     } else {
-        HEXLOWER_PERMISSIVE.decode(hex_string.as_ref()).unwrap()
+        hex::decode(hex_string).unwrap()
     }
 }
 
@@ -539,12 +536,11 @@ fn sign_message(args: SignMessageCliArgs) {
     match sign(args.signature_type, &keypair, &message) {
         DeviceActivationSignature::Ed25519(signature_bytes) => {
             eprintln!("Pubkey: {}", keypair.pubkey());
-            let signature = Signature::from(signature_bytes);
-            println!("Signature: {}", signature);
+            println!("Signature: 0x{}", hex::encode(signature_bytes));
         },
         DeviceActivationSignature::Secp256k1(signature_bytes, recovery_id) |
         DeviceActivationSignature::EthSecp256k1(signature_bytes, recovery_id) => {
-            println!("Signature: {}{}", HEXLOWER_PERMISSIVE.encode(&signature_bytes), HEXLOWER_PERMISSIVE.encode(&[recovery_id]));
+            println!("Signature: {}{}", hex::encode(&signature_bytes), hex::encode(&[recovery_id]));
         },
     }
 }
@@ -598,7 +594,7 @@ fn activate_device_offchain(args: ActivateDeviceOffchainCliArgs) {
 
     let signature = match args.signature_type {
         SignatureType::Ed25519 => {
-            let decoded_signature = Signature::from_str(&args.signature).unwrap();
+            let decoded_signature = Signature::try_from(decode_hex(args.signature)).unwrap();
             assert!(decoded_signature.verify(device_pubkey.as_ref(), message));
             DeviceActivationSignature::Ed25519(*array_ref![decoded_signature.as_ref(), 0, 64])
         }
