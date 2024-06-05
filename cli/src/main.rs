@@ -23,10 +23,10 @@ enum Commands {
     Initialize(InitializeCliArgs),
     CreateProduct(CreateProductCliArgs),
     CreateDevice(CreateDeviceCliArgs),
-    ActivateDevice(ActivateDeviceCliArgs),
     GenerateMessage(GenerateMessageCliArgs),
     SignMessage(SignMessageCliArgs),
     ActivateDeviceOffchain(ActivateDeviceOffchainCliArgs),
+    DevActivateDevice(DevActivateDeviceCliArgs),
 }
 
 #[derive(Debug, Args)]
@@ -102,7 +102,7 @@ enum SignatureType {
 }
 
 #[derive(Debug, Args)]
-struct ActivateDeviceCliArgs {
+struct DevActivateDeviceCliArgs {
     #[arg(long = "device")]
     device_keypair: String,
     #[arg(long = "user")]
@@ -187,8 +187,8 @@ fn main() {
         Commands::CreateDevice(args) => create_device(args),
         Commands::GenerateMessage(args) => generate_message(args),
         Commands::SignMessage(args) => sign_message(args),
-        Commands::ActivateDevice(args) => activate_device(args),
         Commands::ActivateDeviceOffchain(args) => activate_device_offchain(args),
+        Commands::DevActivateDevice(args) => dev_activate_device(args),
     }
 }
 
@@ -357,7 +357,7 @@ fn create_device(args: CreateDeviceCliArgs) {
     };
 }
 
-fn activate_device(args: ActivateDeviceCliArgs) {
+fn dev_activate_device(args: DevActivateDeviceCliArgs) {
     let client = get_client(&args.common.url);
     let program_id = args.common.program_id.unwrap_or(PROGRAM_ID);
     let token_program_id = spl_token_2022::ID;
