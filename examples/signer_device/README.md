@@ -11,7 +11,7 @@ A fake device to sign messages.
 
 ### Generate a device
 
-`bun generate <-v VENDOR_ADDRESS> [-t secp256k1|ed25519] [-o FILE_PATH] [-f]`
+`bun generate <-v VENDOR_ADDRESS> <-p PRODUCT_TOKEN> [-t secp256k1|ed25519] [-o FILE_PATH] [-f]`
 - `-v` required, the vendor's Solana address, e.g. `4CBgnTunRPYccMR7HcjvNQWchLMB2fTMXGah1L7bfnUR`
 - `-p` required, the product's Solana address, e.g. `4aLcbu6QdKdWbPAfoQEzTQi3U5Ksd2T5t9Y9vsjW73K7`
 - `-t` optional, the did crypto key type, default: `ed25519`
