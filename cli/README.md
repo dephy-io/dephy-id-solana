@@ -1,38 +1,46 @@
-# DePHY cli & indexer
+DePHY ID CLI
+====
 
-## Example
+> Run all commands in the root of the repo
 
-1. Build program:
+> By default, all commands will connect to local solana-test-validator,
+> if you want to connect to the mainnet-beta program, you need to add extra args `-u YOUR_SOLANA_HTTP_RPC_ENDPOINT -p hdMghjD73uASxgJXi6e1mGPsXqnADMsrqB1bveqABP1`
 
-        cargo-build-sbf --tools-version v1.41
+## Create Product
 
-2. Run `solana-test-validator`
+```sh
+cargo run create-product --vendor ./tmp/keys/vendor1.json 'Product 1' 'SYMBOL' 'METADATA_URI' -m desc="First Product by Example Vendor"
+```
 
-3. Run indexer
+## Create Device
 
-        cargo run --bin indexer
+```sh
+# the PRODUCT_PUBKEY is from "Create Product" step's command output
+# the DEVICE_PUBKEY can get by `solana address -k ./tmp/keys/device1.json`
+cargo run create-device --vendor ./tmp/keys/vendor1.json --product <PRODUCT_PUBKEY> --device <DEVICE_PUBKEY> 'Device#1' 'METADATA_URI'
+```
 
-4. Deploy
+## Activate Device
 
-        solana -u l program deploy target/deploy/dephy_io_dephy_id.so --program-id ./program/keypair.json
+```sh
+cargo run generate-message --user tmp/keys/user1.json --device tmp/keys/device1.json --product <PRODUCT_PUBKEY>
 
-5. Create DePHY
+# here we signed the message for demo purposes
+# in reality one should sign this on the device
+cargo run sign-message -k tmp/keys/device1.json <MESSAGE>
 
-        cargo run --bin dephy-cli create-dephy --admin admin.json
+cargo run activate-device-offchain --device tmp/keys/device1.json --user tmp/keys/user1.json --product <PRODUCT_PUBKEY> --vendor tmp/keys/vendor1.json --signature <SIGNATURE> --message <MESSAGE>
+```
 
-6. Create Vendor
+### (Development only purpose)
 
-        cargo run --bin dephy-cli create-vendor --admin admin.json --vendor $(solana address -k vendor.json) 'Example Vendor' 'DVD' 'https://example.com'
+```sh
+# the VENDOR_PUBKEY is from "Create Vendor" step's command output
+cargo run dev-activate-device --user ./tmp/keys/user1.json --device ./tmp/keys/device1.json --vendor <VENDOR_PUBKEY> --product <PRODUCT_PUBKEY>
+```
 
-7. Create Product
+## (Development only) Initialize the program
 
-        cargo run --bin dephy-cli create-product --vendor vendor.json "PRODUCT1"
-
-8. Create Device
-
-        cargo run --bin dephy-cli create-device --vendor vendor.json --device device.json --product <PRODUCT_PUBKEY>
-
-9. Activate Device
-
-        cargo run --bin dephy-cli activate-device --device device.json --user user.json --product <PRODUCT_PUBKEY>
-
+```sh
+cargo run initialize --admin ./tmp/keys/admin.json
+```
