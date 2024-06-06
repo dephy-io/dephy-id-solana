@@ -8,7 +8,7 @@ export type GetDIDArgs = {
 
 export type GetDIDReturns = {
   "mint_account": string;
-  "token_account": string;
+  "token_account": string | null;
   "device": {
     "token_account": string;
     "pubkey": string;
@@ -16,14 +16,12 @@ export type GetDIDReturns = {
       "mint_account": string;
       "vendor": {
         "pubkey": string;
-        "mint_account": string;
-        "token_account": string;
       };
     };
   };
-  "user": {
+  "owner": {
     "pubkey": string;
-  };
+  } | null;
 } | null;
 
 export function getDID(client: Executor, args: GetDIDArgs): Promise<GetDIDReturns> {
@@ -37,13 +35,11 @@ select default::DID {
     product: {
       mint_account,
       vendor: {
-        pubkey,
-        mint_account,
-        token_account
+        pubkey
       }
     }
   },
-  user: {
+  owner: {
     pubkey
   }
 }

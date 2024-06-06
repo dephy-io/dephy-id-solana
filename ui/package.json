@@ -1,0 +1,21 @@
+{
+  "scripts": {
+    "generate:graphql": "graphql-code-generator --config ./graphql-codegen.ts",
+    "dephy-ui": "imba serve --esm ./index.html"
+  },
+  "dependencies": {
+    "@metaplex-foundation/umi": "^0.9.1",
+    "@metaplex-foundation/umi-bundle-defaults": "^0.9.1",
+    "@metaplex-foundation/umi-signer-wallet-adapters": "^0.9.1",
+    "@metaplex-foundation/umi-web3js-adapters": "^0.9.1",
+    "@solana/wallet-adapter-phantom": "^0.9.24",
+    "@solana/web3.js": "^1.92.1",
+    "graphql": "^16.8.1",
+    "graphql-request": "^7.0.1"
+  },
+  "devDependencies": {
+    "@graphql-codegen/cli": "^5.0.2",
+    "imba": "^2.0.0-alpha.235",
+    "typescript": "^5.4.5"
+  }
+}

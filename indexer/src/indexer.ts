@@ -70,7 +70,8 @@ export class Indexer {
     abortController: AbortController
     databaseUrl: string
     db!: Client
-    programPda!: Account<ProgramDataAccount, string>
+    programAddress!: Address
+    programPda?: Account<ProgramDataAccount, string>
     plugins: IPlugin[] = []
 
     constructor({
@@ -134,13 +135,13 @@ export class Indexer {
 
 
     public async run(programId: string, commitment: Commitment = 'finalized') {
-        let programAddress = address(programId)
-        await this.ensureProgramDataAccount(programAddress)
+        this.programAddress = address(programId)
+        // await this.ensureProgramDataAccount(programAddress)
 
-        const notifications = await this.subscribeLogs(programAddress, commitment)
+        const notifications = await this.subscribeLogs(this.programAddress, commitment)
         console.log('logs subscribed')
 
-        await this.fillMissingTransactions(programAddress, commitment)
+        await this.fillMissingTransactions(this.programAddress, commitment)
 
         for await (const notification of notifications) {
             const { context: { slot }, value: { signature, err } } = notification
@@ -424,7 +425,7 @@ export class Indexer {
             for (const ix of tx.transaction.message.instructions) {
                 if (tx.meta && !tx.meta.err) {
                     switch (ix.programId) {
-                        case this.programPda.programAddress:
+                        case this.programAddress:
                             if ('data' in ix) {
                                 await this.processProgramIx(dbTx, ix, { tx: signature, index: i })
                             }

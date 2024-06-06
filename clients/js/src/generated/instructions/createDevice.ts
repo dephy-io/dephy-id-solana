@@ -52,7 +52,9 @@ export type CreateDeviceInstruction<
   TAccountSystemProgram extends
     | string
     | IAccountMeta<string> = '11111111111111111111111111111111',
-  TAccountToken2022Program extends string | IAccountMeta<string> = string,
+  TAccountToken2022Program extends
+    | string
+    | IAccountMeta<string> = 'TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb',
   TAccountAtaProgram extends
     | string
     | IAccountMeta<string> = 'ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL',
@@ -178,7 +180,7 @@ export type CreateDeviceInput<
   /** The system program */
   systemProgram?: Address<TAccountSystemProgram>;
   /** The SPL Token 2022 program */
-  token2022Program: Address<TAccountToken2022Program>;
+  token2022Program?: Address<TAccountToken2022Program>;
   /** The associated token program */
   ataProgram?: Address<TAccountAtaProgram>;
   /** The account paying for the storage fees */
@@ -266,6 +268,10 @@ export function getCreateDeviceInstruction<
   if (!accounts.systemProgram.value) {
     accounts.systemProgram.value =
       '11111111111111111111111111111111' as Address<'11111111111111111111111111111111'>;
+  }
+  if (!accounts.token2022Program.value) {
+    accounts.token2022Program.value =
+      'TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb' as Address<'TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb'>;
   }
   if (!accounts.ataProgram.value) {
     accounts.ataProgram.value =

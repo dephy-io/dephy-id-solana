@@ -99,7 +99,7 @@ pub struct CreateProductInstructionArgs {
 /// ### Accounts:
 ///
 ///   0. `[optional]` system_program (default to `11111111111111111111111111111111`)
-///   1. `[]` token2022_program
+///   1. `[optional]` token2022_program (default to `TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb`)
 ///   2. `[writable, signer]` payer
 ///   3. `[signer]` vendor
 ///   4. `[writable]` product_mint
@@ -128,6 +128,7 @@ impl CreateProductBuilder {
         self.system_program = Some(system_program);
         self
     }
+    /// `[optional account, default to 'TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb']`
     /// The SPL Token 2022 program
     #[inline(always)]
     pub fn token2022_program(
@@ -199,9 +200,9 @@ impl CreateProductBuilder {
             system_program: self
                 .system_program
                 .unwrap_or(solana_program::pubkey!("11111111111111111111111111111111")),
-            token2022_program: self
-                .token2022_program
-                .expect("token2022_program is not set"),
+            token2022_program: self.token2022_program.unwrap_or(solana_program::pubkey!(
+                "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb"
+            )),
             payer: self.payer.expect("payer is not set"),
             vendor: self.vendor.expect("vendor is not set"),
             product_mint: self.product_mint.expect("product_mint is not set"),

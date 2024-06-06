@@ -13,12 +13,15 @@
     "validator:restart": "pnpm validator:start --restart",
     "validator:stop": "zx ./scripts/stop-validator.mjs",
     "clients:js:test": "zx ./scripts/client/test-js.mjs",
-    "clients:rust:test": "zx ./scripts/client/test-rust.mjs"
+    "clients:rust:test": "zx ./scripts/client/test-rust.mjs",
+    "clients:js:lint": "zx ./scripts/client/lint-js.mjs",
+    "clients:rust:lint": "zx ./scripts/client/lint-rust.mjs"
   },
   "devDependencies": {
     "@iarna/toml": "^2.2.5",
     "@kinobi-so/nodes-from-anchor": "^0.20.5",
     "@kinobi-so/renderers-js": "^0.20.5",
+    "@kinobi-so/renderers-js-umi": "^0.20.4",
     "@kinobi-so/renderers-rust": "^0.20.6",
     "@metaplex-foundation/shank-js": "^0.1.7",
     "kinobi": "^0.20.3",

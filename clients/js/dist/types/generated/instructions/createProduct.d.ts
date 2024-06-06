@@ -7,7 +7,7 @@
  */
 import { Address, Codec, Decoder, Encoder, IAccountMeta, IAccountSignerMeta, IInstruction, IInstructionWithAccounts, IInstructionWithData, ReadonlyAccount, ReadonlySignerAccount, TransactionSigner, WritableAccount, WritableSignerAccount } from '@solana/web3.js';
 import { DEPHY_ID_PROGRAM_ADDRESS } from '../programs';
-export type CreateProductInstruction<TProgram extends string = typeof DEPHY_ID_PROGRAM_ADDRESS, TAccountSystemProgram extends string | IAccountMeta<string> = '11111111111111111111111111111111', TAccountToken2022Program extends string | IAccountMeta<string> = string, TAccountPayer extends string | IAccountMeta<string> = string, TAccountVendor extends string | IAccountMeta<string> = string, TAccountProductMint extends string | IAccountMeta<string> = string, TRemainingAccounts extends readonly IAccountMeta<string>[] = []> = IInstruction<TProgram> & IInstructionWithData<Uint8Array> & IInstructionWithAccounts<[
+export type CreateProductInstruction<TProgram extends string = typeof DEPHY_ID_PROGRAM_ADDRESS, TAccountSystemProgram extends string | IAccountMeta<string> = '11111111111111111111111111111111', TAccountToken2022Program extends string | IAccountMeta<string> = 'TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb', TAccountPayer extends string | IAccountMeta<string> = string, TAccountVendor extends string | IAccountMeta<string> = string, TAccountProductMint extends string | IAccountMeta<string> = string, TRemainingAccounts extends readonly IAccountMeta<string>[] = []> = IInstruction<TProgram> & IInstructionWithData<Uint8Array> & IInstructionWithAccounts<[
     TAccountSystemProgram extends string ? ReadonlyAccount<TAccountSystemProgram> : TAccountSystemProgram,
     TAccountToken2022Program extends string ? ReadonlyAccount<TAccountToken2022Program> : TAccountToken2022Program,
     TAccountPayer extends string ? WritableSignerAccount<TAccountPayer> & IAccountSignerMeta<TAccountPayer> : TAccountPayer,
@@ -35,7 +35,7 @@ export type CreateProductInput<TAccountSystemProgram extends string = string, TA
     /** The system program */
     systemProgram?: Address<TAccountSystemProgram>;
     /** The SPL Token 2022 program */
-    token2022Program: Address<TAccountToken2022Program>;
+    token2022Program?: Address<TAccountToken2022Program>;
     /** The account paying for the storage fees */
     payer: TransactionSigner<TAccountPayer>;
     /** The vendor */

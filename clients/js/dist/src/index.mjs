@@ -1,7 +1,33 @@
-import { getProgramDerivedAddress, getUtf8Encoder, getDiscriminatedUnionEncoder, getStructEncoder, getTupleEncoder, fixEncoderSize, getBytesEncoder, getU8Encoder, getDiscriminatedUnionDecoder, getStructDecoder, getTupleDecoder, fixDecoderSize, getBytesDecoder, getU8Decoder, combineCodec, getEnumEncoder, getEnumDecoder, transformEncoder, getAddressEncoder, getAddressDecoder, decodeAccount, assertAccountExists, fetchEncodedAccount, assertAccountsExist, fetchEncodedAccounts, containsBytes, getU64Encoder, getU64Decoder, addEncoderSizePrefix, getU32Encoder, getArrayEncoder, addDecoderSizePrefix, getUtf8Decoder, getU32Decoder, getArrayDecoder, AccountRole, upgradeRoleToSigner, isTransactionSigner as isTransactionSigner$1 } from '@solana/web3.js';
+import { getProgramDerivedAddress, getUtf8Encoder, getAddressEncoder, getDiscriminatedUnionEncoder, getStructEncoder, getTupleEncoder, fixEncoderSize, getBytesEncoder, getU8Encoder, getDiscriminatedUnionDecoder, getStructDecoder, getTupleDecoder, fixDecoderSize, getBytesDecoder, getU8Decoder, combineCodec, getEnumEncoder, getEnumDecoder, transformEncoder, getAddressDecoder, decodeAccount, assertAccountExists, fetchEncodedAccount, assertAccountsExist, fetchEncodedAccounts, containsBytes, getU64Encoder, getU64Decoder, addEncoderSizePrefix, getU32Encoder, getArrayEncoder, addDecoderSizePrefix, getUtf8Decoder, getU32Decoder, getArrayDecoder, AccountRole, upgradeRoleToSigner, isTransactionSigner as isTransactionSigner$1 } from '@solana/web3.js';
 
 // env-shim.ts
 var __DEV__ = /* @__PURE__ */ (() => process["env"].NODE_ENV === "development")();
+async function findDeviceMintPda(seeds, config = {}) {
+  const {
+    programAddress = "hdMghjD73uASxgJXi6e1mGPsXqnADMsrqB1bveqABP1"
+  } = config;
+  return await getProgramDerivedAddress({
+    programAddress,
+    seeds: [
+      getUtf8Encoder().encode("DePHY_ID-DEVICE"),
+      getAddressEncoder().encode(seeds.productMintPubkey),
+      getAddressEncoder().encode(seeds.devicePubkey)
+    ]
+  });
+}
+async function findProductMintPda(seeds, config = {}) {
+  const {
+    programAddress = "hdMghjD73uASxgJXi6e1mGPsXqnADMsrqB1bveqABP1"
+  } = config;
+  return await getProgramDerivedAddress({
+    programAddress,
+    seeds: [
+      getUtf8Encoder().encode("DePHY_ID-PRODUCT"),
+      getAddressEncoder().encode(seeds.vendorPubkey),
+      getUtf8Encoder().encode(seeds.productName)
+    ]
+  });
+}
 async function findProgramDataAccountPda(config = {}) {
   const {
     programAddress = "hdMghjD73uASxgJXi6e1mGPsXqnADMsrqB1bveqABP1"
@@ -485,6 +511,9 @@ function getCreateDeviceInstruction(input) {
   if (!accounts.systemProgram.value) {
     accounts.systemProgram.value = "11111111111111111111111111111111";
   }
+  if (!accounts.token2022Program.value) {
+    accounts.token2022Program.value = "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb";
+  }
   if (!accounts.ataProgram.value) {
     accounts.ataProgram.value = "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL";
   }
@@ -593,6 +622,9 @@ function getCreateProductInstruction(input) {
   const args = { ...input };
   if (!accounts.systemProgram.value) {
     accounts.systemProgram.value = "11111111111111111111111111111111";
+  }
+  if (!accounts.token2022Program.value) {
+    accounts.token2022Program.value = "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb";
   }
   const getAccountMeta = getAccountMetaFactory(programAddress);
   const instruction = {
@@ -703,6 +735,6 @@ function parseInitializeInstruction(instruction) {
   };
 }
 
-export { DEPHY_ID_ERROR__ACCOUNT_MISMATCH, DEPHY_ID_ERROR__DESERIALIZATION_ERROR, DEPHY_ID_ERROR__EXPECTED_EMPTY_ACCOUNT, DEPHY_ID_ERROR__EXPECTED_NON_EMPTY_ACCOUNT, DEPHY_ID_ERROR__EXPECTED_SIGNER_ACCOUNT, DEPHY_ID_ERROR__EXPECTED_WRITABLE_ACCOUNT, DEPHY_ID_ERROR__INVALID_ACCOUNT_KEY, DEPHY_ID_ERROR__INVALID_PDA, DEPHY_ID_ERROR__INVALID_PROGRAM_OWNER, DEPHY_ID_ERROR__MISSING_INSTRUCTION, DEPHY_ID_ERROR__NUMERICAL_OVERFLOW, DEPHY_ID_ERROR__SERIALIZATION_ERROR, DEPHY_ID_ERROR__SIGNATURE_MISMATCH, DEPHY_ID_PROGRAM_ADDRESS, DephyIdAccount, DephyIdInstruction, DeviceSigningAlgorithm, Key, decodeProgramDataAccount, deviceActivationSignature, fetchAllMaybeProgramDataAccount, fetchAllProgramDataAccount, fetchMaybeProgramDataAccount, fetchMaybeProgramDataAccountFromSeeds, fetchProgramDataAccount, fetchProgramDataAccountFromSeeds, findProgramDataAccountPda, getActivateDeviceInstruction, getActivateDeviceInstructionDataCodec, getActivateDeviceInstructionDataDecoder, getActivateDeviceInstructionDataEncoder, getCreateDeviceInstruction, getCreateDeviceInstructionDataCodec, getCreateDeviceInstructionDataDecoder, getCreateDeviceInstructionDataEncoder, getCreateProductInstruction, getCreateProductInstructionDataCodec, getCreateProductInstructionDataDecoder, getCreateProductInstructionDataEncoder, getDephyIdErrorMessage, getDeviceActivationSignatureCodec, getDeviceActivationSignatureDecoder, getDeviceActivationSignatureEncoder, getDeviceSigningAlgorithmCodec, getDeviceSigningAlgorithmDecoder, getDeviceSigningAlgorithmEncoder, getInitializeInstruction, getInitializeInstructionDataCodec, getInitializeInstructionDataDecoder, getInitializeInstructionDataEncoder, getKeyCodec, getKeyDecoder, getKeyEncoder, getProgramDataAccountCodec, getProgramDataAccountDecoder, getProgramDataAccountEncoder, getProgramDataAccountSize, getProgramDataCodec, getProgramDataDecoder, getProgramDataEncoder, identifyDephyIdAccount, identifyDephyIdInstruction, isDeviceActivationSignature, parseActivateDeviceInstruction, parseCreateDeviceInstruction, parseCreateProductInstruction, parseInitializeInstruction };
+export { DEPHY_ID_ERROR__ACCOUNT_MISMATCH, DEPHY_ID_ERROR__DESERIALIZATION_ERROR, DEPHY_ID_ERROR__EXPECTED_EMPTY_ACCOUNT, DEPHY_ID_ERROR__EXPECTED_NON_EMPTY_ACCOUNT, DEPHY_ID_ERROR__EXPECTED_SIGNER_ACCOUNT, DEPHY_ID_ERROR__EXPECTED_WRITABLE_ACCOUNT, DEPHY_ID_ERROR__INVALID_ACCOUNT_KEY, DEPHY_ID_ERROR__INVALID_PDA, DEPHY_ID_ERROR__INVALID_PROGRAM_OWNER, DEPHY_ID_ERROR__MISSING_INSTRUCTION, DEPHY_ID_ERROR__NUMERICAL_OVERFLOW, DEPHY_ID_ERROR__SERIALIZATION_ERROR, DEPHY_ID_ERROR__SIGNATURE_MISMATCH, DEPHY_ID_PROGRAM_ADDRESS, DephyIdAccount, DephyIdInstruction, DeviceSigningAlgorithm, Key, decodeProgramDataAccount, deviceActivationSignature, fetchAllMaybeProgramDataAccount, fetchAllProgramDataAccount, fetchMaybeProgramDataAccount, fetchMaybeProgramDataAccountFromSeeds, fetchProgramDataAccount, fetchProgramDataAccountFromSeeds, findDeviceMintPda, findProductMintPda, findProgramDataAccountPda, getActivateDeviceInstruction, getActivateDeviceInstructionDataCodec, getActivateDeviceInstructionDataDecoder, getActivateDeviceInstructionDataEncoder, getCreateDeviceInstruction, getCreateDeviceInstructionDataCodec, getCreateDeviceInstructionDataDecoder, getCreateDeviceInstructionDataEncoder, getCreateProductInstruction, getCreateProductInstructionDataCodec, getCreateProductInstructionDataDecoder, getCreateProductInstructionDataEncoder, getDephyIdErrorMessage, getDeviceActivationSignatureCodec, getDeviceActivationSignatureDecoder, getDeviceActivationSignatureEncoder, getDeviceSigningAlgorithmCodec, getDeviceSigningAlgorithmDecoder, getDeviceSigningAlgorithmEncoder, getInitializeInstruction, getInitializeInstructionDataCodec, getInitializeInstructionDataDecoder, getInitializeInstructionDataEncoder, getKeyCodec, getKeyDecoder, getKeyEncoder, getProgramDataAccountCodec, getProgramDataAccountDecoder, getProgramDataAccountEncoder, getProgramDataAccountSize, getProgramDataCodec, getProgramDataDecoder, getProgramDataEncoder, identifyDephyIdAccount, identifyDephyIdInstruction, isDeviceActivationSignature, parseActivateDeviceInstruction, parseCreateDeviceInstruction, parseCreateProductInstruction, parseInitializeInstruction };
 //# sourceMappingURL=out.js.map
 //# sourceMappingURL=index.mjs.map

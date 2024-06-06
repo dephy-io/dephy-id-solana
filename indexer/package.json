@@ -1,7 +1,8 @@
 {
   "scripts": {
     "generate:edgeql": "generate edgeql-js --target ts",
-    "dephy-indexer": "bun run ./main.ts"
+    "dephy-indexer": "bun run ./main.ts",
+    "dephy-ui": "imba -w --esm ui/app.imba"
   },
   "dependencies": {
     "@dephy-io/dephy-id-program-client": "file:../clients/js",
@@ -12,6 +13,7 @@
   },
   "devDependencies": {
     "@edgedb/generate": "^0.5.3",
+    "@types/express": "^4.17.21",
     "bun-types": "latest"
   }
 }
