@@ -11,7 +11,7 @@ export type GetProductArgs = {
 export type GetProductReturns = {
   "mint_account": string;
   "mint_authority": string | null;
-  "device_count": number;
+  "devices_count": number;
   "devices": Array<{
     "id": string;
     "pubkey": string;
@@ -27,7 +27,7 @@ export type GetProductReturns = {
       "metadata": {
         "name": string | null;
         "symbol": string | null;
-        "uri": string;
+        "uri": string | null;
         "additional": Array<[string, string]>;
       } | null;
     } | null;
@@ -36,7 +36,7 @@ export type GetProductReturns = {
     "name": string | null;
     "additional": Array<[string, string]>;
     "symbol": string | null;
-    "uri": string;
+    "uri": string | null;
   } | null;
   "vendor": {
     "pubkey": string;
@@ -48,7 +48,7 @@ export function getProduct(client: Executor, args: GetProductArgs): Promise<GetP
 select default::Product {
   mint_account,
   mint_authority,
-  device_count := count(.devices),
+  devices_count := count(.devices),
   devices: {
     id,
     pubkey,

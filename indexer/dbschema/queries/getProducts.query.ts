@@ -10,12 +10,12 @@ export type GetProductsArgs = {
 export type GetProductsReturns = Array<{
   "mint_account": string;
   "mint_authority": string | null;
-  "device_count": number;
+  "devices_count": number;
   "metadata": {
     "name": string | null;
     "additional": Array<[string, string]>;
     "symbol": string | null;
-    "uri": string;
+    "uri": string | null;
   } | null;
   "vendor": {
     "pubkey": string;
@@ -27,7 +27,7 @@ export function getProducts(client: Executor, args: GetProductsArgs): Promise<Ge
 select default::Product {
   mint_account,
   mint_authority,
-  device_count := count(.devices),
+  devices_count := count(.devices),
   metadata: {
     name,
     additional,

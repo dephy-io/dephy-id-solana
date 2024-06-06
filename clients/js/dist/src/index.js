@@ -4,6 +4,32 @@ var web3_js = require('@solana/web3.js');
 
 // env-shim.ts
 var __DEV__ = /* @__PURE__ */ (() => process["env"].NODE_ENV === "development")();
+async function findDeviceMintPda(seeds, config = {}) {
+  const {
+    programAddress = "hdMghjD73uASxgJXi6e1mGPsXqnADMsrqB1bveqABP1"
+  } = config;
+  return await web3_js.getProgramDerivedAddress({
+    programAddress,
+    seeds: [
+      web3_js.getUtf8Encoder().encode("DePHY_ID-DEVICE"),
+      web3_js.getAddressEncoder().encode(seeds.productMintPubkey),
+      web3_js.getAddressEncoder().encode(seeds.devicePubkey)
+    ]
+  });
+}
+async function findProductMintPda(seeds, config = {}) {
+  const {
+    programAddress = "hdMghjD73uASxgJXi6e1mGPsXqnADMsrqB1bveqABP1"
+  } = config;
+  return await web3_js.getProgramDerivedAddress({
+    programAddress,
+    seeds: [
+      web3_js.getUtf8Encoder().encode("DePHY_ID-PRODUCT"),
+      web3_js.getAddressEncoder().encode(seeds.vendorPubkey),
+      web3_js.getUtf8Encoder().encode(seeds.productName)
+    ]
+  });
+}
 async function findProgramDataAccountPda(config = {}) {
   const {
     programAddress = "hdMghjD73uASxgJXi6e1mGPsXqnADMsrqB1bveqABP1"
@@ -487,6 +513,9 @@ function getCreateDeviceInstruction(input) {
   if (!accounts.systemProgram.value) {
     accounts.systemProgram.value = "11111111111111111111111111111111";
   }
+  if (!accounts.token2022Program.value) {
+    accounts.token2022Program.value = "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb";
+  }
   if (!accounts.ataProgram.value) {
     accounts.ataProgram.value = "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL";
   }
@@ -595,6 +624,9 @@ function getCreateProductInstruction(input) {
   const args = { ...input };
   if (!accounts.systemProgram.value) {
     accounts.systemProgram.value = "11111111111111111111111111111111";
+  }
+  if (!accounts.token2022Program.value) {
+    accounts.token2022Program.value = "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb";
   }
   const getAccountMeta = getAccountMetaFactory(programAddress);
   const instruction = {
@@ -731,6 +763,8 @@ exports.fetchMaybeProgramDataAccount = fetchMaybeProgramDataAccount;
 exports.fetchMaybeProgramDataAccountFromSeeds = fetchMaybeProgramDataAccountFromSeeds;
 exports.fetchProgramDataAccount = fetchProgramDataAccount;
 exports.fetchProgramDataAccountFromSeeds = fetchProgramDataAccountFromSeeds;
+exports.findDeviceMintPda = findDeviceMintPda;
+exports.findProductMintPda = findProductMintPda;
 exports.findProgramDataAccountPda = findProgramDataAccountPda;
 exports.getActivateDeviceInstruction = getActivateDeviceInstruction;
 exports.getActivateDeviceInstructionDataCodec = getActivateDeviceInstructionDataCodec;

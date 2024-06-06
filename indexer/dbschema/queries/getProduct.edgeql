@@ -1,7 +1,7 @@
 select default::Product {
   mint_account,
   mint_authority,
-  device_count := count(.devices),
+  devices_count := count(.devices),
   devices: {
     id,
     pubkey,

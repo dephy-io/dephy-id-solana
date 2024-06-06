@@ -1,6 +1,5 @@
-import { PublicKey } from '@solana/web3.js'
-import { Context, createNoopSigner } from '@metaplex-foundation/umi'
-import { fromWeb3JsPublicKey } from '@metaplex-foundation/umi-web3js-adapters'
+import { Context } from '@metaplex-foundation/umi'
+import { getDevice } from './queries'
 import './pubkey'
 
 
@@ -9,17 +8,16 @@ tag device-page
 	loaded = false
 	device
 
-	def routed params, state
+	def routed params, _state
 		loaded = false
-		{device} = await load_device(params.pubkey)
+		device = await load_device(params.pubkey)
+		log 'device', device
 
-	def load_device pubkey
-		const res = await window.fetch(`/api/device/{pubkey}`)
+	def load_device device_pubkey\string
+		const result = await getDevice(device_pubkey)
 		loaded = true
-		return await res.json()
+		return result.Device[0]
 
-	def reload_vendor
-		vendor = route.state.vendor = await load_products()
 
 	<self>
 		<h2> 'Device'
@@ -41,7 +39,7 @@ tag device-page
 						<span> device.signing_alg
 					<p>
 						<label> 'Mint At'
-						<span> device.block_ts
+						<span> device.tx.block_ts
 					<p>
 						<label> 'Owner'
 						if device.did.owner

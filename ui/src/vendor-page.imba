@@ -1,9 +1,9 @@
 import { createProduct } from './generated'
-import { PublicKey } from '@solana/web3.js'
-import { getAToken, getProductMint } from './pda'
+import { getProductMint } from './pda'
 import { Context, createNoopSigner } from '@metaplex-foundation/umi'
 import { fromWeb3JsPublicKey } from '@metaplex-foundation/umi-web3js-adapters'
 import './product'
+import { getVendor } from './queries'
 
 
 tag vendor-page
@@ -17,17 +17,16 @@ tag vendor-page
 	}
 
 	def vendor_pubkey
-		new PublicKey(route.params.vendor_pubkey)
+		route.params.vendor_pubkey
 
-	def routed params, state
-		{vendor} = await load_vendor(params.vendor_pubkey)
-		log 'Vendor', params.vendor_pubkey, vendor
+	def routed params, _state
+		vendor = await load_vendor(params.vendor_pubkey)
+		log 'Vendor', vendor
 
-	def load_vendor vendor_pubkey\PublicKey
-		if vendor_pubkey
-			let res = await window.fetch(`/api/vendor/{vendor_pubkey}`)
-			loaded = true
-			return await res.json()
+	def load_vendor vendor_pubkey\string
+		const result = await getVendor(vendor_pubkey)
+		loaded = true
+		return result.Vendor[0]
 
 	def reload_vendor
 		vendor = route.state.vendor = await load_vendor(vendor_pubkey!)

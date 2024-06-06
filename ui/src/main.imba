@@ -17,20 +17,15 @@ global css
 	@root
 		--width-card: 465px
 
-def get_config
-	const resp = await window.fetch('/config.json')
-	await resp.json()
-
 tag app
-	rpc_url
+	# TODO: config
+	rpc_url = 'http://127.0.0.1:8899'
 	umi\Umi
 	adapter\PhantomWalletAdapter
 
 	def setup
 		adapter = new PhantomWalletAdapter()
 
-		const config = await get_config()
-		rpc_url = config.rpc_url
 		umi = createUmi(rpc_url).use(walletAdapterIdentity(adapter))
 		imba.commit!
 

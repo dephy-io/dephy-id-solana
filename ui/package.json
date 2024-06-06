@@ -1,7 +1,7 @@
 {
   "scripts": {
-    "dephy-ui-dev": "imba run -w --esm app.imba --",
-    "dephy-ui-prod": "imba run -p -S --esm app.imba --"
+    "generate:graphql": "graphql-code-generator --config ./graphql-codegen.ts",
+    "dephy-ui": "imba serve --esm ./index.html"
   },
   "dependencies": {
     "@metaplex-foundation/umi": "^0.9.1",
@@ -9,11 +9,13 @@
     "@metaplex-foundation/umi-signer-wallet-adapters": "^0.9.1",
     "@metaplex-foundation/umi-web3js-adapters": "^0.9.1",
     "@solana/wallet-adapter-phantom": "^0.9.24",
-    "@solana/web3.js": "^1.91.8",
-    "edgedb": "^1.5.7",
-    "express": "^4.19.2"
+    "@solana/web3.js": "^1.92.1",
+    "graphql": "^16.8.1",
+    "graphql-request": "^7.0.1"
   },
   "devDependencies": {
-    "imba": "^2.0.0-alpha.235"
+    "@graphql-codegen/cli": "^5.0.2",
+    "imba": "^2.0.0-alpha.235",
+    "typescript": "^5.4.5"
   }
 }

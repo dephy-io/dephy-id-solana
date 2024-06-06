@@ -1,7 +1,8 @@
 import './pubkey'
+import { Product } from './gql'
 
 tag product
-	prop product
+	prop product\Product
 
 	<self>
 		<aside>

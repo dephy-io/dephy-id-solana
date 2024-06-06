@@ -19,7 +19,7 @@ export type GetDeviceReturns = {
     } | null;
     "metadata": {
       "name": string | null;
-      "uri": string;
+      "uri": string | null;
       "symbol": string | null;
       "additional": Array<[string, string]>;
     } | null;
@@ -29,7 +29,7 @@ export type GetDeviceReturns = {
     "metadata": {
       "name": string | null;
       "symbol": string | null;
-      "uri": string;
+      "uri": string | null;
       "additional": Array<[string, string]>;
     } | null;
     "vendor": {

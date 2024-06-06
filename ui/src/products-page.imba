@@ -1,8 +1,5 @@
-import { createProduct } from './generated'
-import { PublicKey } from '@solana/web3.js'
-import { getAToken, getProductMint } from './pda'
-import { Context, createNoopSigner } from '@metaplex-foundation/umi'
-import { fromWeb3JsPublicKey } from '@metaplex-foundation/umi-web3js-adapters'
+import { Context } from '@metaplex-foundation/umi'
+import { getProducts } from './queries'
 import './product'
 
 
@@ -11,24 +8,19 @@ tag products-page
 	loaded = false
 	products = []
 
-	def routed params, state
-		{products, limit, page} = await load_products(params.page)
+	def routed _params, _state
+		products = await load_products()
 
-	def load_products page
-		const qs = new URLSearchParams({ page })
-		const res = await window.fetch(`/api/products?{qs}`)
+	def load_products
+		const result = await getProducts()
 		loaded = true
-		return await res.json()
-
-	def reload_vendor
-		vendor = route.state.vendor = await load_products()
+		return result.Product
 
 	<self>
 		<h2> 'Products'
 
-		if loaded
-			<section>
-				for product in products
-					<product product=product>
-				else
-					<aside> <p> 'No Products found'
+		<section>
+			for product in products
+				<product product=product>
+			else
+				<aside> <p> 'No Products found'

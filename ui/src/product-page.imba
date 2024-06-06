@@ -4,6 +4,7 @@ import { getAToken, getDeviceMint } from './pda'
 import { createDevice, DeviceSigningAlgorithm } from './generated'
 import './pubkey'
 import './product'
+import { getProduct } from './queries'
 
 
 tag product-page
@@ -23,17 +24,19 @@ tag product-page
 	def routed params, state
 		# TODO: cache results
 		log('Product params', params)
-		page = params.page
-		{product, limit, page} = await load_product(params.mint_pubkey, page)
-		log 'Product', params.mint_pubkey, product
+		{product, limit, page} = await load_product(params.mint_pubkey, params.page)
 		imba.commit!
 
-	def load_product mint_pubkey\PublicKey, page\number = 0
-		if mint_pubkey
-			const qs = new URLSearchParams({ page })
-			let res = await window.fetch(`/api/product/{mint_pubkey}?{qs}`)
-			loaded = true
-			return await res.json()
+	def load_product mint_pubkey\string, page\number = 0
+		const limit = 50
+		const offset = limit * page
+		const result = await getProduct(mint_pubkey, offset, limit)
+		log 'Product', result
+		{
+			product: result.Product[0],
+			limit,
+			page
+		}
 
 	def reload_devices
 		'ok'
@@ -75,7 +78,7 @@ tag product-page
 			<section>
 				<div> `{product.device_count} devices`
 				<div>
-					for i in [0 ... Math.ceil(product.device_count / limit)]
+					for i in [0 ... Math.ceil(product.devices_count / limit)]
 						<a[ml:0.3rem] route-to=`/product/{product.mint_account}/{i}`> i
 
 			<section>

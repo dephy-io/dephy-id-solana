@@ -8,13 +8,14 @@ export type GetVendorArgs = {
 
 export type GetVendorReturns = {
   "pubkey": string;
+  "products_count": number;
   "products": Array<{
     "mint_authority": string | null;
     "mint_account": string;
     "metadata": {
       "name": string | null;
       "symbol": string | null;
-      "uri": string;
+      "uri": string | null;
       "additional": Array<[string, string]>;
     } | null;
     "block_ts": Date | null;
@@ -26,6 +27,7 @@ export function getVendor(client: Executor, args: GetVendorArgs): Promise<GetVen
   return client.querySingle(`\
 select default::Vendor {
   pubkey,
+  products_count := count(.products),
   products: {
     mint_authority,
     mint_account,

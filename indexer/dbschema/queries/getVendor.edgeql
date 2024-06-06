@@ -1,5 +1,6 @@
 select default::Vendor {
   pubkey,
+  products_count := count(.products),
   products: {
     mint_authority,
     mint_account,
