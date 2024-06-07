@@ -46,7 +46,7 @@ You need to learn basic about how to prepare a Solana development environment fi
 
 See: https://solana.com/developers/guides/getstarted/setup-local-development
 
-> Note: Use `Solana 1.18.12` or later
+> Note: Use `Solana 1.18.15` or later
 
 ```sh
 sh -c "$(curl -sSfL https://release.solana.com/v1.18.15/install)"
