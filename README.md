@@ -22,8 +22,8 @@ The DePHY ID Solana program mono repo
 - [Example: Simple data subscription (with Kwil)](./examples/kwil):
   A demo to show how to connect DePIN devices with Kwil decentralized DB,
   Devices can publish their data to the Kwil DB, people can subscribe them, and read.
-- [Example: Fake device](./examples/signer_device):
-  A software that mocking a device, providing essential abilities to work with DePHY ID
+- [Example: Device simulator](./examples/device_simulator):
+  A set of Javascript scripts that mocking a device, providing essential abilities to work with DePHY ID
 
 ## Program address
 
