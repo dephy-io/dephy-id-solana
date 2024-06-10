@@ -94,7 +94,7 @@ impl DeviceActivationSignature {
         device_pubkey: &Pubkey,
         device_mint_pubkey: &Pubkey,
         owner_pubkey: &Pubkey,
-        message_slot: u64
+        timestamp: u64
     ) -> ProgramResult {
         match self {
             DeviceActivationSignature::Ed25519(signature) => {
@@ -102,7 +102,7 @@ impl DeviceActivationSignature {
                     DEVICE_MESSAGE_PREFIX,
                     device_mint_pubkey.as_ref(),
                     owner_pubkey.as_ref(),
-                    &message_slot.to_le_bytes(),
+                    &timestamp.to_le_bytes(),
                 ].concat();
                 crate::ed25519::verify_signature(device_pubkey, signature, &message)
             },
@@ -111,12 +111,12 @@ impl DeviceActivationSignature {
                     DEVICE_MESSAGE_PREFIX,
                     device_mint_pubkey.as_ref(),
                     owner_pubkey.as_ref(),
-                    &message_slot.to_le_bytes(),
+                    &timestamp.to_le_bytes(),
                 ].concat();
                 crate::secp256k1::verify_signature(device_pubkey, signature, *recovery_id, &message)
             },
             DeviceActivationSignature::EthSecp256k1(signature, recovery_id) => {
-                let message = message_slot.to_le_bytes();
+                let message = timestamp.to_le_bytes();
                 let eip191_message = [EIP191_MESSAGE_PREFIX, message.len().to_string().as_bytes(), &message].concat();
                 crate::secp256k1::verify_signature(device_pubkey, signature, *recovery_id, eip191_message.as_ref())
             },
@@ -128,6 +128,6 @@ impl DeviceActivationSignature {
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
 pub struct ActivateDeviceArgs {
     pub signature: DeviceActivationSignature,
-    pub message_slot: u64,
+    pub timestamp: u64,
 }
 

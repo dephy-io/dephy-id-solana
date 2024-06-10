@@ -28,6 +28,7 @@ use spl_token_2022::{
 };
 use spl_token_metadata_interface::state::TokenMetadata;
 use std::str::FromStr;
+use std::time::{SystemTime, UNIX_EPOCH};
 
 #[tokio::test]
 async fn test_smoke() {
@@ -327,13 +328,14 @@ async fn test_activate_device(
             &spl_token_2022::id(),
         );
 
+    let timestamp = SystemTime::now().duration_since(UNIX_EPOCH).ok().unwrap().as_secs();
     let signature = match key_type {
         DeviceSigningAlgorithm::Ed25519 => {
             let message = [
                 DEVICE_MESSAGE_PREFIX,
                 device_mint_pubkey.as_ref(),
                 user.pubkey().as_ref(),
-                &slot.to_le_bytes(),
+                &timestamp.to_le_bytes(),
             ].concat();
 
             let mut device_ed25519_keypair =
@@ -344,7 +346,7 @@ async fn test_activate_device(
             let device_secp256k1_priv_key =
                 libsecp256k1::SecretKey::parse(device.secret().as_bytes()).unwrap();
 
-            let message = slot.to_le_bytes();
+            let message = timestamp.to_le_bytes();
             let eth_message = [
                 EIP191_MESSAGE_PREFIX,
                 message.len().to_string().as_bytes(),
@@ -363,7 +365,7 @@ async fn test_activate_device(
         program_id,
         &Instruction::ActivateDevice(ActivateDeviceArgs {
             signature,
-            message_slot: slot,
+            timestamp,
         }),
         vec![
             // #[account(0, name="system_program", desc="The system program")]
