@@ -26,11 +26,11 @@ export type ActivateDeviceInstruction<TProgram extends string = typeof DEPHY_ID_
 export type ActivateDeviceInstructionData = {
     discriminator: number;
     signature: DeviceActivationSignature;
-    messageSlot: bigint;
+    timestamp: bigint;
 };
 export type ActivateDeviceInstructionDataArgs = {
     signature: DeviceActivationSignatureArgs;
-    messageSlot: number | bigint;
+    timestamp: number | bigint;
 };
 export declare function getActivateDeviceInstructionDataEncoder(): Encoder<ActivateDeviceInstructionDataArgs>;
 export declare function getActivateDeviceInstructionDataDecoder(): Decoder<ActivateDeviceInstructionData>;
@@ -61,7 +61,7 @@ export type ActivateDeviceInput<TAccountSystemProgram extends string = string, T
     /** The device's owner */
     owner: Address<TAccountOwner>;
     signature: ActivateDeviceInstructionDataArgs['signature'];
-    messageSlot: ActivateDeviceInstructionDataArgs['messageSlot'];
+    timestamp: ActivateDeviceInstructionDataArgs['timestamp'];
 };
 export declare function getActivateDeviceInstruction<TAccountSystemProgram extends string, TAccountToken2022Program extends string, TAccountAtaProgram extends string, TAccountInstructions extends string, TAccountPayer extends string, TAccountVendor extends string, TAccountProductMint extends string, TAccountProductAssociatedToken extends string, TAccountDevice extends string, TAccountDeviceMint extends string, TAccountDeviceAssociatedToken extends string, TAccountOwner extends string>(input: ActivateDeviceInput<TAccountSystemProgram, TAccountToken2022Program, TAccountAtaProgram, TAccountInstructions, TAccountPayer, TAccountVendor, TAccountProductMint, TAccountProductAssociatedToken, TAccountDevice, TAccountDeviceMint, TAccountDeviceAssociatedToken, TAccountOwner>): ActivateDeviceInstruction<typeof DEPHY_ID_PROGRAM_ADDRESS, TAccountSystemProgram, TAccountToken2022Program, TAccountAtaProgram, TAccountInstructions, TAccountPayer, TAccountVendor, TAccountProductMint, TAccountProductAssociatedToken, TAccountDevice, TAccountDeviceMint, TAccountDeviceAssociatedToken, TAccountOwner>;
 export type ParsedActivateDeviceInstruction<TProgram extends string = typeof DEPHY_ID_PROGRAM_ADDRESS, TAccountMetas extends readonly IAccountMeta[] = readonly IAccountMeta[]> = {

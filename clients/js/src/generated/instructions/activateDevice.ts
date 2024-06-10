@@ -105,12 +105,12 @@ export type ActivateDeviceInstruction<
 export type ActivateDeviceInstructionData = {
   discriminator: number;
   signature: DeviceActivationSignature;
-  messageSlot: bigint;
+  timestamp: bigint;
 };
 
 export type ActivateDeviceInstructionDataArgs = {
   signature: DeviceActivationSignatureArgs;
-  messageSlot: number | bigint;
+  timestamp: number | bigint;
 };
 
 export function getActivateDeviceInstructionDataEncoder(): Encoder<ActivateDeviceInstructionDataArgs> {
@@ -118,7 +118,7 @@ export function getActivateDeviceInstructionDataEncoder(): Encoder<ActivateDevic
     getStructEncoder([
       ['discriminator', getU8Encoder()],
       ['signature', getDeviceActivationSignatureEncoder()],
-      ['messageSlot', getU64Encoder()],
+      ['timestamp', getU64Encoder()],
     ]),
     (value) => ({ ...value, discriminator: 3 })
   );
@@ -128,7 +128,7 @@ export function getActivateDeviceInstructionDataDecoder(): Decoder<ActivateDevic
   return getStructDecoder([
     ['discriminator', getU8Decoder()],
     ['signature', getDeviceActivationSignatureDecoder()],
-    ['messageSlot', getU64Decoder()],
+    ['timestamp', getU64Decoder()],
   ]);
 }
 
@@ -181,7 +181,7 @@ export type ActivateDeviceInput<
   /** The device's owner */
   owner: Address<TAccountOwner>;
   signature: ActivateDeviceInstructionDataArgs['signature'];
-  messageSlot: ActivateDeviceInstructionDataArgs['messageSlot'];
+  timestamp: ActivateDeviceInstructionDataArgs['timestamp'];
 };
 
 export function getActivateDeviceInstruction<
