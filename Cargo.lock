@@ -1241,7 +1241,7 @@ name = "dephy-id-program-client"
 version = "0.0.1"
 dependencies = [
  "assert_matches",
- "borsh 0.10.3",
+ "borsh 1.5.1",
  "num-derive 0.4.2",
  "num-traits",
  "serde",
@@ -1262,6 +1262,8 @@ dependencies = [
  "num-traits",
  "shank",
  "solana-program",
+ "solana-program-test",
+ "solana-sdk",
  "spl-token-2022 3.0.2",
  "thiserror",
 ]
