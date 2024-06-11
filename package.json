@@ -27,5 +27,10 @@
     "typescript": "^5.5.2",
     "zx": "^7.2.3"
   },
-  "packageManager": "pnpm@9.4.0"
+  "packageManager": "pnpm@9.4.0",
+  "pnpm": {
+    "patchedDependencies": {
+      "@kinobi-so/renderers-rust@0.20.10": "patches/@kinobi-so__renderers-rust@0.20.10.patch"
+    }
+  }
 }
