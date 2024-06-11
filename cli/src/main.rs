@@ -1,4 +1,5 @@
 use std::{error::Error, str::FromStr, time::Duration};
+use std::time::{SystemTime, UNIX_EPOCH};
 
 use arrayref::array_ref;
 use clap::{Args, Parser, Subcommand, ValueEnum};
@@ -7,7 +8,7 @@ use dephy_id_program_client::{instructions::{
 }, types::{self, DeviceActivationSignature}, DEVICE_MESSAGE_PREFIX, DEVICE_MINT_SEED_PREFIX, ID as PROGRAM_ID, PRODUCT_MINT_SEED_PREFIX, PROGRAM_PDA_SEED_PREFIX, EIP191_MESSAGE_PREFIX};
 use solana_client::rpc_client::RpcClient;
 use solana_sdk::{
-    commitment_config::{CommitmentConfig, CommitmentLevel}, keccak, pubkey::Pubkey, signature::{Keypair, Signature}, signer::{EncodableKey, Signer}, sysvar::instructions, transaction::Transaction
+    commitment_config::CommitmentConfig, keccak, pubkey::Pubkey, signature::{Keypair, Signature}, signer::{EncodableKey, Signer}, sysvar::instructions, transaction::Transaction
 };
 
 #[derive(Debug, Parser)]
@@ -390,16 +391,12 @@ fn dev_activate_device(args: DevActivateDeviceCliArgs) {
             &token_program_id,
         );
 
-    let slot: u64 = client
-        .get_slot_with_commitment(CommitmentConfig {
-            commitment: CommitmentLevel::Finalized,
-        })
-        .unwrap();
+    let timestamp = SystemTime::now().duration_since(UNIX_EPOCH).ok().unwrap().as_secs();
     let message = [
         DEVICE_MESSAGE_PREFIX,
         args.product_mint_pubkey.as_ref(),
         user.pubkey().as_ref(),
-        &slot.to_le_bytes(),
+        &timestamp.to_le_bytes(),
     ].concat();
 
     let latest_block = client.get_latest_blockhash().unwrap();
@@ -418,7 +415,7 @@ fn dev_activate_device(args: DevActivateDeviceCliArgs) {
             .device_mint(did_mint_pubkey)
             .device_associated_token(did_atoken_pubkey)
             .signature(signature)
-            .message_slot(slot)
+            .timestamp(timestamp)
             .instruction()],
         Some(&payer.pubkey()),
         &[&user, &payer],
@@ -474,9 +471,6 @@ fn sign(signature_type: SignatureType, keypair: &Keypair, message: &[u8]) -> Dev
 }
 
 fn generate_message(args: GenerateMessageCliArgs) {
-    eprintln!("RPC Endpoint: {}", args.common.url);
-
-    let client = get_client(&args.common.url);
     let program_id = args.common.program_id.unwrap_or(PROGRAM_ID);
     let product_mint_pubkey = args.product_pubkey;
     let device_pubkey = args.device_pubkey;
@@ -490,27 +484,23 @@ fn generate_message(args: GenerateMessageCliArgs) {
         &program_id,
     );
 
-    let slot: u64 = client
-        .get_slot_with_commitment(CommitmentConfig {
-            commitment: CommitmentLevel::Finalized,
-        })
-        .unwrap();
+    let timestamp = SystemTime::now().duration_since(UNIX_EPOCH).ok().unwrap().as_secs();
     let message = [
         DEVICE_MESSAGE_PREFIX,
         did_mint_pubkey.as_ref(),
         args.user_pubkey.as_ref(),
-        &slot.to_le_bytes(),
+        &timestamp.to_le_bytes(),
     ].concat();
 
     assert_eq!(message.len(), 96);
     assert_eq!(array_ref![message, 0, 24], DEVICE_MESSAGE_PREFIX);
     assert_eq!(array_ref![message, 24, 32], did_mint_pubkey.as_ref());
     assert_eq!(array_ref![message, 56, 32], args.user_pubkey.as_ref());
-    assert_eq!(array_ref![message, 88, 8], &slot.to_le_bytes());
+    assert_eq!(array_ref![message, 88, 8], &timestamp.to_le_bytes());
 
     eprintln!("Device Mint: {}", did_mint_pubkey);
     eprintln!("User Pubkey: {}", args.user_pubkey);
-    eprintln!("CurrentSlot: {}", slot);
+    eprintln!("Timestamp: {}", timestamp);
 
     let msg = hex::encode(&message);
 
@@ -590,7 +580,7 @@ fn activate_device_offchain(args: ActivateDeviceOffchainCliArgs) {
     assert_eq!(array_ref![message, 24, 32], did_mint_pubkey.as_ref());
     assert_eq!(array_ref![message, 56, 32], user.pubkey().as_ref());
 
-    let slot = u64::from_le_bytes(*array_ref![message, 88, 8]);
+    let timestamp = u64::from_le_bytes(*array_ref![message, 88, 8]);
 
     let signature = match args.signature_type {
         SignatureType::Ed25519 => {
@@ -628,7 +618,7 @@ fn activate_device_offchain(args: ActivateDeviceOffchainCliArgs) {
             .device_mint(did_mint_pubkey)
             .device_associated_token(did_atoken_pubkey)
             .signature(signature)
-            .message_slot(slot)
+            .timestamp(timestamp)
             .instruction()],
         Some(&payer.pubkey()),
         &[&user, &payer],

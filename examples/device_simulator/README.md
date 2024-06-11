@@ -1,7 +1,7 @@
-Fake signer device
+Device simulator
 ====
 
-A fake device to sign messages.
+A set of Javascript scripts that mocking a device, providing essential abilities to work with DePHY ID.
 
 ## Preparation
 
@@ -18,9 +18,17 @@ A fake device to sign messages.
 - `-o` optional, the save path, default: `./tmp/default.json`
 - `-f` optional, overwrite exist file
 
-### Show a device info
+### Show a (simulated) device info
 
 `bun show [-w FILE_PATH]`
+- `-w` optional, the wallet file path, default: `./tmp/default.json`
+
+### Activate the device
+
+`bun activate <-o OWNER_ADDRESS> <-p PRODUCT_TOKEN> [-w FILE_PATH]`
+- `-o` required, the owner's Solana address, e.g. `G2xf2ophFPJpPeZPy2hTU8H5q7YdULkqabD344kM4NAU`
+- `-p` required, the product's Solana address, e.g. `4aLcbu6QdKdWbPAfoQEzTQi3U5Ksd2T5t9Y9vsjW73K7`
+- `-i` optional, the DePHY ID program address, default points to the development program address
 - `-w` optional, the wallet file path, default: `./tmp/default.json`
 
 ### Sign a message

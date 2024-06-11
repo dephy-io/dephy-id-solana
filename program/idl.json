@@ -426,7 +426,7 @@
             }
           },
           {
-            "name": "messageSlot",
+            "name": "timestamp",
             "type": "u64"
           }
         ]

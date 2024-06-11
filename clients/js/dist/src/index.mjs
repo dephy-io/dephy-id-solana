@@ -341,7 +341,7 @@ function getActivateDeviceInstructionDataEncoder() {
     getStructEncoder([
       ["discriminator", getU8Encoder()],
       ["signature", getDeviceActivationSignatureEncoder()],
-      ["messageSlot", getU64Encoder()]
+      ["timestamp", getU64Encoder()]
     ]),
     (value) => ({ ...value, discriminator: 3 })
   );
@@ -350,7 +350,7 @@ function getActivateDeviceInstructionDataDecoder() {
   return getStructDecoder([
     ["discriminator", getU8Decoder()],
     ["signature", getDeviceActivationSignatureDecoder()],
-    ["messageSlot", getU64Decoder()]
+    ["timestamp", getU64Decoder()]
   ]);
 }
 function getActivateDeviceInstructionDataCodec() {
