@@ -10,7 +10,7 @@ members = [
     "program",
     "clients/rust",
     "cli",
-    "examples/kwil",
+    "examples/kwil", "examples/template",
 ]
 
 [workspace.dependencies]
