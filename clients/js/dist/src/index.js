@@ -285,6 +285,7 @@ var DephyIdInstruction = /* @__PURE__ */ ((DephyIdInstruction2) => {
   DephyIdInstruction2[DephyIdInstruction2["CreateProduct"] = 1] = "CreateProduct";
   DephyIdInstruction2[DephyIdInstruction2["CreateDevice"] = 2] = "CreateDevice";
   DephyIdInstruction2[DephyIdInstruction2["ActivateDevice"] = 3] = "ActivateDevice";
+  DephyIdInstruction2[DephyIdInstruction2["CreateActivatedDevice"] = 4] = "CreateActivatedDevice";
   return DephyIdInstruction2;
 })(DephyIdInstruction || {});
 function identifyDephyIdInstruction(instruction) {
@@ -300,6 +301,9 @@ function identifyDephyIdInstruction(instruction) {
   }
   if (web3_js.containsBytes(data, web3_js.getU8Encoder().encode(3), 0)) {
     return 3 /* ActivateDevice */;
+  }
+  if (web3_js.containsBytes(data, web3_js.getU8Encoder().encode(4), 0)) {
+    return 4 /* CreateActivatedDevice */;
   }
   throw new Error(
     "The provided instruction could not be identified as a dephyId instruction."
@@ -444,6 +448,134 @@ function parseActivateDeviceInstruction(instruction) {
       owner: getNextAccount()
     },
     data: getActivateDeviceInstructionDataDecoder().decode(instruction.data)
+  };
+}
+function getCreateActivatedDeviceInstructionDataEncoder() {
+  return web3_js.transformEncoder(
+    web3_js.getStructEncoder([
+      ["discriminator", web3_js.getU8Encoder()],
+      ["name", web3_js.addEncoderSizePrefix(web3_js.getUtf8Encoder(), web3_js.getU32Encoder())],
+      ["uri", web3_js.addEncoderSizePrefix(web3_js.getUtf8Encoder(), web3_js.getU32Encoder())],
+      [
+        "additionalMetadata",
+        web3_js.getArrayEncoder(
+          web3_js.getTupleEncoder([
+            web3_js.addEncoderSizePrefix(web3_js.getUtf8Encoder(), web3_js.getU32Encoder()),
+            web3_js.addEncoderSizePrefix(web3_js.getUtf8Encoder(), web3_js.getU32Encoder())
+          ])
+        )
+      ]
+    ]),
+    (value) => ({ ...value, discriminator: 4 })
+  );
+}
+function getCreateActivatedDeviceInstructionDataDecoder() {
+  return web3_js.getStructDecoder([
+    ["discriminator", web3_js.getU8Decoder()],
+    ["name", web3_js.addDecoderSizePrefix(web3_js.getUtf8Decoder(), web3_js.getU32Decoder())],
+    ["uri", web3_js.addDecoderSizePrefix(web3_js.getUtf8Decoder(), web3_js.getU32Decoder())],
+    [
+      "additionalMetadata",
+      web3_js.getArrayDecoder(
+        web3_js.getTupleDecoder([
+          web3_js.addDecoderSizePrefix(web3_js.getUtf8Decoder(), web3_js.getU32Decoder()),
+          web3_js.addDecoderSizePrefix(web3_js.getUtf8Decoder(), web3_js.getU32Decoder())
+        ])
+      )
+    ]
+  ]);
+}
+function getCreateActivatedDeviceInstructionDataCodec() {
+  return web3_js.combineCodec(
+    getCreateActivatedDeviceInstructionDataEncoder(),
+    getCreateActivatedDeviceInstructionDataDecoder()
+  );
+}
+function getCreateActivatedDeviceInstruction(input) {
+  const programAddress = DEPHY_ID_PROGRAM_ADDRESS;
+  const originalAccounts = {
+    systemProgram: { value: input.systemProgram ?? null, isWritable: false },
+    token2022Program: {
+      value: input.token2022Program ?? null,
+      isWritable: false
+    },
+    ataProgram: { value: input.ataProgram ?? null, isWritable: false },
+    instructions: { value: input.instructions ?? null, isWritable: false },
+    payer: { value: input.payer ?? null, isWritable: true },
+    vendor: { value: input.vendor ?? null, isWritable: false },
+    productMint: { value: input.productMint ?? null, isWritable: false },
+    productAssociatedToken: {
+      value: input.productAssociatedToken ?? null,
+      isWritable: true
+    },
+    device: { value: input.device ?? null, isWritable: false },
+    deviceMint: { value: input.deviceMint ?? null, isWritable: true },
+    deviceAssociatedToken: {
+      value: input.deviceAssociatedToken ?? null,
+      isWritable: true
+    },
+    owner: { value: input.owner ?? null, isWritable: false }
+  };
+  const accounts = originalAccounts;
+  const args = { ...input };
+  if (!accounts.systemProgram.value) {
+    accounts.systemProgram.value = "11111111111111111111111111111111";
+  }
+  if (!accounts.ataProgram.value) {
+    accounts.ataProgram.value = "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL";
+  }
+  const getAccountMeta = getAccountMetaFactory(programAddress);
+  const instruction = {
+    accounts: [
+      getAccountMeta(accounts.systemProgram),
+      getAccountMeta(accounts.token2022Program),
+      getAccountMeta(accounts.ataProgram),
+      getAccountMeta(accounts.instructions),
+      getAccountMeta(accounts.payer),
+      getAccountMeta(accounts.vendor),
+      getAccountMeta(accounts.productMint),
+      getAccountMeta(accounts.productAssociatedToken),
+      getAccountMeta(accounts.device),
+      getAccountMeta(accounts.deviceMint),
+      getAccountMeta(accounts.deviceAssociatedToken),
+      getAccountMeta(accounts.owner)
+    ],
+    programAddress,
+    data: getCreateActivatedDeviceInstructionDataEncoder().encode(
+      args
+    )
+  };
+  return instruction;
+}
+function parseCreateActivatedDeviceInstruction(instruction) {
+  if (instruction.accounts.length < 12) {
+    throw new Error("Not enough accounts");
+  }
+  let accountIndex = 0;
+  const getNextAccount = () => {
+    const accountMeta = instruction.accounts[accountIndex];
+    accountIndex += 1;
+    return accountMeta;
+  };
+  return {
+    programAddress: instruction.programAddress,
+    accounts: {
+      systemProgram: getNextAccount(),
+      token2022Program: getNextAccount(),
+      ataProgram: getNextAccount(),
+      instructions: getNextAccount(),
+      payer: getNextAccount(),
+      vendor: getNextAccount(),
+      productMint: getNextAccount(),
+      productAssociatedToken: getNextAccount(),
+      device: getNextAccount(),
+      deviceMint: getNextAccount(),
+      deviceAssociatedToken: getNextAccount(),
+      owner: getNextAccount()
+    },
+    data: getCreateActivatedDeviceInstructionDataDecoder().decode(
+      instruction.data
+    )
   };
 }
 function getCreateDeviceInstructionDataEncoder() {
@@ -770,6 +902,10 @@ exports.getActivateDeviceInstruction = getActivateDeviceInstruction;
 exports.getActivateDeviceInstructionDataCodec = getActivateDeviceInstructionDataCodec;
 exports.getActivateDeviceInstructionDataDecoder = getActivateDeviceInstructionDataDecoder;
 exports.getActivateDeviceInstructionDataEncoder = getActivateDeviceInstructionDataEncoder;
+exports.getCreateActivatedDeviceInstruction = getCreateActivatedDeviceInstruction;
+exports.getCreateActivatedDeviceInstructionDataCodec = getCreateActivatedDeviceInstructionDataCodec;
+exports.getCreateActivatedDeviceInstructionDataDecoder = getCreateActivatedDeviceInstructionDataDecoder;
+exports.getCreateActivatedDeviceInstructionDataEncoder = getCreateActivatedDeviceInstructionDataEncoder;
 exports.getCreateDeviceInstruction = getCreateDeviceInstruction;
 exports.getCreateDeviceInstructionDataCodec = getCreateDeviceInstructionDataCodec;
 exports.getCreateDeviceInstructionDataDecoder = getCreateDeviceInstructionDataDecoder;
@@ -803,6 +939,7 @@ exports.identifyDephyIdAccount = identifyDephyIdAccount;
 exports.identifyDephyIdInstruction = identifyDephyIdInstruction;
 exports.isDeviceActivationSignature = isDeviceActivationSignature;
 exports.parseActivateDeviceInstruction = parseActivateDeviceInstruction;
+exports.parseCreateActivatedDeviceInstruction = parseCreateActivatedDeviceInstruction;
 exports.parseCreateDeviceInstruction = parseCreateDeviceInstruction;
 exports.parseCreateProductInstruction = parseCreateProductInstruction;
 exports.parseInitializeInstruction = parseInitializeInstruction;

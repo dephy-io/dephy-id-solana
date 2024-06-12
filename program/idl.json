@@ -309,6 +309,119 @@
         "type": "u8",
         "value": 3
       }
+    },
+    {
+      "name": "CreateActivatedDevice",
+      "accounts": [
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The system program"
+          ]
+        },
+        {
+          "name": "token2022Program",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The SPL Token 2022 program"
+          ]
+        },
+        {
+          "name": "ataProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The associated token program"
+          ]
+        },
+        {
+          "name": "instructions",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The instructions sysvar"
+          ]
+        },
+        {
+          "name": "payer",
+          "isMut": true,
+          "isSigner": true,
+          "docs": [
+            "The account paying for the storage fees"
+          ]
+        },
+        {
+          "name": "vendor",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The vendor"
+          ]
+        },
+        {
+          "name": "productMint",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The mint account for the product"
+          ]
+        },
+        {
+          "name": "productAssociatedToken",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "The associated token account for the product"
+          ]
+        },
+        {
+          "name": "device",
+          "isMut": false,
+          "isSigner": true,
+          "docs": [
+            "The device"
+          ]
+        },
+        {
+          "name": "deviceMint",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "The mint account for the device"
+          ]
+        },
+        {
+          "name": "deviceAssociatedToken",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "The associated token account for the device"
+          ]
+        },
+        {
+          "name": "owner",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The device's owner"
+          ]
+        }
+      ],
+      "args": [
+        {
+          "name": "createActivatedDeviceArgs",
+          "type": {
+            "defined": "CreateActivatedDeviceArgs"
+          }
+        }
+      ],
+      "discriminant": {
+        "type": "u8",
+        "value": 4
+      }
     }
   ],
   "accounts": [
@@ -428,6 +541,33 @@
           {
             "name": "timestamp",
             "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "CreateActivatedDeviceArgs",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "name": "uri",
+            "type": "string"
+          },
+          {
+            "name": "additionalMetadata",
+            "type": {
+              "vec": {
+                "tuple": [
+                  "string",
+                  "string"
+                ]
+              }
+            }
           }
         ]
       }

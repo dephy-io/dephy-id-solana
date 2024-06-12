@@ -2,47 +2,48 @@ use borsh::BorshDeserialize;
 use solana_program::{
     account_info::AccountInfo, entrypoint::ProgramResult, msg, pubkey::Pubkey, system_program,
 };
+use spl_token_2022::extension::{BaseStateWithExtensions, StateWithExtensions};
+use spl_token_2022::state::Mint;
+use spl_token_metadata_interface::state::TokenMetadata;
 
 use crate::assertions::{
-    assert_pda, assert_program_owner, assert_same_pubkeys, assert_signer, assert_writable,
+    assert_pda, assert_same_pubkeys, assert_signer, assert_writable,
 };
-use crate::instruction::accounts::{IncrementAccounts, InitAccounts};
-use crate::instruction::{DemoInstruction, InitArgs};
+use crate::instruction::accounts::{CreateVirtualDeviceAccounts, InitAccounts};
+use crate::instruction::{CreateVirtualDeviceArgs, DemoInstruction, InitArgs};
 use crate::state::{DemoAccount, Key};
 use crate::utils::create_account;
 
-use dephy_id_program_client::instructions::CreateProductCpiBuilder;
+use dephy_id_program_client::instructions::{
+    CreateActivatedDeviceCpiBuilder, CreateProductCpiBuilder,
+};
 
 pub fn process_instruction<'a>(
-    _program_id: &Pubkey,
+    program_id: &Pubkey,
     accounts: &'a [AccountInfo<'a>],
     instruction_data: &[u8],
 ) -> ProgramResult {
     let instruction: DemoInstruction = DemoInstruction::try_from_slice(instruction_data)?;
     match instruction {
         DemoInstruction::Init(args) => {
-            msg!("Instruction: Create");
-            init(accounts, args)
+            msg!("Instruction: Init");
+            init(program_id, accounts, args)
         }
-        DemoInstruction::Increment { amount } => {
-            msg!("Instruction: Increment");
-            increment(accounts, amount)
+        DemoInstruction::CreateVirtualDevice(args) => {
+            msg!("Instruction: CreateVirtualDevice");
+            create_virtual_device(program_id, accounts, args)
         }
     }
 }
 
-fn init<'a>(accounts: &'a [AccountInfo<'a>], args: InitArgs) -> ProgramResult {
+fn init<'a>(program_id: &Pubkey, accounts: &'a [AccountInfo<'a>], args: InitArgs) -> ProgramResult {
     // Accounts.
     let ctx = InitAccounts::context(accounts)?;
 
     // Guards.
-    let mut seeds = DemoAccount::seeds();
-    let bump = assert_pda(
-        "counter",
-        ctx.accounts.demo,
-        &crate::ID,
-        &seeds,
-    )?;
+    let mut demo_seeds = DemoAccount::seeds();
+    let demo_bump = [assert_pda("counter", ctx.accounts.demo, &crate::ID, &demo_seeds)?];
+    demo_seeds.push(&demo_bump);
     assert_signer("authority", ctx.accounts.authority)?;
     assert_signer("payer", ctx.accounts.payer)?;
     assert_writable("payer", ctx.accounts.payer)?;
@@ -58,15 +59,13 @@ fn init<'a>(accounts: &'a [AccountInfo<'a>], args: InitArgs) -> ProgramResult {
         authority: *ctx.accounts.authority.key,
         product_mint: *ctx.accounts.product_mint.key,
     };
-    let bump = [bump];
-    seeds.push(&bump);
     create_account(
         ctx.accounts.demo,
         ctx.accounts.payer,
         ctx.accounts.system_program,
         DemoAccount::LEN,
         &crate::ID,
-        Some(&[&seeds]),
+        Some(&[&demo_seeds]),
     )?;
 
     account.save(ctx.accounts.demo)?;
@@ -75,7 +74,7 @@ fn init<'a>(accounts: &'a [AccountInfo<'a>], args: InitArgs) -> ProgramResult {
     let vendor_bump = [assert_pda(
         "vendor",
         ctx.accounts.vendor,
-        &dephy_id_program_client::ID,
+        program_id,
         &vendor_seeds,
     )?];
     vendor_seeds.push(&vendor_bump);
@@ -96,9 +95,39 @@ fn init<'a>(accounts: &'a [AccountInfo<'a>], args: InitArgs) -> ProgramResult {
     Ok(())
 }
 
-fn increment<'a>(accounts: &'a [AccountInfo<'a>], amount: Option<u32>) -> ProgramResult {
+fn create_virtual_device<'a>(
+    program_id: &Pubkey,
+    accounts: &'a [AccountInfo<'a>],
+    args: CreateVirtualDeviceArgs,
+) -> ProgramResult {
     // Accounts.
-    let ctx = IncrementAccounts::context(accounts)?;
+    let ctx = CreateVirtualDeviceAccounts::context(accounts)?;
+    let owner_pubkey = ctx.accounts.owner.key;
+
+    let product_mint_data = ctx.accounts.product_mint.data.borrow();
+    let product_mint = StateWithExtensions::<Mint>::unpack(&product_mint_data)?;
+    let product_mint_metadata = product_mint.get_variable_len_extension::<TokenMetadata>()?;
+
+    assert_pda("device", ctx.accounts.device, program_id, &[b"DEVICE", owner_pubkey.as_ref()])?;
+
+    // TODO: use your own verify method
+    assert_eq!(args.challenge, 42);
+
+    let mut create_activated_device = CreateActivatedDeviceCpiBuilder::new(ctx.accounts.dephy_id);
+    create_activated_device
+        .system_program(ctx.accounts.system_program)
+        .token2022_program(ctx.accounts.token_2022_program)
+        .ata_program(ctx.accounts.ata_program)
+        .payer(ctx.accounts.payer)
+        .vendor(ctx.accounts.vendor)
+        .product_mint(ctx.accounts.product_mint)
+        .product_associated_token(ctx.accounts.product_atoken)
+        .device(ctx.accounts.device)
+        .device_mint(ctx.accounts.device_mint)
+        .device_associated_token(ctx.accounts.device_atoken)
+        .name(product_mint_metadata.name)
+        .uri(product_mint_metadata.uri)
+        .additional_metadata(product_mint_metadata.additional_metadata);
 
     Ok(())
 }

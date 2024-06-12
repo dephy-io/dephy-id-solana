@@ -48,6 +48,21 @@ pub enum Instruction {
     #[account(10, writable, name="device_associated_token", desc="The associated token account for the device")]
     #[account(11, name="owner", desc="The device's owner")]
     ActivateDevice(ActivateDeviceArgs),
+
+    /// Vendor create an activated Device
+    #[account(0, name="system_program", desc="The system program")]
+    #[account(1, name="token_2022_program", desc="The SPL Token 2022 program")]
+    #[account(2, name="ata_program", desc="The associated token program")]
+    #[account(3, name="instructions", desc="The instructions sysvar")]
+    #[account(4, writable, signer, name="payer", desc="The account paying for the storage fees")]
+    #[account(5, name="vendor", desc="The vendor")]
+    #[account(6, name="product_mint", desc="The mint account for the product")]
+    #[account(7, writable, name="product_associated_token", desc="The associated token account for the product")]
+    #[account(8, signer, name="device", desc="The device")]
+    #[account(9, writable, name="device_mint", desc="The mint account for the device")]
+    #[account(10, writable, name="device_associated_token", desc="The associated token account for the device")]
+    #[account(11, name="owner", desc="The device's owner")]
+    CreateActivatedDevice(CreateActivatedDeviceArgs),
 }
 
 
@@ -129,5 +144,13 @@ impl DeviceActivationSignature {
 pub struct ActivateDeviceArgs {
     pub signature: DeviceActivationSignature,
     pub timestamp: u64,
+}
+
+#[repr(C)]
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
+pub struct CreateActivatedDeviceArgs {
+    pub name: String,
+    pub uri: String,
+    pub additional_metadata: Vec<(String, String)>,
 }
 
