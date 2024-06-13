@@ -25,7 +25,7 @@ A set of Javascript scripts that mocking a device, providing essential abilities
 
 ### Activate the device
 
-`bun activate <-o OWNER_ADDRESS> <-p PRODUCT_TOKEN> [-w FILE_PATH]`
+`bun activate <-o OWNER_ADDRESS> <-p PRODUCT_TOKEN> <-i PROGRAM_ID> [-w FILE_PATH]`
 - `-o` required, the owner's Solana address, e.g. `G2xf2ophFPJpPeZPy2hTU8H5q7YdULkqabD344kM4NAU`
 - `-p` required, the product's Solana address, e.g. `4aLcbu6QdKdWbPAfoQEzTQi3U5Ksd2T5t9Y9vsjW73K7`
 - `-i` optional, the DePHY ID program address, default points to the development program address
