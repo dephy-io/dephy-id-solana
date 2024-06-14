@@ -277,7 +277,8 @@ bun verify <-m MESSAGE> <-s SIGNATURE> [-k did|secp256k1|ed25519] [-w FILE_PATH]
 **An example is as follows:**
 
 ```sh
-bun verify -m 0x0a17e589e7f1d8406b856369e6fb96f94682d730581f8d1babb6ec805e9b62b9 -s 0x47e9ac8f9b14f2917977a50e1eed4cb27499a2c8e8b4d1b1b5a4476591f9397dcfc098b4885991d30c9bdfa857f787128ced1973dda062ca8bd634726d7d0209
+bun verify -m 0x0a17e589e7f1d8406b856369e6fb96f94682d730581f8d1babb6ec805e9b62b9 \
+-s 0x47e9ac8f9b14f2917977a50e1eed4cb27499a2c8e8b4d1b1b5a4476591f9397dcfc098b4885991d30c9bdfa857f787128ced1973dda062ca8bd634726d7d0209
 ```
 
 The output content is as follows:

@@ -9,13 +9,14 @@ sidebar_label: Prerequisites
 
 ### Install Rust
 
-运行以下命令安装 rust 环境：
+Install Rust with the following cli:
 
 ```sh
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 ```
 
-查看是否安装成功：
+Check the `rust` and `rustup` version:
+
 ```sh
 rustup -V
 rustc -Vv
@@ -23,19 +24,20 @@ rustc -Vv
 
 ### Install Solana
 
-运行以下命令安装 solana 环境：
+Install Solana with the following cli:
 
 ```sh
-# 最新版本是 1.18.15
+# The current latest version is 1.18.15
 sh -c "$(curl -sSfL https://release.solana.com/v1.18.15/install)"
 ```
 
-查看是否安装成功：
+Check the `solana` version:
+
 ```sh
 solana -V
 ```
 
-更多内容请看：https://solana.com/developers/guides/getstarted/setup-local-development
+More information, please read: https://solana.com/developers/guides/getstarted/setup-local-development
 
 ### Install EdgeDB
 
@@ -43,27 +45,29 @@ solana -V
 curl https://sh.edgedb.com --proto '=https' -sSf1 | sh
 ```
 
-查看是否安装成功：
+check EdgeDB version:
+
 ```sh
 edgedb -V
 ```
 
 ### Install Bun
 
-请运行以下命令：
+Run the following cli:
 
 ```sh
 curl -fsSL https://bun.sh/install | bash
 ```
 
-查看是否安装成功：
+check Bun version:
+
 ```sh
 bun -v
 ```
 
 ### Install Node.js
 
-请运行以下命令：
+Run the following cli:
 
 ```sh
 curl -sL https://deb.nodesource.com/setup_20.x -o /tmp/nodesource_setup.sh
@@ -93,9 +97,9 @@ edgedb project init --server-instance dephy-indexer --non-interactive
 
 ```
 
-启动成功，会有以下输出：
+If the launch is successful, the following output will be displayed:
 
-```
+```sh
 Found `edgedb.toml` in ~/dephy/dephy-id/indexer
 Initializing project...
 Checking EdgeDB versions...
@@ -120,12 +124,12 @@ To connect to dephy-indexer, run `edgedb`
 ### Run solana local node
 
 ```sh
-solana config set --url localhost # 设定网络为 localhost
+solana config set --url localhost # set network is localhost
 
 solana-test-validator
 ```
 
-使用以下命令进行测试，如有输出，说明成功启动 solana 本地节点：
+Run the following command to test the solana local node. If the output is displayed, the local Solana node is successfully started:
 
 ```sh
 curl http://127.0.0.1:8899 -X POST -H "Content-Type: application/json" -d '
@@ -144,10 +148,10 @@ cd dephy-io
 ./scripts/generate_demo_keys.sh
 ```
 
-本命令一共生成了 6 个文件，每个文件都保存了 solana 地址的私钥。
-执行这个命令的同时，并向几个地址空投了一定数量的 sol，所以上一步的操作很重要。
+This command generates a total of 6 files, each of which holds the privatekey for the solana address.
+While executing this command, a certain amount of sol is dropped to several addresses, so the previous step is important.
 
-运行以下命令，查看文件：
+Let us check these privatekey files:
 
 ```sh
 ls tmp/keys
@@ -158,24 +162,25 @@ ls tmp/keys
 
 ### Build solana contract
 
-执行以下命令：
+Run the following cli:
+
 ```sh
 cd dephy-io
 cargo-build-sbf
 ```
 
-经过一段时间 (可能会比较长) 的编译，会生成文件 `target/deploy/dephy_id_program.so`，这就是 solana 的合约文件。
+After a period of (possibly long) compilation, the file `target/deploy/dephy_id_program.so` is generated, which is solana's contract file.
 
 ### Deploy solana contract
 
-执行以下命令：
+Run the following cli:
 
 ```sh
 cd dephy-io
 solana -u l program deploy target/deploy/dephy_id_program.so --program-id ./program/keypair.json
 ```
 
-执行成功，会输出以下内容，
+If executed correctly, the following output will appear:
 
 ```sh
 Program Id: hdMghjD73uASxgJXi6e1mGPsXqnADMsrqB1bveqABP1
@@ -183,20 +188,24 @@ Program Id: hdMghjD73uASxgJXi6e1mGPsXqnADMsrqB1bveqABP1
 
 ### Initialize the solana contract
 
-为 solana 合约设定管理员。
+Set up an administrator for the solana contract.
 
 ```sh
 cd dephy-io
 cargo run initialize --admin ./tmp/keys/admin.json
 
-# 会有以下输出：
+```
+
+The output content is as follows:
+
+```
 Success: FDXBFCH9UJ36GTE4WerZJu6NjE3EZRQrYxwDMA5wEpKBcmqT4YjGczgnKTd1ogWUXGcpV2xb56Ec6wDbf8Gx6ua
 DePHY Created: AwjekLaTfwaWYWhUg25oir4ygqxvzAKM7yeHDRHEZDGu
 ```
 
 ### Launch Indexer
 
-启动 indexer，之后的注册、激活设备登操作，会同步到链下，方便查询。
+After indexer is started, the subsequent registration and activation of the device will be synchronized to the offchain for easy query.
 
 ```sh
 cd indexer
@@ -205,13 +214,13 @@ bun dephy-indexer
 
 ### Open EdgeDB web UI
 
-打开 EdgeDB 的网页，方便展示数据以及结构。
+Open the EdgeDB web page to display the data and struct.
 
 ```sh
 cd indexer
 edgedb ui
 ```
 
-页面如下：
+The page is as follows:
 
 ![](/img/edgedb-ui.png)
