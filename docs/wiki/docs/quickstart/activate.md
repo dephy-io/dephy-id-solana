@@ -217,7 +217,8 @@ bun activate <-o OWNER_ADDRESS> <-p PRODUCT_TOKEN> [-w FILE_PATH]
 **An example is as follows:**
 
 ```sh
-bun activate -o gQDFktfUbvNbrMjp1Qs3Ri62UCbe6bBwZS5Vd1Kaf1S -p \ 4Dx9QF8ixhXdi9xdkW6RBa61UedNC1KSWDVKWdut687W
+bun activate -o gQDFktfUbvNbrMjp1Qs3Ri62UCbe6bBwZS5Vd1Kaf1S -p \
+4Dx9QF8ixhXdi9xdkW6RBa61UedNC1KSWDVKWdut687W
 ```
 
 The output content is as follows:
