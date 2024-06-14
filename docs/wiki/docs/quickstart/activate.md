@@ -11,7 +11,7 @@ sidebar_label: Activate
 
 ## Activate Device
 
-整个激活设备过程，需要执行 3 个命令，命令行模版如下：
+整个激活设备过程，需要执行 3 个命令，过程如下：
 
 ### 1. 生成激活信息
 
@@ -24,6 +24,25 @@ cargo run generate-message --user tmp/keys/user1.json --device tmp/keys/device1.
 - `--device` 是指对应的私钥文件
 - `--product` 提供对应的 product 公钥
 
+**例子如下**：
+
+```sh
+cargo run generate-message --user tmp/keys/user1.json --device tmp/keys/device1.json \
+--product 4Dx9QF8ixhXdi9xdkW6RBa61UedNC1KSWDVKWdut687W
+```
+
+输出以下内容：
+
+```sh
+Device Mint: HgvgAsSg5dJwLtek4kATxstBDJbDXYwKv6Ak7jJWoBti
+User Pubkey: 5CcFND4w6rqViD4CqAViV67GnpbHdo1MaPz4Wej6yYL5
+Timestamp: 1718330000
+
+0x44455048595f49445f5349474e45445f4d4553534147453af7f5555225875ac43e49887e0bebe8a9db759a60e21ec99fd3dd74217cfc633f3e67fdc511b3bb88302587e129d25da4aaa3ad50f9288aa8d5ec7b27404366bea4bd6b6600000000
+```
+
+`0x4445504...` 即为生成的消息
+
 ### 2. 对消息进行签名
 
 ```sh
@@ -31,6 +50,22 @@ cargo run sign-message -k tmp/keys/device1.json <MESSAGE>
 ```
 
 - `<MESSAGE>` 是指第 1 步中生成的激活信息
+
+**例子如下**：
+
+```sh
+cargo run sign-message -k tmp/keys/device1.json \
+"0x44455048595f49445f5349474e45445f4d4553534147453af7f5555225875ac43e49887e0bebe8a9db759a60e21ec99fd3dd74217cfc633f3e67fdc511b3bb88302587e129d25da4aaa3ad50f9288aa8d5ec7b27404366bea4bd6b6600000000"
+```
+
+输出以下内容：
+
+```sh
+Pubkey: 2Xoru6yaXoMbicMKJY3VUH9hUWMXmzve9umswCe9SSQd
+Signature: 0xa8233c99274dcbea17b35bc33c3963d1fc4952396dde2c3abda60eee62f9f9e24004ceae318dbd96684e3c8b2319697040bf93031a588a2963638988105c0802
+```
+
+`0xa8233c...` 即为签名消息
 
 ### 3. 验证激活
 
@@ -47,45 +82,7 @@ cargo run activate-device-offchain  --user tmp/keys/user1.json --device tmp/keys
 - `--signature` 是指第 2 步中生成的签名信息
 - `--message` 是指第 1 步中生成的激活信息
 
-例子如下：
-
-1. **生成激活信息**
-
-```sh
-cargo run generate-message --user tmp/keys/user1.json --device tmp/keys/device1.json \
---product 4Dx9QF8ixhXdi9xdkW6RBa61UedNC1KSWDVKWdut687W
-
-```
-
-输出以下内容
-
-```sh
-Device Mint: HgvgAsSg5dJwLtek4kATxstBDJbDXYwKv6Ak7jJWoBti
-User Pubkey: 5CcFND4w6rqViD4CqAViV67GnpbHdo1MaPz4Wej6yYL5
-Timestamp: 1718330000
-
-0x44455048595f49445f5349474e45445f4d4553534147453af7f5555225875ac43e49887e0bebe8a9db759a60e21ec99fd3dd74217cfc633f3e67fdc511b3bb88302587e129d25da4aaa3ad50f9288aa8d5ec7b27404366bea4bd6b6600000000
-```
-
-`0x4445504...` 即为生成的消息
-
-2. **对消息进行签名**
-
-```sh
-cargo run sign-message -k tmp/keys/device1.json \
-"0x44455048595f49445f5349474e45445f4d4553534147453af7f5555225875ac43e49887e0bebe8a9db759a60e21ec99fd3dd74217cfc633f3e67fdc511b3bb88302587e129d25da4aaa3ad50f9288aa8d5ec7b27404366bea4bd6b6600000000"
-```
-
-输出以下内容
-
-```sh
-Pubkey: 2Xoru6yaXoMbicMKJY3VUH9hUWMXmzve9umswCe9SSQd
-Signature: 0xa8233c99274dcbea17b35bc33c3963d1fc4952396dde2c3abda60eee62f9f9e24004ceae318dbd96684e3c8b2319697040bf93031a588a2963638988105c0802
-```
-
-`0xa8233c...` 即为签名消息
-
-3. **验证激活**
+**例子如下**：
 
 ```sh
 cargo run activate-device-offchain --device tmp/keys/device1.json --user tmp/keys/user1.json \
@@ -94,7 +91,7 @@ cargo run activate-device-offchain --device tmp/keys/device1.json --user tmp/key
 --message "0x44455048595f49445f5349474e45445f4d4553534147453af7f5555225875ac43e49887e0bebe8a9db759a60e21ec99fd3dd74217cfc633f3e67fdc511b3bb88302587e129d25da4aaa3ad50f9288aa8d5ec7b27404366bea4bd6b6600000000"
 ```
 
-输出以下内容
+输出以下内容：
 
 ```sh
 Success: 52k39GgNAmgLft4uFHHqHpvHvFunNKJf3nwByX4EMRmKdVecy7q64vZR9jLKmgqGAUWysCkqkZmZQGFpQmAY2gwU
