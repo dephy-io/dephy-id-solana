@@ -13,10 +13,6 @@ try {
                 short: 'w',
                 default: "./tmp/default.json",
             },
-            slot: {
-                type: 'string',
-                short: 's',
-            },
             owner: {
                 type: 'string',
                 short: 'o',
@@ -41,12 +37,6 @@ try {
     const walletJSON: Wallet = JSON.parse(fs.readFileSync(cliArgs.wallet, "utf8"));
     const device = new Device(walletJSON);
 
-    if (!cliArgs.slot) {
-        console.error(`-s <slot> is required`);
-        process.exit(1);
-    }
-    const slot = parseInt(cliArgs.slot);
-
     if (!cliArgs.owner || cliArgs.owner.trim() === "") {
         console.error(`-o <owner> is required`);
         process.exit(1);
@@ -65,7 +55,8 @@ try {
     }
     const productMintAddress = cliArgs.productMintAddress;
 
-    const activationMessage = await device.activationMessage(BigInt(slot), owner, productMintAddress, programAddress);
+    const timestamp = Math.floor(Date.now() / 1000);
+    const activationMessage = await device.activationMessage(BigInt(timestamp), owner, productMintAddress, programAddress);
     const signature = device.sign(activationMessage, "did");
     const output = {
         keyType: device.keys["did"].keyType,

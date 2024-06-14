@@ -343,7 +343,7 @@ function getActivateDeviceInstructionDataEncoder() {
     web3_js.getStructEncoder([
       ["discriminator", web3_js.getU8Encoder()],
       ["signature", getDeviceActivationSignatureEncoder()],
-      ["messageSlot", web3_js.getU64Encoder()]
+      ["timestamp", web3_js.getU64Encoder()]
     ]),
     (value) => ({ ...value, discriminator: 3 })
   );
@@ -352,7 +352,7 @@ function getActivateDeviceInstructionDataDecoder() {
   return web3_js.getStructDecoder([
     ["discriminator", web3_js.getU8Decoder()],
     ["signature", getDeviceActivationSignatureDecoder()],
-    ["messageSlot", web3_js.getU64Decoder()]
+    ["timestamp", web3_js.getU64Decoder()]
   ]);
 }
 function getActivateDeviceInstructionDataCodec() {

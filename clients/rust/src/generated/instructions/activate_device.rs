@@ -131,7 +131,7 @@ impl Default for ActivateDeviceInstructionData {
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct ActivateDeviceInstructionArgs {
     pub signature: DeviceActivationSignature,
-    pub message_slot: u64,
+    pub timestamp: u64,
 }
 
 /// Instruction builder for `ActivateDevice`.
@@ -165,7 +165,7 @@ pub struct ActivateDeviceBuilder {
     device_associated_token: Option<solana_program::pubkey::Pubkey>,
     owner: Option<solana_program::pubkey::Pubkey>,
     signature: Option<DeviceActivationSignature>,
-    message_slot: Option<u64>,
+    timestamp: Option<u64>,
     __remaining_accounts: Vec<solana_program::instruction::AccountMeta>,
 }
 
@@ -262,8 +262,8 @@ impl ActivateDeviceBuilder {
         self
     }
     #[inline(always)]
-    pub fn message_slot(&mut self, message_slot: u64) -> &mut Self {
-        self.message_slot = Some(message_slot);
+    pub fn timestamp(&mut self, timestamp: u64) -> &mut Self {
+        self.timestamp = Some(timestamp);
         self
     }
     /// Add an aditional account to the instruction.
@@ -312,7 +312,7 @@ impl ActivateDeviceBuilder {
         };
         let args = ActivateDeviceInstructionArgs {
             signature: self.signature.clone().expect("signature is not set"),
-            message_slot: self.message_slot.clone().expect("message_slot is not set"),
+            timestamp: self.timestamp.clone().expect("timestamp is not set"),
         };
 
         accounts.instruction_with_remaining_accounts(args, &self.__remaining_accounts)
@@ -564,7 +564,7 @@ impl<'a, 'b> ActivateDeviceCpiBuilder<'a, 'b> {
             device_associated_token: None,
             owner: None,
             signature: None,
-            message_slot: None,
+            timestamp: None,
             __remaining_accounts: Vec::new(),
         });
         Self { instruction }
@@ -677,8 +677,8 @@ impl<'a, 'b> ActivateDeviceCpiBuilder<'a, 'b> {
         self
     }
     #[inline(always)]
-    pub fn message_slot(&mut self, message_slot: u64) -> &mut Self {
-        self.instruction.message_slot = Some(message_slot);
+    pub fn timestamp(&mut self, timestamp: u64) -> &mut Self {
+        self.instruction.timestamp = Some(timestamp);
         self
     }
     /// Add an additional account to the instruction.
@@ -728,11 +728,11 @@ impl<'a, 'b> ActivateDeviceCpiBuilder<'a, 'b> {
                 .signature
                 .clone()
                 .expect("signature is not set"),
-            message_slot: self
+            timestamp: self
                 .instruction
-                .message_slot
+                .timestamp
                 .clone()
-                .expect("message_slot is not set"),
+                .expect("timestamp is not set"),
         };
         let instruction = ActivateDeviceCpi {
             __program: self.instruction.__program,
@@ -809,7 +809,7 @@ struct ActivateDeviceCpiBuilderInstruction<'a, 'b> {
     device_associated_token: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     owner: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     signature: Option<DeviceActivationSignature>,
-    message_slot: Option<u64>,
+    timestamp: Option<u64>,
     /// Additional instruction accounts `(AccountInfo, is_writable, is_signer)`.
     __remaining_accounts: Vec<(
         &'b solana_program::account_info::AccountInfo<'a>,

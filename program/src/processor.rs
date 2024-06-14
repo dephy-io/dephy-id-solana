@@ -538,10 +538,11 @@ fn activate_device<'a>(
     assert_signer("owner", ctx.accounts.owner)?;
 
     let clock = Clock::get()?;
-    assert!(clock.slot >= args.message_slot);
-    assert!(clock.slot < args.message_slot + 1500); // ~10min
+    let current_timestamp = clock.unix_timestamp as u64;
+    assert!(current_timestamp >= args.timestamp);
+    assert!(current_timestamp < args.timestamp + 1800); // ~30min
 
-    args.signature.verify(device_pubkey, device_mint_pubkey, owner_pubkey, args.message_slot)?;
+    args.signature.verify(device_pubkey, device_mint_pubkey, owner_pubkey, args.timestamp)?;
 
     let product_ata_pubkey = get_associated_token_address_with_program_id(
         &device_pubkey,
