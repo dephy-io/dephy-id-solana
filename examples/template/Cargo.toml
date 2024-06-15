@@ -28,3 +28,8 @@ dephy-id-program-client = { path = "../../clients/rust" }
 [dev-dependencies]
 solana-program-test = { workspace = true }
 solana-sdk = { workspace = true }
+solana-client = { workspace = true }
+clap = { workspace = true, features = ["derive"] }
+
+[[example]]
+name = "template_cli"
