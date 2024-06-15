@@ -74,7 +74,7 @@ module default {
 
     type Device extending SolanaAccount, SplAccount, WithIx {
         required product: Product;
-        required signing_alg: DeviceSigningAlgorithm;
+        signing_alg: DeviceSigningAlgorithm;
         overloaded required token_account: str {
             constraint exclusive;
         };
