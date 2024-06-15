@@ -28,7 +28,10 @@ import {
     identifyDephyIdInstruction,
     parseActivateDeviceInstruction, parseInitializeInstruction, parseCreateDeviceInstruction,
     parseCreateProductInstruction,
-} from "@dephy-io/dephy-id-program-client";
+    parseCreateActivatedDeviceInstruction,
+    ParsedCreateActivatedDeviceInstruction,
+// } from "@dephy-io/dephy-id-program-client";
+} from "./generated";
 
 interface Config {
     rpcUrl?: string
@@ -337,7 +340,7 @@ export class Indexer {
                 signing_alg: e.cast(e.DeviceSigningAlgorithm, e.str(DeviceSigningAlgorithm[createDevice.data.signingAlg])),
             }),
             metadata: e.insert(e.TokenMetadata, {
-                name: product?.metadata?.name + ' DID',
+                name: createDevice.data.name,
                 symbol: product?.metadata?.symbol,
                 uri: createDevice.data.uri,
                 additional: createDevice.data.additionalMetadata as [string, string][],
@@ -346,7 +349,7 @@ export class Indexer {
     }
 
     async handleActivateDevice(dbTx: Executor, activateDevice: ParsedActivateDeviceInstruction<string, readonly IAccountMeta[]>, meta: IxMeta) {
-        let owner = await e.select(e.User, () => ({
+        const owner = await e.select(e.User, () => ({
             filter_single: {
                 pubkey: activateDevice.accounts.owner.address,
             }
@@ -377,6 +380,71 @@ export class Indexer {
         })).run(dbTx)
     }
 
+    async handleCreateActivatedDevice(dbTx: Executor, createActivatedDevice: ParsedCreateActivatedDeviceInstruction<string, IAccountMeta[]>, meta: IxMeta) {
+        const product = await e.select(e.Product, () => ({
+            metadata: {
+                name: true,
+                symbol: true,
+            },
+            filter_single: {
+                mint_account: createActivatedDevice.accounts.productMint.address,
+            }
+        })).run(dbTx)
+
+        const owner = await e.select(e.User, () => ({
+            filter_single: {
+                pubkey: createActivatedDevice.accounts.owner.address,
+            }
+        })).run(dbTx)
+
+        let ownerQuery;
+        if (owner) {
+            ownerQuery = e.select(e.User, () => ({
+                filter_single: {
+                    pubkey: createActivatedDevice.accounts.owner.address,
+                }
+            }))
+        } else {
+            ownerQuery = e.insert(e.User, {
+                pubkey: createActivatedDevice.accounts.owner.address,
+            })
+        }
+
+        await e.insert(e.DID, {
+            owner: ownerQuery,
+            mint_account: createActivatedDevice.accounts.deviceMint.address,
+            mint_authority: null,
+            token_account: createActivatedDevice.accounts.deviceAssociatedToken.address,
+            tx: e.select(e.Transaction, () => ({
+                filter_single: {
+                    signature: meta.tx,
+                },
+                "@ix_index": e.int16(meta.index),
+            })),
+            device: e.insert(e.Device, {
+                pubkey: createActivatedDevice.accounts.device.address,
+                token_account: createActivatedDevice.accounts.productAssociatedToken.address,
+                product: e.select(e.Product, () => ({
+                    filter_single: {
+                        mint_account: createActivatedDevice.accounts.productMint.address,
+                    }
+                })),
+                tx: e.select(e.Transaction, () => ({
+                    filter_single: {
+                        signature: meta.tx,
+                    },
+                    "@ix_index": e.int16(meta.index),
+                })),
+            }),
+            metadata: e.insert(e.TokenMetadata, {
+                name: createActivatedDevice.data.name,
+                symbol: product?.metadata?.symbol,
+                uri: createActivatedDevice.data.uri,
+                additional: createActivatedDevice.data.additionalMetadata as [string, string][],
+            }),
+        }).run(dbTx)
+    }
+
     async processProgramIx(dbTx: Executor, ix: PartiallyDecodedTransactionInstruction, meta: IxMeta) {
         let programIx = {
             accounts: ix.accounts.map(address => ({ address, role: 0 })),
@@ -403,6 +471,11 @@ export class Indexer {
             case DephyIdInstruction.ActivateDevice:
                 let activateDevice = parseActivateDeviceInstruction(programIx)
                 await this.handleActivateDevice(dbTx, activateDevice, meta)
+                break
+
+            case DephyIdInstruction.CreateActivatedDevice:
+                let createActivatedDevice = parseCreateActivatedDeviceInstruction(programIx)
+                await this.handleCreateActivatedDevice(dbTx, createActivatedDevice, meta)
                 break
 
             default:
