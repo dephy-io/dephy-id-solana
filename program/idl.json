@@ -225,14 +225,6 @@
           ]
         },
         {
-          "name": "instructions",
-          "isMut": false,
-          "isSigner": false,
-          "docs": [
-            "The instructions sysvar"
-          ]
-        },
-        {
           "name": "payer",
           "isMut": true,
           "isSigner": true,
@@ -338,14 +330,6 @@
           ]
         },
         {
-          "name": "instructions",
-          "isMut": false,
-          "isSigner": false,
-          "docs": [
-            "The instructions sysvar"
-          ]
-        },
-        {
           "name": "payer",
           "isMut": true,
           "isSigner": true,
@@ -363,7 +347,7 @@
         },
         {
           "name": "productMint",
-          "isMut": false,
+          "isMut": true,
           "isSigner": false,
           "docs": [
             "The mint account for the product"

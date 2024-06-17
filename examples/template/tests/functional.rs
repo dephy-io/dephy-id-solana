@@ -1,4 +1,4 @@
-use dephy_id_program_client::find_device_mint;
+use dephy_id_program_client::{find_device_mint, find_product_mint};
 use dephy_io_dephy_template::{
     instruction::{CreateVirtualDeviceArgs, DemoInstruction, InitArgs},
     pda::find_device,
@@ -30,12 +30,9 @@ async fn test_all() {
     let (vendor_pubkey, _) = Pubkey::find_program_address(&[b"VENDOR"], &program_id);
 
     let product_name = "Demo".to_string();
-    let (product_mint_pubkey, _) = Pubkey::find_program_address(
-        &[
-            dephy_id_program_client::PRODUCT_MINT_SEED_PREFIX,
-            vendor_pubkey.as_ref(),
-            product_name.as_ref(),
-        ],
+    let (product_mint_pubkey, _) = find_product_mint(
+        &vendor_pubkey,
+        product_name.clone(),
         &dephy_id_program_client::ID,
     );
 
@@ -134,11 +131,14 @@ async fn test_create_virtual_device(
             &product_mint_pubkey,
             &spl_token_2022::id(),
         );
-    let (device_mint_pubkey, _) =
-        find_device_mint(&product_mint_pubkey, &device_pubkey, &program_id);
+    let (device_mint_pubkey, _) = find_device_mint(
+        &product_mint_pubkey,
+        &device_pubkey,
+        &dephy_id_program_client::ID,
+    );
     let device_atoken_pubkey =
         spl_associated_token_account::get_associated_token_address_with_program_id(
-            &device_pubkey,
+            &owner.pubkey(),
             &device_mint_pubkey,
             &spl_token_2022::id(),
         );
@@ -183,4 +183,11 @@ async fn test_create_virtual_device(
         .process_transaction(transaction)
         .await
         .unwrap();
+
+    let _did_account = ctx
+        .banks_client
+        .get_account(device_atoken_pubkey)
+        .await
+        .expect("get_account")
+        .expect("DID account not none");
 }

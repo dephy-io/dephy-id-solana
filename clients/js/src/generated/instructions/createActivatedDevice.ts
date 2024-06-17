@@ -50,7 +50,6 @@ export type CreateActivatedDeviceInstruction<
   TAccountAtaProgram extends
     | string
     | IAccountMeta<string> = 'ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL',
-  TAccountInstructions extends string | IAccountMeta<string> = string,
   TAccountPayer extends string | IAccountMeta<string> = string,
   TAccountVendor extends string | IAccountMeta<string> = string,
   TAccountProductMint extends string | IAccountMeta<string> = string,
@@ -73,9 +72,6 @@ export type CreateActivatedDeviceInstruction<
       TAccountAtaProgram extends string
         ? ReadonlyAccount<TAccountAtaProgram>
         : TAccountAtaProgram,
-      TAccountInstructions extends string
-        ? ReadonlyAccount<TAccountInstructions>
-        : TAccountInstructions,
       TAccountPayer extends string
         ? WritableSignerAccount<TAccountPayer> &
             IAccountSignerMeta<TAccountPayer>
@@ -84,7 +80,7 @@ export type CreateActivatedDeviceInstruction<
         ? ReadonlyAccount<TAccountVendor>
         : TAccountVendor,
       TAccountProductMint extends string
-        ? ReadonlyAccount<TAccountProductMint>
+        ? WritableAccount<TAccountProductMint>
         : TAccountProductMint,
       TAccountProductAssociatedToken extends string
         ? WritableAccount<TAccountProductAssociatedToken>
@@ -170,7 +166,6 @@ export type CreateActivatedDeviceInput<
   TAccountSystemProgram extends string = string,
   TAccountToken2022Program extends string = string,
   TAccountAtaProgram extends string = string,
-  TAccountInstructions extends string = string,
   TAccountPayer extends string = string,
   TAccountVendor extends string = string,
   TAccountProductMint extends string = string,
@@ -186,8 +181,6 @@ export type CreateActivatedDeviceInput<
   token2022Program: Address<TAccountToken2022Program>;
   /** The associated token program */
   ataProgram?: Address<TAccountAtaProgram>;
-  /** The instructions sysvar */
-  instructions: Address<TAccountInstructions>;
   /** The account paying for the storage fees */
   payer: TransactionSigner<TAccountPayer>;
   /** The vendor */
@@ -213,7 +206,6 @@ export function getCreateActivatedDeviceInstruction<
   TAccountSystemProgram extends string,
   TAccountToken2022Program extends string,
   TAccountAtaProgram extends string,
-  TAccountInstructions extends string,
   TAccountPayer extends string,
   TAccountVendor extends string,
   TAccountProductMint extends string,
@@ -227,7 +219,6 @@ export function getCreateActivatedDeviceInstruction<
     TAccountSystemProgram,
     TAccountToken2022Program,
     TAccountAtaProgram,
-    TAccountInstructions,
     TAccountPayer,
     TAccountVendor,
     TAccountProductMint,
@@ -242,7 +233,6 @@ export function getCreateActivatedDeviceInstruction<
   TAccountSystemProgram,
   TAccountToken2022Program,
   TAccountAtaProgram,
-  TAccountInstructions,
   TAccountPayer,
   TAccountVendor,
   TAccountProductMint,
@@ -263,10 +253,9 @@ export function getCreateActivatedDeviceInstruction<
       isWritable: false,
     },
     ataProgram: { value: input.ataProgram ?? null, isWritable: false },
-    instructions: { value: input.instructions ?? null, isWritable: false },
     payer: { value: input.payer ?? null, isWritable: true },
     vendor: { value: input.vendor ?? null, isWritable: false },
-    productMint: { value: input.productMint ?? null, isWritable: false },
+    productMint: { value: input.productMint ?? null, isWritable: true },
     productAssociatedToken: {
       value: input.productAssociatedToken ?? null,
       isWritable: true,
@@ -303,7 +292,6 @@ export function getCreateActivatedDeviceInstruction<
       getAccountMeta(accounts.systemProgram),
       getAccountMeta(accounts.token2022Program),
       getAccountMeta(accounts.ataProgram),
-      getAccountMeta(accounts.instructions),
       getAccountMeta(accounts.payer),
       getAccountMeta(accounts.vendor),
       getAccountMeta(accounts.productMint),
@@ -322,7 +310,6 @@ export function getCreateActivatedDeviceInstruction<
     TAccountSystemProgram,
     TAccountToken2022Program,
     TAccountAtaProgram,
-    TAccountInstructions,
     TAccountPayer,
     TAccountVendor,
     TAccountProductMint,
@@ -348,24 +335,22 @@ export type ParsedCreateActivatedDeviceInstruction<
     token2022Program: TAccountMetas[1];
     /** The associated token program */
     ataProgram: TAccountMetas[2];
-    /** The instructions sysvar */
-    instructions: TAccountMetas[3];
     /** The account paying for the storage fees */
-    payer: TAccountMetas[4];
+    payer: TAccountMetas[3];
     /** The vendor */
-    vendor: TAccountMetas[5];
+    vendor: TAccountMetas[4];
     /** The mint account for the product */
-    productMint: TAccountMetas[6];
+    productMint: TAccountMetas[5];
     /** The associated token account for the product */
-    productAssociatedToken: TAccountMetas[7];
+    productAssociatedToken: TAccountMetas[6];
     /** The device */
-    device: TAccountMetas[8];
+    device: TAccountMetas[7];
     /** The mint account for the device */
-    deviceMint: TAccountMetas[9];
+    deviceMint: TAccountMetas[8];
     /** The associated token account for the device */
-    deviceAssociatedToken: TAccountMetas[10];
+    deviceAssociatedToken: TAccountMetas[9];
     /** The device's owner */
-    owner: TAccountMetas[11];
+    owner: TAccountMetas[10];
   };
   data: CreateActivatedDeviceInstructionData;
 };
@@ -378,7 +363,7 @@ export function parseCreateActivatedDeviceInstruction<
     IInstructionWithAccounts<TAccountMetas> &
     IInstructionWithData<Uint8Array>
 ): ParsedCreateActivatedDeviceInstruction<TProgram, TAccountMetas> {
-  if (instruction.accounts.length < 12) {
+  if (instruction.accounts.length < 11) {
     // TODO: Coded error.
     throw new Error('Not enough accounts');
   }
@@ -394,7 +379,6 @@ export function parseCreateActivatedDeviceInstruction<
       systemProgram: getNextAccount(),
       token2022Program: getNextAccount(),
       ataProgram: getNextAccount(),
-      instructions: getNextAccount(),
       payer: getNextAccount(),
       vendor: getNextAccount(),
       productMint: getNextAccount(),

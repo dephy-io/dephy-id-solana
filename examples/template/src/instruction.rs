@@ -24,7 +24,7 @@ pub enum DemoInstruction {
     #[account(4, name="ata_program", desc = "The associated token program")]
     #[account(5, name="dephy_id", desc = "DePHY ID program id")]
     #[account(6, name="vendor", desc = "PDA as product vendor (seeds: ['VENDOR'])")]
-    #[account(7, name="product_mint", desc = "PDA of the product mint account (program: dephy_id, seeds: ['DePHY_ID-PRODUCT', vendor, PRODUCT_NAME])")]
+    #[account(7, writable, name="product_mint", desc = "PDA of the product mint account (program: dephy_id, seeds: ['DePHY_ID-PRODUCT', vendor, PRODUCT_NAME])")]
     #[account(8, name="owner", desc="The device's owner")]
     #[account(9, name="device", desc = "PDA of the virtual device (seeds: ['DEVICE', owner])")]
     #[account(10, writable, name="product_atoken", desc="The associated token account of the product")]

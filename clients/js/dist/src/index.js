@@ -374,7 +374,6 @@ function getActivateDeviceInstruction(input) {
       isWritable: false
     },
     ataProgram: { value: input.ataProgram ?? null, isWritable: false },
-    instructions: { value: input.instructions ?? null, isWritable: false },
     payer: { value: input.payer ?? null, isWritable: true },
     vendor: { value: input.vendor ?? null, isWritable: false },
     productMint: { value: input.productMint ?? null, isWritable: false },
@@ -404,7 +403,6 @@ function getActivateDeviceInstruction(input) {
       getAccountMeta(accounts.systemProgram),
       getAccountMeta(accounts.token2022Program),
       getAccountMeta(accounts.ataProgram),
-      getAccountMeta(accounts.instructions),
       getAccountMeta(accounts.payer),
       getAccountMeta(accounts.vendor),
       getAccountMeta(accounts.productMint),
@@ -422,7 +420,7 @@ function getActivateDeviceInstruction(input) {
   return instruction;
 }
 function parseActivateDeviceInstruction(instruction) {
-  if (instruction.accounts.length < 12) {
+  if (instruction.accounts.length < 11) {
     throw new Error("Not enough accounts");
   }
   let accountIndex = 0;
@@ -437,7 +435,6 @@ function parseActivateDeviceInstruction(instruction) {
       systemProgram: getNextAccount(),
       token2022Program: getNextAccount(),
       ataProgram: getNextAccount(),
-      instructions: getNextAccount(),
       payer: getNextAccount(),
       vendor: getNextAccount(),
       productMint: getNextAccount(),
@@ -500,10 +497,9 @@ function getCreateActivatedDeviceInstruction(input) {
       isWritable: false
     },
     ataProgram: { value: input.ataProgram ?? null, isWritable: false },
-    instructions: { value: input.instructions ?? null, isWritable: false },
     payer: { value: input.payer ?? null, isWritable: true },
     vendor: { value: input.vendor ?? null, isWritable: false },
-    productMint: { value: input.productMint ?? null, isWritable: false },
+    productMint: { value: input.productMint ?? null, isWritable: true },
     productAssociatedToken: {
       value: input.productAssociatedToken ?? null,
       isWritable: true
@@ -530,7 +526,6 @@ function getCreateActivatedDeviceInstruction(input) {
       getAccountMeta(accounts.systemProgram),
       getAccountMeta(accounts.token2022Program),
       getAccountMeta(accounts.ataProgram),
-      getAccountMeta(accounts.instructions),
       getAccountMeta(accounts.payer),
       getAccountMeta(accounts.vendor),
       getAccountMeta(accounts.productMint),
@@ -548,7 +543,7 @@ function getCreateActivatedDeviceInstruction(input) {
   return instruction;
 }
 function parseCreateActivatedDeviceInstruction(instruction) {
-  if (instruction.accounts.length < 12) {
+  if (instruction.accounts.length < 11) {
     throw new Error("Not enough accounts");
   }
   let accountIndex = 0;
@@ -563,7 +558,6 @@ function parseCreateActivatedDeviceInstruction(instruction) {
       systemProgram: getNextAccount(),
       token2022Program: getNextAccount(),
       ataProgram: getNextAccount(),
-      instructions: getNextAccount(),
       payer: getNextAccount(),
       vendor: getNextAccount(),
       productMint: getNextAccount(),

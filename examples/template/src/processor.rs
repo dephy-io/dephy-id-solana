@@ -42,7 +42,7 @@ fn init<'a>(program_id: &Pubkey, accounts: &'a [AccountInfo<'a>], args: InitArgs
 
     // Guards.
     let mut demo_seeds = DemoAccount::seeds();
-    let demo_bump = [assert_pda("counter", ctx.accounts.demo, &crate::ID, &demo_seeds)?];
+    let demo_bump = [assert_pda("demo_account", ctx.accounts.demo, &crate::ID, &demo_seeds)?];
     demo_seeds.push(&demo_bump);
     assert_signer("authority", ctx.accounts.authority)?;
     assert_signer("payer", ctx.accounts.payer)?;
@@ -104,11 +104,16 @@ fn create_virtual_device<'a>(
     let ctx = CreateVirtualDeviceAccounts::context(accounts)?;
     let owner_pubkey = ctx.accounts.owner.key;
 
-    let product_mint_data = ctx.accounts.product_mint.data.borrow();
+    let demo_account = DemoAccount::load(ctx.accounts.demo)?;
+    assert_same_pubkeys("product_mint", ctx.accounts.product_mint, &demo_account.product_mint)?;
+
+    let product_mint_data = ctx.accounts.product_mint.data.borrow().to_owned();
     let product_mint = StateWithExtensions::<Mint>::unpack(&product_mint_data)?;
     let product_mint_metadata = product_mint.get_variable_len_extension::<TokenMetadata>()?;
 
-    assert_pda("device", ctx.accounts.device, program_id, &[b"DEVICE", owner_pubkey.as_ref()])?;
+    let mut device_seeds: Vec<&[u8]> = vec![b"DEVICE", owner_pubkey.as_ref()];
+    let device_bump = [assert_pda("device", ctx.accounts.device, program_id, &device_seeds)?];
+    device_seeds.push(&device_bump);
 
     // TODO: use your own verify method
     assert_eq!(args.challenge, 42);
@@ -120,6 +125,7 @@ fn create_virtual_device<'a>(
         .ata_program(ctx.accounts.ata_program)
         .payer(ctx.accounts.payer)
         .vendor(ctx.accounts.vendor)
+        .owner(ctx.accounts.owner)
         .product_mint(ctx.accounts.product_mint)
         .product_associated_token(ctx.accounts.product_atoken)
         .device(ctx.accounts.device)
@@ -127,7 +133,8 @@ fn create_virtual_device<'a>(
         .device_associated_token(ctx.accounts.device_atoken)
         .name(product_mint_metadata.name)
         .uri(product_mint_metadata.uri)
-        .additional_metadata(product_mint_metadata.additional_metadata);
+        .additional_metadata(product_mint_metadata.additional_metadata)
+        .invoke_signed(&[&device_seeds])?;
 
     Ok(())
 }
