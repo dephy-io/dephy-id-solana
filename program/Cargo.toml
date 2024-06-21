@@ -39,4 +39,5 @@ solana-sdk = { workspace = true }
 ed25519-dalek = { workspace = true }
 
 [features]
+ed25519-sign = []
 test-sbf = []
