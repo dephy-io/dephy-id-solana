@@ -40,8 +40,6 @@ async fn test_smoke() {
 
     let admin = Keypair::new();
     let vendor = Keypair::new();
-    let device1 = Keypair::new();
-    let device2 = Keypair::new();
     let user1 = Keypair::new();
 
     // Initialize the program
@@ -80,27 +78,33 @@ async fn test_smoke() {
 
     test_create_product(program_id, &mut ctx, &vendor, product_name.clone()).await;
 
-    test_create_device(
-        program_id,
-        &mut ctx,
-        &vendor,
-        &device1,
-        product_name.as_ref(),
-        DeviceSigningAlgorithm::Ed25519,
-    )
-    .await;
+    #[cfg(feature = "ed25519-sign")]
+    {
+        let device1 = Keypair::new();
+        test_create_device(
+            program_id,
+            &mut ctx,
+            &vendor,
+            &device1,
+            product_name.as_ref(),
+            DeviceSigningAlgorithm::Ed25519,
+        )
+        .await;
 
-    test_activate_device(
-        program_id,
-        &mut ctx,
-        &vendor,
-        product_name.as_ref(),
-        &device1,
-        &user1,
-        DeviceSigningAlgorithm::Ed25519,
-        1_000,
-    )
-    .await;
+        test_activate_device(
+            program_id,
+            &mut ctx,
+            &vendor,
+            product_name.as_ref(),
+            &device1,
+            &user1,
+            DeviceSigningAlgorithm::Ed25519,
+            1_000,
+        )
+        .await;
+    }
+
+    let device2 = Keypair::new();
 
     test_create_device(
         program_id,
