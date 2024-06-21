@@ -328,7 +328,8 @@ async fn test_activate_device(
             &spl_token_2022::id(),
         );
 
-    let timestamp = SystemTime::now().duration_since(UNIX_EPOCH).ok().unwrap().as_secs();
+    // - 60s should make the test more reliable
+    let timestamp = SystemTime::now().duration_since(UNIX_EPOCH).ok().unwrap().as_secs() - 60;
     let signature = match key_type {
         DeviceSigningAlgorithm::Ed25519 => {
             let message = [
@@ -358,7 +359,23 @@ async fn test_activate_device(
                 &device_secp256k1_priv_key,
             );
             DeviceActivationSignature::EthSecp256k1(signature.serialize(), recovery_id.serialize())
-        }
+        },
+        // DeviceSigningAlgorithm::Secp256k1 => {
+        //     let device_secp256k1_priv_key =
+        //         libsecp256k1::SecretKey::parse(device.secret().as_bytes()).unwrap();
+        //     let message = [
+        //         DEVICE_MESSAGE_PREFIX,
+        //         device_mint_pubkey.as_ref(),
+        //         user.pubkey().as_ref(),
+        //         &timestamp.to_le_bytes(),
+        //     ].concat();
+        //     let message_hash = keccak::hash(&message);
+        //     let (signature, recovery_id) = libsecp256k1::sign(
+        //         &libsecp256k1::Message::parse(&message_hash.to_bytes()),
+        //         &device_secp256k1_priv_key,
+        //     );
+        //     DeviceActivationSignature::Secp256k1(signature.serialize(), recovery_id.serialize())
+        // }
     };
 
     let activate_device_ix = SolanaInstruction::new_with_borsh(
