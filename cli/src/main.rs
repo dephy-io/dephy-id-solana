@@ -83,7 +83,7 @@ struct CreateDeviceCliArgs {
     product_pubkey: Pubkey,
     #[arg(long = "device", value_parser = parse_pubkey)]
     device_pubkey: Pubkey,
-    #[arg(value_enum, long, default_value_t = DeviceSigningAlgorithm::Ed25519)]
+    #[arg(value_enum, long, default_value_t = DeviceSigningAlgorithm::Secp256k1)]
     signing_alg: DeviceSigningAlgorithm,
     name: String,
     #[arg(default_value = "")]
@@ -111,7 +111,7 @@ struct DevActivateDeviceCliArgs {
     vendor_pubkey: Pubkey,
     #[arg(long = "product", value_parser = parse_pubkey)]
     product_mint_pubkey: Pubkey,
-    #[arg(value_enum, long, default_value_t = SignatureType::Ed25519)]
+    #[arg(value_enum, long, default_value_t = SignatureType::Secp256k1)]
     signature_type: SignatureType,
     #[command(flatten)]
     common: CommonArgs,
@@ -137,7 +137,7 @@ struct SignMessageCliArgs {
     keypair: String,
     #[arg()]
     message: String,
-    #[arg(value_enum, long, default_value_t = SignatureType::Ed25519)]
+    #[arg(value_enum, long, default_value_t = SignatureType::Secp256k1)]
     signature_type: SignatureType,
 }
 
@@ -151,7 +151,7 @@ struct ActivateDeviceOffchainCliArgs {
     vendor_pubkey: Pubkey,
     #[arg(long = "product", value_parser = parse_pubkey)]
     product_mint_pubkey: Pubkey,
-    #[arg(value_enum, long, default_value_t = SignatureType::Ed25519)]
+    #[arg(value_enum, long, default_value_t = SignatureType::Secp256k1)]
     signature_type: SignatureType,
     #[arg(short, long)]
     signature: String,

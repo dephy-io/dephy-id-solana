@@ -25,6 +25,7 @@ try {
             did: {
                 keyType: walletJSON.keys.did.keyType,
                 publicKey: walletJSON.keys.did.publicKey,
+                mappedAddress: walletJSON.keys.did.mappedAddress,
             },
             secp256k1: {
                 keyType: walletJSON.keys.secp256k1.keyType,
