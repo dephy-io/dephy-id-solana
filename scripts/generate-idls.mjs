@@ -1,9 +1,6 @@
 #!/usr/bin/env zx
 import 'zx/globals';
 import { getCargo, getProgramFolders } from './utils.mjs';
-import { $ } from "bun"
-
-const binaryInstallDir = path.join(__dirname, '..', '.cargo');
 
 getProgramFolders().forEach(async (folder) => {
   const cargo = getCargo(folder);

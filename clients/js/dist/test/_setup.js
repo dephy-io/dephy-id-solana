@@ -1,7 +1,6 @@
 'use strict';
 
 var web3_js = require('@solana/web3.js');
-var src = require('../src');
 
 const createDefaultSolanaClient = () => {
   const rpc = web3_js.createSolanaRpc("http://127.0.0.1:8899");
@@ -34,21 +33,7 @@ const signAndSendTransaction = async (client, transactionMessage, commitment = "
   return signature;
 };
 const getBalance = async (client, address) => (await client.rpc.getBalance(address, { commitment: "confirmed" }).send()).value;
-const createCounterForAuthority = async (client, authority) => {
-  const [transaction, counterPda, createIx] = await Promise.all([
-    createDefaultTransaction(client, authority),
-    src.findCounterPda({ authority: authority.address }),
-    src.getCreateInstructionAsync({ authority })
-  ]);
-  await web3_js.pipe(
-    transaction,
-    (tx) => web3_js.appendTransactionMessageInstruction(createIx, tx),
-    (tx) => signAndSendTransaction(client, tx)
-  );
-  return counterPda;
-};
 
-exports.createCounterForAuthority = createCounterForAuthority;
 exports.createDefaultSolanaClient = createDefaultSolanaClient;
 exports.createDefaultTransaction = createDefaultTransaction;
 exports.generateKeyPairSignerWithSol = generateKeyPairSignerWithSol;
