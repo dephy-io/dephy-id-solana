@@ -119,10 +119,10 @@ function deviceActivationSignature(kind, data) {
 function isDeviceActivationSignature(kind, value) {
   return value.__kind === kind;
 }
-var DeviceSigningAlgorithm = /* @__PURE__ */ ((DeviceSigningAlgorithm3) => {
-  DeviceSigningAlgorithm3[DeviceSigningAlgorithm3["Ed25519"] = 0] = "Ed25519";
-  DeviceSigningAlgorithm3[DeviceSigningAlgorithm3["Secp256k1"] = 1] = "Secp256k1";
-  return DeviceSigningAlgorithm3;
+var DeviceSigningAlgorithm = /* @__PURE__ */ ((DeviceSigningAlgorithm2) => {
+  DeviceSigningAlgorithm2[DeviceSigningAlgorithm2["Ed25519"] = 0] = "Ed25519";
+  DeviceSigningAlgorithm2[DeviceSigningAlgorithm2["Secp256k1"] = 1] = "Secp256k1";
+  return DeviceSigningAlgorithm2;
 })(DeviceSigningAlgorithm || {});
 function getDeviceSigningAlgorithmEncoder() {
   return web3_js.getEnumEncoder(DeviceSigningAlgorithm);
@@ -370,7 +370,6 @@ function getActivateDeviceInstruction(input) {
       isWritable: false
     },
     ataProgram: { value: input.ataProgram ?? null, isWritable: false },
-    instructions: { value: input.instructions ?? null, isWritable: false },
     payer: { value: input.payer ?? null, isWritable: true },
     vendor: { value: input.vendor ?? null, isWritable: false },
     productMint: { value: input.productMint ?? null, isWritable: false },
@@ -400,7 +399,6 @@ function getActivateDeviceInstruction(input) {
       getAccountMeta(accounts.systemProgram),
       getAccountMeta(accounts.token2022Program),
       getAccountMeta(accounts.ataProgram),
-      getAccountMeta(accounts.instructions),
       getAccountMeta(accounts.payer),
       getAccountMeta(accounts.vendor),
       getAccountMeta(accounts.productMint),
@@ -418,7 +416,7 @@ function getActivateDeviceInstruction(input) {
   return instruction;
 }
 function parseActivateDeviceInstruction(instruction) {
-  if (instruction.accounts.length < 12) {
+  if (instruction.accounts.length < 11) {
     throw new Error("Not enough accounts");
   }
   let accountIndex = 0;
@@ -433,7 +431,6 @@ function parseActivateDeviceInstruction(instruction) {
       systemProgram: getNextAccount(),
       token2022Program: getNextAccount(),
       ataProgram: getNextAccount(),
-      instructions: getNextAccount(),
       payer: getNextAccount(),
       vendor: getNextAccount(),
       productMint: getNextAccount(),

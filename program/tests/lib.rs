@@ -19,7 +19,7 @@ use solana_sdk::{
     keccak,
     signature::Keypair,
     signer::Signer,
-    system_program, sysvar,
+    system_program,
     transaction::Transaction,
 };
 use spl_token_2022::{
@@ -364,22 +364,6 @@ async fn test_activate_device(
             );
             DeviceActivationSignature::EthSecp256k1(signature.serialize(), recovery_id.serialize())
         },
-        // DeviceSigningAlgorithm::Secp256k1 => {
-        //     let device_secp256k1_priv_key =
-        //         libsecp256k1::SecretKey::parse(device.secret().as_bytes()).unwrap();
-        //     let message = [
-        //         DEVICE_MESSAGE_PREFIX,
-        //         device_mint_pubkey.as_ref(),
-        //         user.pubkey().as_ref(),
-        //         &timestamp.to_le_bytes(),
-        //     ].concat();
-        //     let message_hash = keccak::hash(&message);
-        //     let (signature, recovery_id) = libsecp256k1::sign(
-        //         &libsecp256k1::Message::parse(&message_hash.to_bytes()),
-        //         &device_secp256k1_priv_key,
-        //     );
-        //     DeviceActivationSignature::Secp256k1(signature.serialize(), recovery_id.serialize())
-        // }
     };
 
     let activate_device_ix = SolanaInstruction::new_with_borsh(
@@ -395,23 +379,21 @@ async fn test_activate_device(
             AccountMeta::new(spl_token_2022::id(), false),
             // #[account(2, name="ata_program", desc="The associated token program")]
             AccountMeta::new(spl_associated_token_account::id(), false),
-            // #[account(3, name="instructions", desc="The instructions sys var")]
-            AccountMeta::new(sysvar::instructions::id(), false),
-            // #[account(4, writable, signer, name="payer", desc="The account paying for the storage fees")]
+            // #[account(3, writable, signer, name="payer", desc="The account paying for the storage fees")]
             AccountMeta::new(ctx.payer.pubkey(), true),
-            // #[account(5, name="vendor", desc="The vendor")]
+            // #[account(4, name="vendor", desc="The vendor")]
             AccountMeta::new(vendor.pubkey(), false),
-            // #[account(6, name="product_program_data", desc="The PDA for the product to store mint data")]
+            // #[account(5, name="product_program_data", desc="The PDA for the product to store mint data")]
             AccountMeta::new(product_mint_pubkey, false),
-            // #[account(7, name="product_associated_token", desc="The ATA for the product")]
+            // #[account(6, name="product_associated_token", desc="The ATA for the product")]
             AccountMeta::new(product_ata_pubkey, false),
-            // #[account(8, name="device", desc="The device")]
+            // #[account(7, name="device", desc="The device")]
             AccountMeta::new(device_pubkey, false),
-            // #[account(9, writable, name="device_program_data", desc="The PDA for the device to store mint data")]
+            // #[account(8, writable, name="device_program_data", desc="The PDA for the device to store mint data")]
             AccountMeta::new(device_mint_pubkey, false),
-            // #[account(10, writable, name="device_associated_token", desc="The ATA for the device")]
+            // #[account(9, writable, name="device_associated_token", desc="The ATA for the device")]
             AccountMeta::new(device_ata_pubkey, false),
-            // #[account(11, name="owner", desc="The device's owner")]
+            // #[account(10, name="owner", desc="The device's owner")]
             AccountMeta::new(user.pubkey(), true),
         ],
     );

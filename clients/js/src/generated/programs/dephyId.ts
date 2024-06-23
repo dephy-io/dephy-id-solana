@@ -6,12 +6,12 @@
  * @see https://github.com/kinobi-so/kinobi
  */
 
-import { Address, containsBytes, getU8Encoder } from '@solana/web3.js';
+import { containsBytes, getU8Encoder, type Address } from '@solana/web3.js';
 import {
-  ParsedActivateDeviceInstruction,
-  ParsedCreateDeviceInstruction,
-  ParsedCreateProductInstruction,
-  ParsedInitializeInstruction,
+  type ParsedActivateDeviceInstruction,
+  type ParsedCreateDeviceInstruction,
+  type ParsedCreateProductInstruction,
+  type ParsedInitializeInstruction,
 } from '../instructions';
 import { Key, getKeyEncoder } from '../types';
 

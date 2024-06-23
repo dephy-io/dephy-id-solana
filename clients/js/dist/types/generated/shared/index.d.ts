@@ -5,7 +5,7 @@
  *
  * @see https://github.com/kinobi-so/kinobi
  */
-import { Address, IAccountMeta, IAccountSignerMeta, ProgramDerivedAddress, TransactionSigner } from '@solana/web3.js';
+import { type Address, type IAccountMeta, type IAccountSignerMeta, type ProgramDerivedAddress, type TransactionSigner } from '@solana/web3.js';
 /**
  * Asserts that the given value is not null or undefined.
  * @internal

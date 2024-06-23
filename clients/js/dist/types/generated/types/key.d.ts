@@ -5,7 +5,7 @@
  *
  * @see https://github.com/kinobi-so/kinobi
  */
-import { Codec, Decoder, Encoder } from '@solana/web3.js';
+import { type Codec, type Decoder, type Encoder } from '@solana/web3.js';
 export declare enum Key {
     Uninitialized = 0,
     ProgramDataAccount = 1
