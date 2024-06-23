@@ -66,3 +66,28 @@ impl<'a> TryFrom<&solana_program::account_info::AccountInfo<'a>> for ProgramData
         Self::deserialize(&mut data)
     }
 }
+
+#[cfg(feature = "anchor")]
+impl anchor_lang::AccountDeserialize for ProgramDataAccount {
+    fn try_deserialize_unchecked(buf: &mut &[u8]) -> anchor_lang::Result<Self> {
+        Ok(Self::deserialize(buf)?)
+    }
+}
+
+#[cfg(feature = "anchor")]
+impl anchor_lang::AccountSerialize for ProgramDataAccount {}
+
+#[cfg(feature = "anchor")]
+impl anchor_lang::Owner for ProgramDataAccount {
+    fn owner() -> Pubkey {
+        crate::DEPHY_ID_ID
+    }
+}
+
+#[cfg(feature = "anchor-idl-build")]
+impl anchor_lang::IdlBuild for ProgramDataAccount {}
+
+#[cfg(feature = "anchor-idl-build")]
+impl anchor_lang::Discriminator for ProgramDataAccount {
+    const DISCRIMINATOR: [u8; 8] = [0; 8];
+}

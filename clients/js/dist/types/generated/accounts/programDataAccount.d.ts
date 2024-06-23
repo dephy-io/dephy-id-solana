@@ -5,8 +5,8 @@
  *
  * @see https://github.com/kinobi-so/kinobi
  */
-import { Account, Address, Codec, Decoder, EncodedAccount, Encoder, FetchAccountConfig, FetchAccountsConfig, MaybeAccount, MaybeEncodedAccount, fetchEncodedAccount, fetchEncodedAccounts } from '@solana/web3.js';
-import { Key, ProgramData, ProgramDataArgs } from '../types';
+import { fetchEncodedAccount, fetchEncodedAccounts, type Account, type Address, type Codec, type Decoder, type EncodedAccount, type Encoder, type FetchAccountConfig, type FetchAccountsConfig, type MaybeAccount, type MaybeEncodedAccount } from '@solana/web3.js';
+import { Key, type ProgramData, type ProgramDataArgs } from '../types';
 export type ProgramDataAccount = {
     key: Key;
     authority: Address;

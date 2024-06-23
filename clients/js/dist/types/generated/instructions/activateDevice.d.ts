@@ -5,14 +5,13 @@
  *
  * @see https://github.com/kinobi-so/kinobi
  */
-import { Address, Codec, Decoder, Encoder, IAccountMeta, IAccountSignerMeta, IInstruction, IInstructionWithAccounts, IInstructionWithData, ReadonlyAccount, TransactionSigner, WritableAccount, WritableSignerAccount } from '@solana/web3.js';
+import { type Address, type Codec, type Decoder, type Encoder, type IAccountMeta, type IAccountSignerMeta, type IInstruction, type IInstructionWithAccounts, type IInstructionWithData, type ReadonlyAccount, type TransactionSigner, type WritableAccount, type WritableSignerAccount } from '@solana/web3.js';
 import { DEPHY_ID_PROGRAM_ADDRESS } from '../programs';
-import { DeviceActivationSignature, DeviceActivationSignatureArgs } from '../types';
-export type ActivateDeviceInstruction<TProgram extends string = typeof DEPHY_ID_PROGRAM_ADDRESS, TAccountSystemProgram extends string | IAccountMeta<string> = '11111111111111111111111111111111', TAccountToken2022Program extends string | IAccountMeta<string> = string, TAccountAtaProgram extends string | IAccountMeta<string> = 'ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL', TAccountInstructions extends string | IAccountMeta<string> = string, TAccountPayer extends string | IAccountMeta<string> = string, TAccountVendor extends string | IAccountMeta<string> = string, TAccountProductMint extends string | IAccountMeta<string> = string, TAccountProductAssociatedToken extends string | IAccountMeta<string> = string, TAccountDevice extends string | IAccountMeta<string> = string, TAccountDeviceMint extends string | IAccountMeta<string> = string, TAccountDeviceAssociatedToken extends string | IAccountMeta<string> = string, TAccountOwner extends string | IAccountMeta<string> = string, TRemainingAccounts extends readonly IAccountMeta<string>[] = []> = IInstruction<TProgram> & IInstructionWithData<Uint8Array> & IInstructionWithAccounts<[
+import { type DeviceActivationSignature, type DeviceActivationSignatureArgs } from '../types';
+export type ActivateDeviceInstruction<TProgram extends string = typeof DEPHY_ID_PROGRAM_ADDRESS, TAccountSystemProgram extends string | IAccountMeta<string> = '11111111111111111111111111111111', TAccountToken2022Program extends string | IAccountMeta<string> = string, TAccountAtaProgram extends string | IAccountMeta<string> = 'ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL', TAccountPayer extends string | IAccountMeta<string> = string, TAccountVendor extends string | IAccountMeta<string> = string, TAccountProductMint extends string | IAccountMeta<string> = string, TAccountProductAssociatedToken extends string | IAccountMeta<string> = string, TAccountDevice extends string | IAccountMeta<string> = string, TAccountDeviceMint extends string | IAccountMeta<string> = string, TAccountDeviceAssociatedToken extends string | IAccountMeta<string> = string, TAccountOwner extends string | IAccountMeta<string> = string, TRemainingAccounts extends readonly IAccountMeta<string>[] = []> = IInstruction<TProgram> & IInstructionWithData<Uint8Array> & IInstructionWithAccounts<[
     TAccountSystemProgram extends string ? ReadonlyAccount<TAccountSystemProgram> : TAccountSystemProgram,
     TAccountToken2022Program extends string ? ReadonlyAccount<TAccountToken2022Program> : TAccountToken2022Program,
     TAccountAtaProgram extends string ? ReadonlyAccount<TAccountAtaProgram> : TAccountAtaProgram,
-    TAccountInstructions extends string ? ReadonlyAccount<TAccountInstructions> : TAccountInstructions,
     TAccountPayer extends string ? WritableSignerAccount<TAccountPayer> & IAccountSignerMeta<TAccountPayer> : TAccountPayer,
     TAccountVendor extends string ? ReadonlyAccount<TAccountVendor> : TAccountVendor,
     TAccountProductMint extends string ? ReadonlyAccount<TAccountProductMint> : TAccountProductMint,
@@ -35,15 +34,13 @@ export type ActivateDeviceInstructionDataArgs = {
 export declare function getActivateDeviceInstructionDataEncoder(): Encoder<ActivateDeviceInstructionDataArgs>;
 export declare function getActivateDeviceInstructionDataDecoder(): Decoder<ActivateDeviceInstructionData>;
 export declare function getActivateDeviceInstructionDataCodec(): Codec<ActivateDeviceInstructionDataArgs, ActivateDeviceInstructionData>;
-export type ActivateDeviceInput<TAccountSystemProgram extends string = string, TAccountToken2022Program extends string = string, TAccountAtaProgram extends string = string, TAccountInstructions extends string = string, TAccountPayer extends string = string, TAccountVendor extends string = string, TAccountProductMint extends string = string, TAccountProductAssociatedToken extends string = string, TAccountDevice extends string = string, TAccountDeviceMint extends string = string, TAccountDeviceAssociatedToken extends string = string, TAccountOwner extends string = string> = {
+export type ActivateDeviceInput<TAccountSystemProgram extends string = string, TAccountToken2022Program extends string = string, TAccountAtaProgram extends string = string, TAccountPayer extends string = string, TAccountVendor extends string = string, TAccountProductMint extends string = string, TAccountProductAssociatedToken extends string = string, TAccountDevice extends string = string, TAccountDeviceMint extends string = string, TAccountDeviceAssociatedToken extends string = string, TAccountOwner extends string = string> = {
     /** The system program */
     systemProgram?: Address<TAccountSystemProgram>;
     /** The SPL Token 2022 program */
     token2022Program: Address<TAccountToken2022Program>;
     /** The associated token program */
     ataProgram?: Address<TAccountAtaProgram>;
-    /** The instructions sysvar */
-    instructions: Address<TAccountInstructions>;
     /** The account paying for the storage fees */
     payer: TransactionSigner<TAccountPayer>;
     /** The vendor */
@@ -63,7 +60,7 @@ export type ActivateDeviceInput<TAccountSystemProgram extends string = string, T
     signature: ActivateDeviceInstructionDataArgs['signature'];
     timestamp: ActivateDeviceInstructionDataArgs['timestamp'];
 };
-export declare function getActivateDeviceInstruction<TAccountSystemProgram extends string, TAccountToken2022Program extends string, TAccountAtaProgram extends string, TAccountInstructions extends string, TAccountPayer extends string, TAccountVendor extends string, TAccountProductMint extends string, TAccountProductAssociatedToken extends string, TAccountDevice extends string, TAccountDeviceMint extends string, TAccountDeviceAssociatedToken extends string, TAccountOwner extends string>(input: ActivateDeviceInput<TAccountSystemProgram, TAccountToken2022Program, TAccountAtaProgram, TAccountInstructions, TAccountPayer, TAccountVendor, TAccountProductMint, TAccountProductAssociatedToken, TAccountDevice, TAccountDeviceMint, TAccountDeviceAssociatedToken, TAccountOwner>): ActivateDeviceInstruction<typeof DEPHY_ID_PROGRAM_ADDRESS, TAccountSystemProgram, TAccountToken2022Program, TAccountAtaProgram, TAccountInstructions, TAccountPayer, TAccountVendor, TAccountProductMint, TAccountProductAssociatedToken, TAccountDevice, TAccountDeviceMint, TAccountDeviceAssociatedToken, TAccountOwner>;
+export declare function getActivateDeviceInstruction<TAccountSystemProgram extends string, TAccountToken2022Program extends string, TAccountAtaProgram extends string, TAccountPayer extends string, TAccountVendor extends string, TAccountProductMint extends string, TAccountProductAssociatedToken extends string, TAccountDevice extends string, TAccountDeviceMint extends string, TAccountDeviceAssociatedToken extends string, TAccountOwner extends string>(input: ActivateDeviceInput<TAccountSystemProgram, TAccountToken2022Program, TAccountAtaProgram, TAccountPayer, TAccountVendor, TAccountProductMint, TAccountProductAssociatedToken, TAccountDevice, TAccountDeviceMint, TAccountDeviceAssociatedToken, TAccountOwner>): ActivateDeviceInstruction<typeof DEPHY_ID_PROGRAM_ADDRESS, TAccountSystemProgram, TAccountToken2022Program, TAccountAtaProgram, TAccountPayer, TAccountVendor, TAccountProductMint, TAccountProductAssociatedToken, TAccountDevice, TAccountDeviceMint, TAccountDeviceAssociatedToken, TAccountOwner>;
 export type ParsedActivateDeviceInstruction<TProgram extends string = typeof DEPHY_ID_PROGRAM_ADDRESS, TAccountMetas extends readonly IAccountMeta[] = readonly IAccountMeta[]> = {
     programAddress: Address<TProgram>;
     accounts: {
@@ -73,24 +70,22 @@ export type ParsedActivateDeviceInstruction<TProgram extends string = typeof DEP
         token2022Program: TAccountMetas[1];
         /** The associated token program */
         ataProgram: TAccountMetas[2];
-        /** The instructions sysvar */
-        instructions: TAccountMetas[3];
         /** The account paying for the storage fees */
-        payer: TAccountMetas[4];
+        payer: TAccountMetas[3];
         /** The vendor */
-        vendor: TAccountMetas[5];
+        vendor: TAccountMetas[4];
         /** The mint account for the product */
-        productMint: TAccountMetas[6];
+        productMint: TAccountMetas[5];
         /** The associated token account for the product */
-        productAssociatedToken: TAccountMetas[7];
+        productAssociatedToken: TAccountMetas[6];
         /** The device */
-        device: TAccountMetas[8];
+        device: TAccountMetas[7];
         /** The mint account for the device */
-        deviceMint: TAccountMetas[9];
+        deviceMint: TAccountMetas[8];
         /** The associated token account for the device */
-        deviceAssociatedToken: TAccountMetas[10];
+        deviceAssociatedToken: TAccountMetas[9];
         /** The device's owner */
-        owner: TAccountMetas[11];
+        owner: TAccountMetas[10];
     };
     data: ActivateDeviceInstructionData;
 };
