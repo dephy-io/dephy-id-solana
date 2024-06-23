@@ -17,37 +17,6 @@ env:
     target/
 
 jobs:
-  build_programs:
-    name: Build programs
-    runs-on: ubuntu-latest
-    steps:
-      - name: Git checkout
-        uses: actions/checkout@v4
-      - name: Setup environment
-        uses: ./.github/actions/setup
-        with:
-          node: ${{ env.NODE_VERSION }}
-          solana: ${{ env.SOLANA_VERSION }}
-      - name: Cache cargo dependencies
-        uses: actions/cache@v4
-        with:
-          path: ${{ env.CARGO_CACHE }}
-          key: ${{ runner.os }}-cargo-programs-${{ hashFiles('**/Cargo.lock') }}
-          restore-keys: ${{ runner.os }}-cargo-programs
-      - name: Build programs
-        run: pnpm programs:build
-      - name: Upload program builds
-        uses: actions/upload-artifact@v4
-        with:
-          name: program-builds
-          path: ./target/deploy/*.so
-          if-no-files-found: error
-      - name: Save all builds for clients
-        uses: actions/cache/save@v4
-        with:
-          path: ./**/*.so
-          key: ${{ runner.os }}-builds-${{ github.sha }}
-
   test_programs:
     name: Test programs
     runs-on: ubuntu-latest
@@ -70,6 +39,37 @@ jobs:
             ${{ runner.os }}-cargo-programs
       - name: Test programs
         run: pnpm programs:test
+
+#  build_programs:
+#    name: Build programs
+#    runs-on: ubuntu-latest
+#    steps:
+#      - name: Git checkout
+#        uses: actions/checkout@v4
+#      - name: Setup environment
+#        uses: ./.github/actions/setup
+#        with:
+#          node: ${{ env.NODE_VERSION }}
+#          solana: ${{ env.SOLANA_VERSION }}
+#      - name: Cache cargo dependencies
+#        uses: actions/cache@v4
+#        with:
+#          path: ${{ env.CARGO_CACHE }}
+#          key: ${{ runner.os }}-cargo-programs-${{ hashFiles('**/Cargo.lock') }}
+#          restore-keys: ${{ runner.os }}-cargo-programs
+#      - name: Build programs
+#        run: pnpm programs:build
+#      - name: Upload program builds
+#        uses: actions/upload-artifact@v4
+#        with:
+#          name: program-builds
+#          path: ./target/deploy/*.so
+#          if-no-files-found: error
+#      - name: Save all builds for clients
+#        uses: actions/cache/save@v4
+#        with:
+#          path: ./**/*.so
+#          key: ${{ runner.os }}-builds-${{ github.sha }}
 
 #  generate_idls:
 #    name: Check IDL generation
