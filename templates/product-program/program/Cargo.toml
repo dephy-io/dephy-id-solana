@@ -1,0 +1,31 @@
+[package]
+name = "dephy-id-product-program"
+version = "0.0.1"
+edition = "2021"
+readme = "./README.md"
+license-file = "../LICENSE"
+publish = false
+
+[package.metadata.solana]
+program-id = "8QFRWuQBMgkGrQFQAbHBRhXVw8BUGBLK5FJ4jiJWuu8G"
+program-dependencies = []
+account-dependencies = []
+
+[lib]
+crate-type = ["cdylib", "lib"]
+
+[dependencies]
+borsh = "1.5.1"
+shank = "0.4.2"
+num-derive = "0.4.2"
+num-traits = "0.2.19"
+thiserror = "1.0.61"
+solana-program = "1.18.17"
+spl-token-2022 = { version = "3.0.2", features = ["no-entrypoint"] }
+spl-token-metadata-interface = "0.3.3"
+spl-associated-token-account = { version = "3.0.2", features = ["no-entrypoint"] }
+dephy-id-program-client = { path = "../../../clients/rust" }
+
+[dev-dependencies]
+solana-program-test = "1.18.17"
+solana-sdk = "1.18.17"
