@@ -110,12 +110,12 @@ pub fn transfer_lamports_from_pdas<'a>(
     **from.lamports.borrow_mut() = from
         .lamports()
         .checked_sub(lamports)
-        .ok_or::<ProgramError>(CounterError::NumericalOverflow.into())?;
+        .ok_or::<ProgramError>(Error::NumericalOverflow.into())?;
 
     **to.lamports.borrow_mut() = to
         .lamports()
         .checked_add(lamports)
-        .ok_or::<ProgramError>(CounterError::NumericalOverflow.into())?;
+        .ok_or::<ProgramError>(Error::NumericalOverflow.into())?;
 
     Ok(())
 }

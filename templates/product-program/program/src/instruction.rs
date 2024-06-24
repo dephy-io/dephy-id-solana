@@ -6,7 +6,7 @@ use shank::{ShankContext, ShankInstruction};
 pub enum ProgramInstruction {
     /// Creates the demo account derived from the provided authority.
     /// This will also create a DePHY ID Product with a PDA as vendor
-    #[account(0, writable, name="program_pds", desc = "The program derived address of the demo account to create (seeds: ['Program'])")]
+    #[account(0, writable, name="program_pda", desc = "The program derived address of the program account to create (seeds: ['Program'])")]
     #[account(1, signer, name="authority", desc = "The authority of the demo")]
     #[account(2, writable, signer, name="payer", desc = "The account paying for the storage fees")]
     #[account(3, name="system_program", desc = "The system program")]
@@ -17,7 +17,7 @@ pub enum ProgramInstruction {
     Init(InitArgs),
 
     /// Create a Virtual Device
-    #[account(0, writable, name="program_pds", desc = "The program derived address of the demo account to create (seeds: ['Program'])")]
+    #[account(0, writable, name="program_pda", desc = "The program derived address of the program account to create (seeds: ['Program'])")]
     #[account(1, writable, signer, name="payer", desc = "The account paying for the storage fees")]
     #[account(2, name="system_program", desc = "The system program")]
     #[account(3, name="token_2022_program", desc = "The SPL Token 2022 program")]

@@ -15,17 +15,17 @@ account-dependencies = []
 crate-type = ["cdylib", "lib"]
 
 [dependencies]
-borsh = "1.5.1"
-shank = "0.4.2"
-num-derive = "0.4.2"
-num-traits = "0.2.19"
-thiserror = "1.0.61"
-solana-program = "1.18.17"
-spl-token-2022 = { version = "3.0.2", features = ["no-entrypoint"] }
-spl-token-metadata-interface = "0.3.3"
-spl-associated-token-account = { version = "3.0.2", features = ["no-entrypoint"] }
-dephy-id-program-client = { path = "../../../clients/rust" }
+borsh = { workspace = true }
+shank = { workspace = true }
+num-derive = { workspace = true }
+num-traits = { workspace = true }
+thiserror = { workspace = true }
+solana-program = { workspace = true }
+spl-token-2022 = { workspace = true, features = ["no-entrypoint"] }
+spl-token-metadata-interface = { workspace = true }
+spl-associated-token-account = { workspace = true, features = ["no-entrypoint"] }
+dephy-id-program-client = { workspace = true }
 
 [dev-dependencies]
-solana-program-test = "1.18.17"
-solana-sdk = "1.18.17"
+solana-program-test = { workspace = true }
+solana-sdk = { workspace = true }

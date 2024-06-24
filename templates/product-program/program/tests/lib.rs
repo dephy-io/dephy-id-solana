@@ -1,7 +1,7 @@
 use dephy_id_program_client::find_device_mint;
-use dephy_io_dephy_template::{
+use dephy_id_product_program::{
     instruction::{CreateVirtualDeviceArgs, ProgramInstruction, InitArgs},
-    pda::find_device,
+    utils::find_device,
     state::ProgramAccount,
 };
 use solana_program::pubkey::Pubkey;
@@ -16,7 +16,7 @@ use solana_sdk::{
 
 #[tokio::test]
 async fn test_all() {
-    let program_id = dephy_io_dephy_template::id();
+    let program_id = dephy_id_product_program::id();
 
     let mut program_test = ProgramTest::new("dephy_id_product_program", program_id, None);
     program_test.add_program("dephy_id_program", dephy_id_program_client::ID, None);

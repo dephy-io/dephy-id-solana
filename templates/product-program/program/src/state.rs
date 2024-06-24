@@ -3,7 +3,6 @@ use shank::ShankAccount;
 use solana_program::account_info::AccountInfo;
 use solana_program::entrypoint::ProgramResult;
 use solana_program::msg;
-use solana_program::program_error::ProgramError;
 use solana_program::pubkey::Pubkey;
 
 use crate::error::Error;
@@ -16,7 +15,7 @@ pub enum Key {
 
 #[repr(C)]
 #[derive(Clone, BorshSerialize, BorshDeserialize, Debug, ShankAccount)]
-pub struct Account {
+pub struct ProgramAccount {
     pub key: Key,
     pub authority: Pubkey,
     pub product_mint: Pubkey,

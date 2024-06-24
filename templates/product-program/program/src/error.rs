@@ -50,7 +50,7 @@ impl PrintProgramError for Error {
 }
 
 impl From<Error> for ProgramError {
-    fn from(e: CounterError) -> Self {
+    fn from(e: Error) -> Self {
         ProgramError::Custom(e as u32)
     }
 }

@@ -1,6 +1,6 @@
 use crate::{error::Error, state::Key};
 use solana_program::{
-    account_info::AccountInfo, entrypoint::ProgramResult, msg, program_error::ProgramError,
+    account_info::AccountInfo, entrypoint::ProgramResult, msg,
     pubkey::Pubkey,
 };
 

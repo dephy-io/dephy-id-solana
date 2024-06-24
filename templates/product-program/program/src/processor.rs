@@ -60,15 +60,15 @@ fn init<'a>(program_id: &Pubkey, accounts: &'a [AccountInfo<'a>], args: InitArgs
         product_mint: *ctx.accounts.product_mint.key,
     };
     create_account(
-        ctx.accounts.demo,
+        ctx.accounts.program_pda,
         ctx.accounts.payer,
         ctx.accounts.system_program,
         ProgramAccount::LEN,
         &crate::ID,
-        Some(&[&demo_seeds]),
+        Some(&[&pda_seeds]),
     )?;
 
-    account.save(ctx.accounts.demo)?;
+    account.save(ctx.accounts.program_pda)?;
 
     let mut vendor_seeds: Vec<&[u8]> = vec![b"VENDOR"];
     let vendor_bump = [assert_pda(
