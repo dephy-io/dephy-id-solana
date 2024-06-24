@@ -283,6 +283,7 @@ var DephyIdInstruction = /* @__PURE__ */ ((DephyIdInstruction2) => {
   DephyIdInstruction2[DephyIdInstruction2["CreateProduct"] = 1] = "CreateProduct";
   DephyIdInstruction2[DephyIdInstruction2["CreateDevice"] = 2] = "CreateDevice";
   DephyIdInstruction2[DephyIdInstruction2["ActivateDevice"] = 3] = "ActivateDevice";
+  DephyIdInstruction2[DephyIdInstruction2["CreateActivatedDevice"] = 4] = "CreateActivatedDevice";
   return DephyIdInstruction2;
 })(DephyIdInstruction || {});
 function identifyDephyIdInstruction(instruction) {
@@ -298,6 +299,9 @@ function identifyDephyIdInstruction(instruction) {
   }
   if (containsBytes(data, getU8Encoder().encode(3), 0)) {
     return 3 /* ActivateDevice */;
+  }
+  if (containsBytes(data, getU8Encoder().encode(4), 0)) {
+    return 4 /* CreateActivatedDevice */;
   }
   throw new Error(
     "The provided instruction could not be identified as a dephyId instruction."
@@ -439,6 +443,131 @@ function parseActivateDeviceInstruction(instruction) {
       owner: getNextAccount()
     },
     data: getActivateDeviceInstructionDataDecoder().decode(instruction.data)
+  };
+}
+function getCreateActivatedDeviceInstructionDataEncoder() {
+  return transformEncoder(
+    getStructEncoder([
+      ["discriminator", getU8Encoder()],
+      ["name", addEncoderSizePrefix(getUtf8Encoder(), getU32Encoder())],
+      ["uri", addEncoderSizePrefix(getUtf8Encoder(), getU32Encoder())],
+      [
+        "additionalMetadata",
+        getArrayEncoder(
+          getTupleEncoder([
+            addEncoderSizePrefix(getUtf8Encoder(), getU32Encoder()),
+            addEncoderSizePrefix(getUtf8Encoder(), getU32Encoder())
+          ])
+        )
+      ]
+    ]),
+    (value) => ({ ...value, discriminator: 4 })
+  );
+}
+function getCreateActivatedDeviceInstructionDataDecoder() {
+  return getStructDecoder([
+    ["discriminator", getU8Decoder()],
+    ["name", addDecoderSizePrefix(getUtf8Decoder(), getU32Decoder())],
+    ["uri", addDecoderSizePrefix(getUtf8Decoder(), getU32Decoder())],
+    [
+      "additionalMetadata",
+      getArrayDecoder(
+        getTupleDecoder([
+          addDecoderSizePrefix(getUtf8Decoder(), getU32Decoder()),
+          addDecoderSizePrefix(getUtf8Decoder(), getU32Decoder())
+        ])
+      )
+    ]
+  ]);
+}
+function getCreateActivatedDeviceInstructionDataCodec() {
+  return combineCodec(
+    getCreateActivatedDeviceInstructionDataEncoder(),
+    getCreateActivatedDeviceInstructionDataDecoder()
+  );
+}
+function getCreateActivatedDeviceInstruction(input) {
+  const programAddress = DEPHY_ID_PROGRAM_ADDRESS;
+  const originalAccounts = {
+    systemProgram: { value: input.systemProgram ?? null, isWritable: false },
+    token2022Program: {
+      value: input.token2022Program ?? null,
+      isWritable: false
+    },
+    ataProgram: { value: input.ataProgram ?? null, isWritable: false },
+    payer: { value: input.payer ?? null, isWritable: true },
+    vendor: { value: input.vendor ?? null, isWritable: false },
+    productMint: { value: input.productMint ?? null, isWritable: false },
+    productAssociatedToken: {
+      value: input.productAssociatedToken ?? null,
+      isWritable: true
+    },
+    device: { value: input.device ?? null, isWritable: false },
+    deviceMint: { value: input.deviceMint ?? null, isWritable: true },
+    deviceAssociatedToken: {
+      value: input.deviceAssociatedToken ?? null,
+      isWritable: true
+    },
+    owner: { value: input.owner ?? null, isWritable: false }
+  };
+  const accounts = originalAccounts;
+  const args = { ...input };
+  if (!accounts.systemProgram.value) {
+    accounts.systemProgram.value = "11111111111111111111111111111111";
+  }
+  if (!accounts.ataProgram.value) {
+    accounts.ataProgram.value = "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL";
+  }
+  const getAccountMeta = getAccountMetaFactory(programAddress);
+  const instruction = {
+    accounts: [
+      getAccountMeta(accounts.systemProgram),
+      getAccountMeta(accounts.token2022Program),
+      getAccountMeta(accounts.ataProgram),
+      getAccountMeta(accounts.payer),
+      getAccountMeta(accounts.vendor),
+      getAccountMeta(accounts.productMint),
+      getAccountMeta(accounts.productAssociatedToken),
+      getAccountMeta(accounts.device),
+      getAccountMeta(accounts.deviceMint),
+      getAccountMeta(accounts.deviceAssociatedToken),
+      getAccountMeta(accounts.owner)
+    ],
+    programAddress,
+    data: getCreateActivatedDeviceInstructionDataEncoder().encode(
+      args
+    )
+  };
+  return instruction;
+}
+function parseCreateActivatedDeviceInstruction(instruction) {
+  if (instruction.accounts.length < 11) {
+    throw new Error("Not enough accounts");
+  }
+  let accountIndex = 0;
+  const getNextAccount = () => {
+    const accountMeta = instruction.accounts[accountIndex];
+    accountIndex += 1;
+    return accountMeta;
+  };
+  return {
+    programAddress: instruction.programAddress,
+    accounts: {
+      systemProgram: getNextAccount(),
+      token2022Program: getNextAccount(),
+      ataProgram: getNextAccount(),
+      payer: getNextAccount(),
+      vendor: getNextAccount(),
+      productMint: getNextAccount(),
+      productAssociatedToken: getNextAccount(),
+      device: getNextAccount(),
+      deviceMint: getNextAccount(),
+      deviceAssociatedToken: getNextAccount(),
+      owner: getNextAccount()
+    },
+    data: getCreateActivatedDeviceInstructionDataDecoder().decode(
+      instruction.data
+    )
   };
 }
 function getCreateDeviceInstructionDataEncoder() {
@@ -732,6 +861,6 @@ function parseInitializeInstruction(instruction) {
   };
 }
 
-export { DEPHY_ID_ERROR__ACCOUNT_MISMATCH, DEPHY_ID_ERROR__DESERIALIZATION_ERROR, DEPHY_ID_ERROR__EXPECTED_EMPTY_ACCOUNT, DEPHY_ID_ERROR__EXPECTED_NON_EMPTY_ACCOUNT, DEPHY_ID_ERROR__EXPECTED_SIGNER_ACCOUNT, DEPHY_ID_ERROR__EXPECTED_WRITABLE_ACCOUNT, DEPHY_ID_ERROR__INVALID_ACCOUNT_KEY, DEPHY_ID_ERROR__INVALID_PDA, DEPHY_ID_ERROR__INVALID_PROGRAM_OWNER, DEPHY_ID_ERROR__MISSING_INSTRUCTION, DEPHY_ID_ERROR__NUMERICAL_OVERFLOW, DEPHY_ID_ERROR__SERIALIZATION_ERROR, DEPHY_ID_ERROR__SIGNATURE_MISMATCH, DEPHY_ID_PROGRAM_ADDRESS, DephyIdAccount, DephyIdInstruction, DeviceSigningAlgorithm, Key, decodeProgramDataAccount, deviceActivationSignature, fetchAllMaybeProgramDataAccount, fetchAllProgramDataAccount, fetchMaybeProgramDataAccount, fetchMaybeProgramDataAccountFromSeeds, fetchProgramDataAccount, fetchProgramDataAccountFromSeeds, findDeviceMintPda, findProductMintPda, findProgramDataAccountPda, getActivateDeviceInstruction, getActivateDeviceInstructionDataCodec, getActivateDeviceInstructionDataDecoder, getActivateDeviceInstructionDataEncoder, getCreateDeviceInstruction, getCreateDeviceInstructionDataCodec, getCreateDeviceInstructionDataDecoder, getCreateDeviceInstructionDataEncoder, getCreateProductInstruction, getCreateProductInstructionDataCodec, getCreateProductInstructionDataDecoder, getCreateProductInstructionDataEncoder, getDephyIdErrorMessage, getDeviceActivationSignatureCodec, getDeviceActivationSignatureDecoder, getDeviceActivationSignatureEncoder, getDeviceSigningAlgorithmCodec, getDeviceSigningAlgorithmDecoder, getDeviceSigningAlgorithmEncoder, getInitializeInstruction, getInitializeInstructionDataCodec, getInitializeInstructionDataDecoder, getInitializeInstructionDataEncoder, getKeyCodec, getKeyDecoder, getKeyEncoder, getProgramDataAccountCodec, getProgramDataAccountDecoder, getProgramDataAccountEncoder, getProgramDataAccountSize, getProgramDataCodec, getProgramDataDecoder, getProgramDataEncoder, identifyDephyIdAccount, identifyDephyIdInstruction, isDeviceActivationSignature, parseActivateDeviceInstruction, parseCreateDeviceInstruction, parseCreateProductInstruction, parseInitializeInstruction };
+export { DEPHY_ID_ERROR__ACCOUNT_MISMATCH, DEPHY_ID_ERROR__DESERIALIZATION_ERROR, DEPHY_ID_ERROR__EXPECTED_EMPTY_ACCOUNT, DEPHY_ID_ERROR__EXPECTED_NON_EMPTY_ACCOUNT, DEPHY_ID_ERROR__EXPECTED_SIGNER_ACCOUNT, DEPHY_ID_ERROR__EXPECTED_WRITABLE_ACCOUNT, DEPHY_ID_ERROR__INVALID_ACCOUNT_KEY, DEPHY_ID_ERROR__INVALID_PDA, DEPHY_ID_ERROR__INVALID_PROGRAM_OWNER, DEPHY_ID_ERROR__MISSING_INSTRUCTION, DEPHY_ID_ERROR__NUMERICAL_OVERFLOW, DEPHY_ID_ERROR__SERIALIZATION_ERROR, DEPHY_ID_ERROR__SIGNATURE_MISMATCH, DEPHY_ID_PROGRAM_ADDRESS, DephyIdAccount, DephyIdInstruction, DeviceSigningAlgorithm, Key, decodeProgramDataAccount, deviceActivationSignature, fetchAllMaybeProgramDataAccount, fetchAllProgramDataAccount, fetchMaybeProgramDataAccount, fetchMaybeProgramDataAccountFromSeeds, fetchProgramDataAccount, fetchProgramDataAccountFromSeeds, findDeviceMintPda, findProductMintPda, findProgramDataAccountPda, getActivateDeviceInstruction, getActivateDeviceInstructionDataCodec, getActivateDeviceInstructionDataDecoder, getActivateDeviceInstructionDataEncoder, getCreateActivatedDeviceInstruction, getCreateActivatedDeviceInstructionDataCodec, getCreateActivatedDeviceInstructionDataDecoder, getCreateActivatedDeviceInstructionDataEncoder, getCreateDeviceInstruction, getCreateDeviceInstructionDataCodec, getCreateDeviceInstructionDataDecoder, getCreateDeviceInstructionDataEncoder, getCreateProductInstruction, getCreateProductInstructionDataCodec, getCreateProductInstructionDataDecoder, getCreateProductInstructionDataEncoder, getDephyIdErrorMessage, getDeviceActivationSignatureCodec, getDeviceActivationSignatureDecoder, getDeviceActivationSignatureEncoder, getDeviceSigningAlgorithmCodec, getDeviceSigningAlgorithmDecoder, getDeviceSigningAlgorithmEncoder, getInitializeInstruction, getInitializeInstructionDataCodec, getInitializeInstructionDataDecoder, getInitializeInstructionDataEncoder, getKeyCodec, getKeyDecoder, getKeyEncoder, getProgramDataAccountCodec, getProgramDataAccountDecoder, getProgramDataAccountEncoder, getProgramDataAccountSize, getProgramDataCodec, getProgramDataDecoder, getProgramDataEncoder, identifyDephyIdAccount, identifyDephyIdInstruction, isDeviceActivationSignature, parseActivateDeviceInstruction, parseCreateActivatedDeviceInstruction, parseCreateDeviceInstruction, parseCreateProductInstruction, parseInitializeInstruction };
 //# sourceMappingURL=out.js.map
 //# sourceMappingURL=index.mjs.map
