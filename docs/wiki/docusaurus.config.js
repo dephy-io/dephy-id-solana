@@ -92,9 +92,8 @@ const config = {
             position: 'left',
             label: 'Guides',
           },
-          {to: '/blog', label: 'Blog', position: 'left'},
           {
-            href: 'https://github.com/dephy-io/website',
+            href: 'https://github.com/dephy-io',
             label: 'GitHub',
             position: 'right',
           },
@@ -111,7 +110,7 @@ const config = {
             title: 'Docs',
             items: [
               {
-                label: 'Tutorial',
+                label: 'Guides',
                 to: '/docs/intro',
               },
             ],
@@ -121,7 +120,7 @@ const config = {
             items: [
               {
                 label: 'Discord',
-                href: 'https://discordapp.com/invite/docusaurus',
+                href: 'https://discordapp.com/invite/Wbx2BAn2A4',
               },
               {
                 label: 'Twitter',
@@ -133,17 +132,13 @@ const config = {
             title: 'More',
             items: [
               {
-                label: 'Blog',
-                to: '/blog',
-              },
-              {
                 label: 'GitHub',
-                href: 'https://github.com/dephy-io/website',
+                href: 'https://github.com/dephy-io',
               },
             ],
           },
         ],
-        copyright: `Copyright © ${new Date().getFullYear()} DePHY, Inc. Built with Docusaurus.`,
+        copyright: `Copyright © ${new Date().getFullYear()} DePHY, Inc.`,
       },
       prism: {
         theme: prismThemes.github,
