@@ -72,12 +72,12 @@ const config = {
     /** @type {import('@docusaurus/preset-classic').ThemeConfig} */
     ({
       // Replace with your project's social card
-      image: 'img/docusaurus-social-card.jpg',
+      image: 'img/dephy.jpg',
       navbar: {
         title: 'DePHY',
         logo: {
           alt: 'Logo',
-          src: 'img/logo.svg',
+          src: 'img/dephy.svg',
         },
         items: [
           {
@@ -92,10 +92,11 @@ const config = {
             position: 'left',
             label: 'Guides',
           },
+          {to: '/blog', label: 'Blog', position: 'left'},
           {
-            href: 'https://github.com/dephy-io',
             label: 'GitHub',
             position: 'right',
+            href: 'https://github.com/dephy-io',
           },
           {
             type: 'localeDropdown',
@@ -138,7 +139,7 @@ const config = {
             ],
           },
         ],
-        copyright: `Copyright © ${new Date().getFullYear()} DePHY, Inc.`,
+        copyright: `Copyright © ${new Date().getFullYear()} DePHY`,
       },
       prism: {
         theme: prismThemes.github,
