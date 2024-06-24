@@ -1,14 +1,24 @@
-use std::{error::Error, str::FromStr, time::Duration};
 use std::time::{SystemTime, UNIX_EPOCH};
+use std::{error::Error, str::FromStr, time::Duration};
 
 use arrayref::array_ref;
 use clap::{Args, Parser, Subcommand, ValueEnum};
-use dephy_id_program_client::{instructions::{
-    ActivateDeviceBuilder, CreateDeviceBuilder, CreateProductBuilder, InitializeBuilder,
-}, types::{self, DeviceActivationSignature}, DEVICE_MESSAGE_PREFIX, DEVICE_MINT_SEED_PREFIX, ID as PROGRAM_ID, PRODUCT_MINT_SEED_PREFIX, PROGRAM_PDA_SEED_PREFIX, EIP191_MESSAGE_PREFIX};
+use dephy_id_program_client::{
+    instructions::{
+        ActivateDeviceBuilder, CreateDeviceBuilder, CreateProductBuilder, InitializeBuilder,
+    },
+    types::{self, DeviceActivationSignature},
+    DEVICE_MESSAGE_PREFIX, DEVICE_MINT_SEED_PREFIX, EIP191_MESSAGE_PREFIX, ID as PROGRAM_ID,
+    PRODUCT_MINT_SEED_PREFIX, PROGRAM_PDA_SEED_PREFIX,
+};
 use solana_client::rpc_client::RpcClient;
 use solana_sdk::{
-    commitment_config::CommitmentConfig, keccak, pubkey::Pubkey, signature::{Keypair, Signature}, signer::{EncodableKey, Signer}, sysvar::instructions, transaction::Transaction
+    commitment_config::CommitmentConfig,
+    keccak,
+    pubkey::Pubkey,
+    signature::{Keypair, Signature},
+    signer::{EncodableKey, Signer},
+    transaction::Transaction,
 };
 
 #[derive(Debug, Parser)]
@@ -83,7 +93,7 @@ struct CreateDeviceCliArgs {
     product_pubkey: Pubkey,
     #[arg(long = "device", value_parser = parse_pubkey)]
     device_pubkey: Pubkey,
-    #[arg(value_enum, long, default_value_t = DeviceSigningAlgorithm::Ed25519)]
+    #[arg(value_enum, long, default_value_t = DeviceSigningAlgorithm::Secp256k1)]
     signing_alg: DeviceSigningAlgorithm,
     name: String,
     #[arg(default_value = "")]
@@ -111,7 +121,7 @@ struct DevActivateDeviceCliArgs {
     vendor_pubkey: Pubkey,
     #[arg(long = "product", value_parser = parse_pubkey)]
     product_mint_pubkey: Pubkey,
-    #[arg(value_enum, long, default_value_t = SignatureType::Ed25519)]
+    #[arg(value_enum, long, default_value_t = SignatureType::Secp256k1)]
     signature_type: SignatureType,
     #[command(flatten)]
     common: CommonArgs,
@@ -137,7 +147,7 @@ struct SignMessageCliArgs {
     keypair: String,
     #[arg()]
     message: String,
-    #[arg(value_enum, long, default_value_t = SignatureType::Ed25519)]
+    #[arg(value_enum, long, default_value_t = SignatureType::Secp256k1)]
     signature_type: SignatureType,
 }
 
@@ -151,7 +161,7 @@ struct ActivateDeviceOffchainCliArgs {
     vendor_pubkey: Pubkey,
     #[arg(long = "product", value_parser = parse_pubkey)]
     product_mint_pubkey: Pubkey,
-    #[arg(value_enum, long, default_value_t = SignatureType::Ed25519)]
+    #[arg(value_enum, long, default_value_t = SignatureType::Secp256k1)]
     signature_type: SignatureType,
     #[arg(short, long)]
     signature: String,
@@ -191,7 +201,6 @@ fn main() {
         Commands::DevActivateDevice(args) => dev_activate_device(args),
     }
 }
-
 
 fn get_client(url: &String) -> RpcClient {
     let timeout = Duration::from_secs(10);
@@ -361,7 +370,6 @@ fn dev_activate_device(args: DevActivateDeviceCliArgs) {
     let client = get_client(&args.common.url);
     let program_id = args.common.program_id.unwrap_or(PROGRAM_ID);
     let token_program_id = spl_token_2022::ID;
-    let instructions_id = instructions::ID;
 
     let device = read_key(&args.device_keypair);
     let user = read_key(&args.user_keypair);
@@ -391,13 +399,18 @@ fn dev_activate_device(args: DevActivateDeviceCliArgs) {
             &token_program_id,
         );
 
-    let timestamp = SystemTime::now().duration_since(UNIX_EPOCH).ok().unwrap().as_secs();
+    let timestamp = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .ok()
+        .unwrap()
+        .as_secs();
     let message = [
         DEVICE_MESSAGE_PREFIX,
         args.product_mint_pubkey.as_ref(),
         user.pubkey().as_ref(),
         &timestamp.to_le_bytes(),
-    ].concat();
+    ]
+    .concat();
 
     let latest_block = client.get_latest_blockhash().unwrap();
     let signature = sign(args.signature_type, &device, &message);
@@ -405,7 +418,6 @@ fn dev_activate_device(args: DevActivateDeviceCliArgs) {
     let transaction = Transaction::new_signed_with_payer(
         &[ActivateDeviceBuilder::new()
             .token2022_program(token_program_id)
-            .instructions(instructions_id)
             .payer(payer.pubkey())
             .device(device_pubkey)
             .vendor(args.vendor_pubkey)
@@ -436,7 +448,11 @@ fn dev_activate_device(args: DevActivateDeviceCliArgs) {
     };
 }
 
-fn sign(signature_type: SignatureType, keypair: &Keypair, message: &[u8]) -> DeviceActivationSignature {
+fn sign(
+    signature_type: SignatureType,
+    keypair: &Keypair,
+    message: &[u8],
+) -> DeviceActivationSignature {
     match signature_type {
         SignatureType::Ed25519 => {
             let signature = keypair.sign_message(message);
@@ -459,7 +475,8 @@ fn sign(signature_type: SignatureType, keypair: &Keypair, message: &[u8]) -> Dev
                 EIP191_MESSAGE_PREFIX,
                 message.len().to_string().as_bytes(),
                 message,
-            ].concat();
+            ]
+            .concat();
             let message_hash = keccak::hash(&eth_message);
             let (signature, recovery_id) = libsecp256k1::sign(
                 &libsecp256k1::Message::parse(&message_hash.to_bytes()),
@@ -484,13 +501,18 @@ fn generate_message(args: GenerateMessageCliArgs) {
         &program_id,
     );
 
-    let timestamp = SystemTime::now().duration_since(UNIX_EPOCH).ok().unwrap().as_secs();
+    let timestamp = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .ok()
+        .unwrap()
+        .as_secs();
     let message = [
         DEVICE_MESSAGE_PREFIX,
         did_mint_pubkey.as_ref(),
         args.user_pubkey.as_ref(),
         &timestamp.to_le_bytes(),
-    ].concat();
+    ]
+    .concat();
 
     assert_eq!(message.len(), 96);
     assert_eq!(array_ref![message, 0, 24], DEVICE_MESSAGE_PREFIX);
@@ -527,11 +549,15 @@ fn sign_message(args: SignMessageCliArgs) {
         DeviceActivationSignature::Ed25519(signature_bytes) => {
             eprintln!("Pubkey: {}", keypair.pubkey());
             println!("Signature: 0x{}", hex::encode(signature_bytes));
-        },
-        DeviceActivationSignature::Secp256k1(signature_bytes, recovery_id) |
-        DeviceActivationSignature::EthSecp256k1(signature_bytes, recovery_id) => {
-            println!("Signature: {}{}", hex::encode(&signature_bytes), hex::encode(&[recovery_id]));
-        },
+        }
+        DeviceActivationSignature::Secp256k1(signature_bytes, recovery_id)
+        | DeviceActivationSignature::EthSecp256k1(signature_bytes, recovery_id) => {
+            println!(
+                "Signature: {}{}",
+                hex::encode(&signature_bytes),
+                hex::encode(&[recovery_id])
+            );
+        }
     }
 }
 
@@ -539,7 +565,6 @@ fn activate_device_offchain(args: ActivateDeviceOffchainCliArgs) {
     let client = get_client(&args.common.url);
     let program_id = args.common.program_id.unwrap_or(PROGRAM_ID);
     let token_program_id = spl_token_2022::ID;
-    let instructions_id = instructions::ID;
 
     let device_pubkey = args.device_pubkey;
     let user = read_key(&args.user_keypair);
@@ -608,7 +633,6 @@ fn activate_device_offchain(args: ActivateDeviceOffchainCliArgs) {
     let transaction = Transaction::new_signed_with_payer(
         &[ActivateDeviceBuilder::new()
             .token2022_program(token_program_id)
-            .instructions(instructions_id)
             .payer(payer.pubkey())
             .device(device_pubkey)
             .vendor(args.vendor_pubkey)

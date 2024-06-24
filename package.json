@@ -19,14 +19,13 @@
   },
   "devDependencies": {
     "@iarna/toml": "^2.2.5",
-    "@kinobi-so/nodes-from-anchor": "^0.20.5",
-    "@kinobi-so/renderers-js": "^0.20.5",
-    "@kinobi-so/renderers-js-umi": "^0.20.4",
-    "@kinobi-so/renderers-rust": "^0.20.6",
-    "@metaplex-foundation/shank-js": "^0.1.7",
-    "kinobi": "^0.20.3",
-    "typescript": "^5.4.5",
+    "@kinobi-so/nodes-from-anchor": "^0.20.6",
+    "@kinobi-so/renderers-js": "^0.20.9",
+    "@kinobi-so/renderers-js-umi": "^0.20.6",
+    "@kinobi-so/renderers-rust": "^0.20.10",
+    "kinobi": "^0.20.4",
+    "typescript": "^5.5.2",
     "zx": "^7.2.3"
   },
-  "packageManager": "pnpm@9.1.2"
+  "packageManager": "pnpm@9.4.0"
 }

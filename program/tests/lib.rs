@@ -19,7 +19,7 @@ use solana_sdk::{
     keccak,
     signature::Keypair,
     signer::Signer,
-    system_program, sysvar,
+    system_program,
     transaction::Transaction,
 };
 use spl_token_2022::{
@@ -40,8 +40,6 @@ async fn test_smoke() {
 
     let admin = Keypair::new();
     let vendor = Keypair::new();
-    let device1 = Keypair::new();
-    let device2 = Keypair::new();
     let user1 = Keypair::new();
 
     // Initialize the program
@@ -80,27 +78,33 @@ async fn test_smoke() {
 
     test_create_product(program_id, &mut ctx, &vendor, product_name.clone()).await;
 
-    test_create_device(
-        program_id,
-        &mut ctx,
-        &vendor,
-        &device1,
-        product_name.as_ref(),
-        DeviceSigningAlgorithm::Ed25519,
-    )
-    .await;
+    #[cfg(feature = "ed25519-sign")]
+    {
+        let device1 = Keypair::new();
+        test_create_device(
+            program_id,
+            &mut ctx,
+            &vendor,
+            &device1,
+            product_name.as_ref(),
+            DeviceSigningAlgorithm::Ed25519,
+        )
+        .await;
 
-    test_activate_device(
-        program_id,
-        &mut ctx,
-        &vendor,
-        product_name.as_ref(),
-        &device1,
-        &user1,
-        DeviceSigningAlgorithm::Ed25519,
-        1_000,
-    )
-    .await;
+        test_activate_device(
+            program_id,
+            &mut ctx,
+            &vendor,
+            product_name.as_ref(),
+            &device1,
+            &user1,
+            DeviceSigningAlgorithm::Ed25519,
+            1_000,
+        )
+        .await;
+    }
+
+    let device2 = Keypair::new();
 
     test_create_device(
         program_id,
@@ -328,7 +332,8 @@ async fn test_activate_device(
             &spl_token_2022::id(),
         );
 
-    let timestamp = SystemTime::now().duration_since(UNIX_EPOCH).ok().unwrap().as_secs();
+    // - 60s should make the test more reliable
+    let timestamp = SystemTime::now().duration_since(UNIX_EPOCH).ok().unwrap().as_secs() - 60;
     let signature = match key_type {
         DeviceSigningAlgorithm::Ed25519 => {
             let message = [
@@ -358,7 +363,7 @@ async fn test_activate_device(
                 &device_secp256k1_priv_key,
             );
             DeviceActivationSignature::EthSecp256k1(signature.serialize(), recovery_id.serialize())
-        }
+        },
     };
 
     let activate_device_ix = SolanaInstruction::new_with_borsh(
@@ -374,23 +379,21 @@ async fn test_activate_device(
             AccountMeta::new(spl_token_2022::id(), false),
             // #[account(2, name="ata_program", desc="The associated token program")]
             AccountMeta::new(spl_associated_token_account::id(), false),
-            // #[account(3, name="instructions", desc="The instructions sys var")]
-            AccountMeta::new(sysvar::instructions::id(), false),
-            // #[account(4, writable, signer, name="payer", desc="The account paying for the storage fees")]
+            // #[account(3, writable, signer, name="payer", desc="The account paying for the storage fees")]
             AccountMeta::new(ctx.payer.pubkey(), true),
-            // #[account(5, name="vendor", desc="The vendor")]
+            // #[account(4, name="vendor", desc="The vendor")]
             AccountMeta::new(vendor.pubkey(), false),
-            // #[account(6, name="product_program_data", desc="The PDA for the product to store mint data")]
+            // #[account(5, name="product_program_data", desc="The PDA for the product to store mint data")]
             AccountMeta::new(product_mint_pubkey, false),
-            // #[account(7, name="product_associated_token", desc="The ATA for the product")]
+            // #[account(6, name="product_associated_token", desc="The ATA for the product")]
             AccountMeta::new(product_ata_pubkey, false),
-            // #[account(8, name="device", desc="The device")]
+            // #[account(7, name="device", desc="The device")]
             AccountMeta::new(device_pubkey, false),
-            // #[account(9, writable, name="device_program_data", desc="The PDA for the device to store mint data")]
+            // #[account(8, writable, name="device_program_data", desc="The PDA for the device to store mint data")]
             AccountMeta::new(device_mint_pubkey, false),
-            // #[account(10, writable, name="device_associated_token", desc="The ATA for the device")]
+            // #[account(9, writable, name="device_associated_token", desc="The ATA for the device")]
             AccountMeta::new(device_ata_pubkey, false),
-            // #[account(11, name="owner", desc="The device's owner")]
+            // #[account(10, name="owner", desc="The device's owner")]
             AccountMeta::new(user.pubkey(), true),
         ],
     );

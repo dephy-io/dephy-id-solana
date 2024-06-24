@@ -5,7 +5,7 @@
  *
  * @see https://github.com/kinobi-so/kinobi
  */
-import { Address, ProgramDerivedAddress } from '@solana/web3.js';
+import { type Address, type ProgramDerivedAddress } from '@solana/web3.js';
 export type ProductMintSeeds = {
     vendorPubkey: Address;
     productName: string;

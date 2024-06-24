@@ -5,8 +5,8 @@
  *
  * @see https://github.com/kinobi-so/kinobi
  */
-import { Address } from '@solana/web3.js';
-import { ParsedActivateDeviceInstruction, ParsedCreateDeviceInstruction, ParsedCreateProductInstruction, ParsedInitializeInstruction } from '../instructions';
+import { type Address } from '@solana/web3.js';
+import { type ParsedActivateDeviceInstruction, type ParsedCreateDeviceInstruction, type ParsedCreateProductInstruction, type ParsedInitializeInstruction } from '../instructions';
 export declare const DEPHY_ID_PROGRAM_ADDRESS: Address<"hdMghjD73uASxgJXi6e1mGPsXqnADMsrqB1bveqABP1">;
 export declare enum DephyIdAccount {
     ProgramDataAccount = 0

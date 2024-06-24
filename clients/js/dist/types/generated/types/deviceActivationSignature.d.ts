@@ -5,7 +5,7 @@
  *
  * @see https://github.com/kinobi-so/kinobi
  */
-import { Codec, Decoder, Encoder, GetDiscriminatedUnionVariant, GetDiscriminatedUnionVariantContent, ReadonlyUint8Array } from '@solana/web3.js';
+import { type Codec, type Decoder, type Encoder, type GetDiscriminatedUnionVariant, type GetDiscriminatedUnionVariantContent, type ReadonlyUint8Array } from '@solana/web3.js';
 export type DeviceActivationSignature = {
     __kind: 'Ed25519';
     fields: readonly [ReadonlyUint8Array];

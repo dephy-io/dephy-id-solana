@@ -5,9 +5,9 @@
  *
  * @see https://github.com/kinobi-so/kinobi
  */
-import { Address, Codec, Decoder, Encoder, IAccountMeta, IAccountSignerMeta, IInstruction, IInstructionWithAccounts, IInstructionWithData, ReadonlyAccount, ReadonlySignerAccount, TransactionSigner, WritableAccount, WritableSignerAccount } from '@solana/web3.js';
+import { type Address, type Codec, type Decoder, type Encoder, type IAccountMeta, type IAccountSignerMeta, type IInstruction, type IInstructionWithAccounts, type IInstructionWithData, type ReadonlyAccount, type ReadonlySignerAccount, type TransactionSigner, type WritableAccount, type WritableSignerAccount } from '@solana/web3.js';
 import { DEPHY_ID_PROGRAM_ADDRESS } from '../programs';
-import { DeviceSigningAlgorithm, DeviceSigningAlgorithmArgs } from '../types';
+import { type DeviceSigningAlgorithm, type DeviceSigningAlgorithmArgs } from '../types';
 export type CreateDeviceInstruction<TProgram extends string = typeof DEPHY_ID_PROGRAM_ADDRESS, TAccountSystemProgram extends string | IAccountMeta<string> = '11111111111111111111111111111111', TAccountToken2022Program extends string | IAccountMeta<string> = 'TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb', TAccountAtaProgram extends string | IAccountMeta<string> = 'ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL', TAccountPayer extends string | IAccountMeta<string> = string, TAccountVendor extends string | IAccountMeta<string> = string, TAccountProductMint extends string | IAccountMeta<string> = string, TAccountProductAssociatedToken extends string | IAccountMeta<string> = string, TAccountDevice extends string | IAccountMeta<string> = string, TAccountDeviceMint extends string | IAccountMeta<string> = string, TRemainingAccounts extends readonly IAccountMeta<string>[] = []> = IInstruction<TProgram> & IInstructionWithData<Uint8Array> & IInstructionWithAccounts<[
     TAccountSystemProgram extends string ? ReadonlyAccount<TAccountSystemProgram> : TAccountSystemProgram,
     TAccountToken2022Program extends string ? ReadonlyAccount<TAccountToken2022Program> : TAccountToken2022Program,

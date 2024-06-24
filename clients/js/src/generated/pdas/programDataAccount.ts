@@ -7,10 +7,10 @@
  */
 
 import {
-  Address,
-  ProgramDerivedAddress,
   getProgramDerivedAddress,
   getUtf8Encoder,
+  type Address,
+  type ProgramDerivedAddress,
 } from '@solana/web3.js';
 
 export async function findProgramDataAccountPda(

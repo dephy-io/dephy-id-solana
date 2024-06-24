@@ -5,7 +5,7 @@
  *
  * @see https://github.com/kinobi-so/kinobi
  */
-import { Codec, Decoder, Encoder } from '@solana/web3.js';
+import { type Codec, type Decoder, type Encoder } from '@solana/web3.js';
 export declare enum DeviceSigningAlgorithm {
     Ed25519 = 0,
     Secp256k1 = 1

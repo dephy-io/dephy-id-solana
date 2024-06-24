@@ -5,6 +5,7 @@ import { u8aToHex } from "@polkadot/util";
 import { base58 } from '@scure/base';
 import * as ed25519 from "@noble/ed25519";
 import * as secp256k1 from "@noble/secp256k1";
+import { keccak256 } from "ethereum-cryptography/keccak.js";
 import type { KeyType, Wallet } from "./types";
 
 import { sha512 } from '@noble/hashes/sha512';
@@ -18,7 +19,7 @@ try {
             didKeyType: {
                 type: 'string',
                 short: 't',
-                default: 'ed25519',
+                default: 'secp256k1',
             },
             vendorPublicKey: {
                 type: 'string',
@@ -69,11 +70,21 @@ try {
             case "ed25519":
                 return ed25519.getPublicKey(privateKey);
             case "secp256k1":
-                return secp256k1.getPublicKey(privateKey);
+                return secp256k1.getPublicKey(privateKey, false).slice(1);
             default:
                 throw new Error(`Unsupported key type: ${keyType}`);
         }
     })(cliArgs.didKeyType, didPrivateKey);
+    const didAddress = (function (keyType: string, publicKey: Uint8Array): string {
+        switch (keyType) {
+            case "ed25519":
+                return base58.encode(publicKey);
+            case "secp256k1":
+                return base58.encode(keccak256(didPublicKey));
+            default:
+                throw new Error(`Unsupported key type: ${keyType}`);
+        }
+    })(cliArgs.didKeyType, didPublicKey);
 
     const secp256k1PrivateKey = secp256k1.utils.randomPrivateKey();
     const secp256k1PublicKey = secp256k1.getPublicKey(secp256k1PrivateKey);
@@ -86,7 +97,7 @@ try {
                 keyType: <KeyType>cliArgs.didKeyType,
                 privateKey: u8aToHex(didPrivateKey),
                 publicKey: u8aToHex(didPublicKey),
-                bs58PublicKey: base58.encode(didPublicKey),
+                mappedAddress: didAddress,
             },
             secp256k1: {
                 keyType: "secp256k1",

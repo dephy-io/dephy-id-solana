@@ -7,12 +7,6 @@
  */
 
 import {
-  Codec,
-  Decoder,
-  Encoder,
-  GetDiscriminatedUnionVariant,
-  GetDiscriminatedUnionVariantContent,
-  ReadonlyUint8Array,
   combineCodec,
   fixDecoderSize,
   fixEncoderSize,
@@ -26,6 +20,12 @@ import {
   getTupleEncoder,
   getU8Decoder,
   getU8Encoder,
+  type Codec,
+  type Decoder,
+  type Encoder,
+  type GetDiscriminatedUnionVariant,
+  type GetDiscriminatedUnionVariantContent,
+  type ReadonlyUint8Array,
 } from '@solana/web3.js';
 
 export type DeviceActivationSignature =

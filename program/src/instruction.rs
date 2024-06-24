@@ -1,8 +1,7 @@
+use crate::{DEVICE_MESSAGE_PREFIX, EIP191_MESSAGE_PREFIX};
 use borsh::{BorshDeserialize, BorshSerialize};
 use shank::{ShankContext, ShankInstruction};
-use solana_program::{pubkey::Pubkey, entrypoint::ProgramResult};
-use crate::{DEVICE_MESSAGE_PREFIX, EIP191_MESSAGE_PREFIX};
-
+use solana_program::{entrypoint::ProgramResult, pubkey::Pubkey};
 
 #[derive(BorshDeserialize, BorshSerialize, Clone, Debug, ShankContext, ShankInstruction)]
 #[rustfmt::skip]
@@ -38,18 +37,16 @@ pub enum Instruction {
     #[account(0, name="system_program", desc="The system program")]
     #[account(1, name="token_2022_program", desc="The SPL Token 2022 program")]
     #[account(2, name="ata_program", desc="The associated token program")]
-    #[account(3, name="instructions", desc="The instructions sysvar")]
-    #[account(4, writable, signer, name="payer", desc="The account paying for the storage fees")]
-    #[account(5, name="vendor", desc="The vendor")]
-    #[account(6, name="product_mint", desc="The mint account for the product")]
-    #[account(7, name="product_associated_token", desc="The associated token account for the product")]
-    #[account(8, name="device", desc="The device")]
-    #[account(9, writable, name="device_mint", desc="The mint account for the device")]
-    #[account(10, writable, name="device_associated_token", desc="The associated token account for the device")]
-    #[account(11, name="owner", desc="The device's owner")]
+    #[account(3, writable, signer, name="payer", desc="The account paying for the storage fees")]
+    #[account(4, name="vendor", desc="The vendor")]
+    #[account(5, name="product_mint", desc="The mint account for the product")]
+    #[account(6, name="product_associated_token", desc="The associated token account for the product")]
+    #[account(7, name="device", desc="The device")]
+    #[account(8, writable, name="device_mint", desc="The mint account for the device")]
+    #[account(9, writable, name="device_associated_token", desc="The associated token account for the device")]
+    #[account(10, name="owner", desc="The device's owner")]
     ActivateDevice(ActivateDeviceArgs),
 }
-
 
 #[repr(C)]
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
@@ -94,32 +91,52 @@ impl DeviceActivationSignature {
         device_pubkey: &Pubkey,
         device_mint_pubkey: &Pubkey,
         owner_pubkey: &Pubkey,
-        timestamp: u64
+        timestamp: u64,
     ) -> ProgramResult {
         match self {
             DeviceActivationSignature::Ed25519(signature) => {
-                let message = [
-                    DEVICE_MESSAGE_PREFIX,
-                    device_mint_pubkey.as_ref(),
-                    owner_pubkey.as_ref(),
-                    &timestamp.to_le_bytes(),
-                ].concat();
-                crate::ed25519::verify_signature(device_pubkey, signature, &message)
-            },
+                #[cfg(feature = "ed25519-sign")]
+                {
+                    let message = [
+                        DEVICE_MESSAGE_PREFIX,
+                        device_mint_pubkey.as_ref(),
+                        owner_pubkey.as_ref(),
+                        &timestamp.to_le_bytes(),
+                    ]
+                    .concat();
+                    crate::ed25519::verify_signature(device_pubkey, signature, &message)
+                }
+                #[cfg(not(feature = "ed25519-sign"))]
+                {
+                    _ = signature;
+                    Err(solana_program::program_error::ProgramError::InvalidArgument)
+                }
+            }
             DeviceActivationSignature::Secp256k1(signature, recovery_id) => {
                 let message = [
                     DEVICE_MESSAGE_PREFIX,
                     device_mint_pubkey.as_ref(),
                     owner_pubkey.as_ref(),
                     &timestamp.to_le_bytes(),
-                ].concat();
+                ]
+                .concat();
                 crate::secp256k1::verify_signature(device_pubkey, signature, *recovery_id, &message)
-            },
+            }
             DeviceActivationSignature::EthSecp256k1(signature, recovery_id) => {
                 let message = timestamp.to_le_bytes();
-                let eip191_message = [EIP191_MESSAGE_PREFIX, message.len().to_string().as_bytes(), &message].concat();
-                crate::secp256k1::verify_signature(device_pubkey, signature, *recovery_id, eip191_message.as_ref())
-            },
+                let eip191_message = [
+                    EIP191_MESSAGE_PREFIX,
+                    message.len().to_string().as_bytes(),
+                    &message,
+                ]
+                .concat();
+                crate::secp256k1::verify_signature(
+                    device_pubkey,
+                    signature,
+                    *recovery_id,
+                    eip191_message.as_ref(),
+                )
+            }
         }
     }
 }
