@@ -1,0 +1,32 @@
+diff --git a/dist/templates/instructionsCpiPage.njk b/dist/templates/instructionsCpiPage.njk
+index b955b9acdec9fe52b2c10ba2b9abb1ad2401cff5..054b449a1e8d94cdb522c397305893c2e5241afe 100644
+--- a/dist/templates/instructionsCpiPage.njk
++++ b/dist/templates/instructionsCpiPage.njk
+@@ -150,9 +150,9 @@ impl<'a, 'b> {{ instruction.name | pascalCase }}Cpi<'a, 'b> {
+           is_writable: remaining_account.2,
+       })
+     });
+-    let {{ 'mut ' if hasArgs }}data = {{ instruction.name | pascalCase }}InstructionData::new().try_to_vec().unwrap();
++    let {{ 'mut ' if hasArgs }}data = borsh::to_vec(&{{ instruction.name | pascalCase }}InstructionData::new()).unwrap();
+     {% if hasArgs %}
+-      let mut args = self.__args.try_to_vec().unwrap();
++      let mut args = borsh::to_vec(&self.__args).unwrap();
+       data.append(&mut args);
+     {% endif %}
+ 
+diff --git a/dist/templates/instructionsPage.njk b/dist/templates/instructionsPage.njk
+index b58249d4a96464117234aab646ba7fe9f5114b1a..f5df940c05d7ea46440a3bb64c08909c2f016a14 100644
+--- a/dist/templates/instructionsPage.njk
++++ b/dist/templates/instructionsPage.njk
+@@ -93,9 +93,9 @@ impl {{ instruction.name | pascalCase }} {
+       {% endif %}
+     {% endfor %}
+     accounts.extend_from_slice(remaining_accounts);
+-    let {{ 'mut ' if hasArgs }}data = {{ instruction.name | pascalCase }}InstructionData::new().try_to_vec().unwrap();
++    let {{ 'mut ' if hasArgs }}data = borsh::to_vec(&{{ instruction.name | pascalCase }}InstructionData::new()).unwrap();
+     {% if hasArgs %}
+-      let mut args = args.try_to_vec().unwrap();
++      let mut args = borsh::to_vec(&args).unwrap();
+       data.append(&mut args);
+     {% endif %}
+ 

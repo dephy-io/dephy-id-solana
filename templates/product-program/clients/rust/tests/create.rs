@@ -1,15 +1,19 @@
 #![cfg(feature = "test-sbf")]
 
-use dephy_id_product_program_client::{accounts::Counter, instructions::CreateBuilder};
 use borsh::BorshDeserialize;
+use dephy_id_product_program_client::{accounts::Counter, instructions::CreateBuilder};
 use solana_program_test::{tokio, ProgramTest};
 use solana_sdk::{signature::Signer, transaction::Transaction};
 
 #[tokio::test]
 async fn create() {
-    let mut context = ProgramTest::new("dephy_id_product_program", dephy_id_product_program_client::ID, None)
-        .start_with_context()
-        .await;
+    let mut context = ProgramTest::new(
+        "dephy_id_product_program",
+        dephy_id_product_program_client::ID,
+        None,
+    )
+    .start_with_context()
+    .await;
 
     // Given a PDA derived from the payer's public key.
 
