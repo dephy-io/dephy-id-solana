@@ -10,7 +10,7 @@ import {themes as prismThemes} from 'prism-react-renderer';
 const config = {
   title: 'DePHY Wiki',
   tagline: 'The best framework to build DePIN Apps',
-  favicon: 'img/favicon.ico',
+  favicon: 'img/favicon.svg',
 
   // Set the production url of your site here
   url: 'https://dephy.io/',
@@ -94,14 +94,19 @@ const config = {
           },
           {to: '/blog', label: 'Blog', position: 'left'},
           {
+            label: 'Twitter',
+            position: 'right',
+            href: 'https://twitter.com/dephynetwork',
+          },
+          {
             label: 'GitHub',
             position: 'right',
             href: 'https://github.com/dephy-io',
           },
-          {
-            type: 'localeDropdown',
-            position: 'right',
-          },
+          // {
+          //   type: 'localeDropdown',
+          //   position: 'right',
+          // },
         ],
       },
       footer: {
