@@ -1,0 +1,22 @@
+[package]
+name = "dephy-id-product-program-cli"
+version = "0.0.1"
+description = "CLI for the DePHY ID Solana program"
+authors.workspace = true
+homepage.workspace = true
+repository.workspace = true
+license.workspace = true
+readme = "README.md"
+edition = "2021"
+publish = false
+
+[dependencies]
+borsh = { workspace = true }
+solana-sdk = { workspace = true }
+solana-client = { workspace = true }
+spl-token-2022 = { workspace = true }
+spl-associated-token-account = { workspace = true, features = ["no-entrypoint"] }
+spl-token-metadata-interface = { workspace = true }
+clap = { workspace = true, features = ["derive"] }
+dephy-id-program-client = { workspace = true }
+dephy-id-product-program = { path = "../program" }

@@ -1,6 +1,6 @@
 #!/usr/bin/env zx
 import "zx/globals";
-import fs from 'fs';
+import fs from 'node:fs';
 import * as k from "kinobi";
 import {rootNodeFromAnchor} from "@kinobi-so/nodes-from-anchor";
 import {renderVisitor as renderJavaScriptVisitor} from "@kinobi-so/renderers-js";
@@ -10,7 +10,7 @@ import {renderVisitor as renderUmiVisitor} from "@kinobi-so/renderers-js-umi";
 
 // Instanciate Kinobi.
 const [idl, ...additionalIdls] = getAllProgramIdls().filter(fs.existsSync).map(idl => rootNodeFromAnchor(require(idl)))
-const kinobi = k.createFromRoot(idl);
+const kinobi = k.createFromRoot(idl, additionalIdls);
 
 // Update programs.
 kinobi.update(

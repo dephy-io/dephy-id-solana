@@ -1,9 +1,12 @@
 [package]
 name = "dephy-id-product-program"
 version = "0.0.1"
+authors.workspace = true
+homepage.workspace = true
+repository.workspace = true
+license.workspace = true
+readme = "README.md"
 edition = "2021"
-readme = "./README.md"
-license-file = "../LICENSE"
 publish = false
 
 [package.metadata.solana]
