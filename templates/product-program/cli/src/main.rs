@@ -4,7 +4,7 @@ use borsh::BorshDeserialize;
 use clap::{Args, Parser, Subcommand};
 use dephy_id_program_client::find_device_mint;
 use dephy_id_product_program::{
-    instruction::{CreateVirtualDeviceArgs, InitArgs, ProgramInstruction},
+    instruction::{CreateDeviceArgs, InitArgs, ProgramInstruction},
     utils::find_device,
     state::ProgramAccount,
 };
@@ -34,7 +34,7 @@ struct Cli {
 #[derive(Debug, Subcommand)]
 enum Commands {
     InitProgram(InitProgramCliArgs),
-    CreateVirtualDevice(CreateVirtualDeviceCliArgs),
+    CreateDevice(CreateDeviceCliArgs),
 }
 
 #[derive(Debug, Args)]
@@ -51,7 +51,7 @@ struct InitProgramCliArgs {
 }
 
 #[derive(Debug, Args)]
-struct CreateVirtualDeviceCliArgs {
+struct CreateDeviceCliArgs {
     #[arg(long = "owner")]
     owner_keypair: String,
     #[arg(long, default_value_t = 42)]
@@ -90,7 +90,7 @@ fn main() {
 
     match args.command {
         Commands::InitProgram(args) => init_program(args),
-        Commands::CreateVirtualDevice(args) => create_virtual_device(args),
+        Commands::CreateDevice(args) => create_device(args),
     }
 }
 
@@ -183,7 +183,7 @@ fn init_program(args: InitProgramCliArgs) {
     };
 }
 
-fn create_virtual_device(args: CreateVirtualDeviceCliArgs) {
+fn create_device(args: CreateDeviceCliArgs) {
     let client = get_client(&args.common.url);
     let program_id = args
         .common
@@ -237,7 +237,7 @@ fn create_virtual_device(args: CreateVirtualDeviceCliArgs) {
     let transaction = Transaction::new_signed_with_payer(
         &[SolanaInstruction::new_with_borsh(
             program_id,
-            &ProgramInstruction::CreateVirtualDevice(CreateVirtualDeviceArgs { challenge: 42 }),
+            &ProgramInstruction::CreateDevice(CreateDeviceArgs { challenge: 42 }),
             vec![
                 // #[account(0, writable, name="program_pda", desc = "The program derived address of the program account to increment (seeds: ['Program'])")]
                 AccountMeta::new(program_account_pubkey, false),
@@ -257,7 +257,7 @@ fn create_virtual_device(args: CreateVirtualDeviceCliArgs) {
                 AccountMeta::new(product_mint_pubkey, false),
                 // #[account(8, name="owner", desc="The device's owner")]
                 AccountMeta::new(owner.pubkey(), false),
-                // #[account(9, name="device", desc = "PDA of the virtual device (seeds: ['DEVICE', owner])")]
+                // #[account(9, name="device", desc = "PDA of the device (seeds: ['DEVICE', owner])")]
                 AccountMeta::new(device_pubkey, false),
                 // #[account(10, writable, name="product_atoken", desc="The associated token account of the product")]
                 AccountMeta::new(product_atoken_pubkey, false),
@@ -275,7 +275,7 @@ fn create_virtual_device(args: CreateVirtualDeviceCliArgs) {
     match client.send_and_confirm_transaction(&transaction) {
         Ok(sig) => {
             println!("Success: {:?}", sig);
-            println!("Virtual Device Created: {}", device_pubkey);
+            println!("Device Created: {}", device_pubkey);
         }
         Err(err) => {
             eprintln!("Error: {:?}", err);

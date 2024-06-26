@@ -9,8 +9,8 @@ use spl_token_metadata_interface::state::TokenMetadata;
 use crate::assertions::{
     assert_pda, assert_same_pubkeys, assert_signer, assert_writable,
 };
-use crate::instruction::accounts::{CreateVirtualDeviceAccounts, InitAccounts};
-use crate::instruction::{CreateVirtualDeviceArgs, ProgramInstruction, InitArgs};
+use crate::instruction::accounts::{CreateDeviceAccounts, InitAccounts};
+use crate::instruction::{CreateDeviceArgs, ProgramInstruction, InitArgs};
 use crate::state::{ProgramAccount, Key};
 use crate::utils::create_account;
 
@@ -29,9 +29,9 @@ pub fn process_instruction<'a>(
             msg!("Instruction: Init");
             init(program_id, accounts, args)
         }
-        ProgramInstruction::CreateVirtualDevice(args) => {
-            msg!("Instruction: CreateVirtualDevice");
-            create_virtual_device(program_id, accounts, args)
+        ProgramInstruction::CreateDevice(args) => {
+            msg!("Instruction: CreateDevice");
+            create_device(program_id, accounts, args)
         }
     }
 }
@@ -95,13 +95,13 @@ fn init<'a>(program_id: &Pubkey, accounts: &'a [AccountInfo<'a>], args: InitArgs
     Ok(())
 }
 
-fn create_virtual_device<'a>(
+fn create_device<'a>(
     program_id: &Pubkey,
     accounts: &'a [AccountInfo<'a>],
-    args: CreateVirtualDeviceArgs,
+    args: CreateDeviceArgs,
 ) -> ProgramResult {
     // Accounts.
-    let ctx = CreateVirtualDeviceAccounts::context(accounts)?;
+    let ctx = CreateDeviceAccounts::context(accounts)?;
     let owner_pubkey = ctx.accounts.owner.key;
 
     let product_mint_data = ctx.accounts.product_mint.data.borrow();

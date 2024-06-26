@@ -30,16 +30,14 @@ import {
 import { PRODUCT_PROGRAM_PROGRAM_ADDRESS } from '../programs';
 import { getAccountMetaFactory, type ResolvedAccount } from '../shared';
 
-export type CreateVirtualDeviceInstruction<
+export type CreateDeviceInstruction<
   TProgram extends string = typeof PRODUCT_PROGRAM_PROGRAM_ADDRESS,
   TAccountProgramPda extends string | IAccountMeta<string> = string,
   TAccountPayer extends string | IAccountMeta<string> = string,
   TAccountSystemProgram extends
     | string
     | IAccountMeta<string> = '11111111111111111111111111111111',
-  TAccountToken2022Program extends
-    | string
-    | IAccountMeta<string> = 'TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb',
+  TAccountToken2022Program extends string | IAccountMeta<string> = string,
   TAccountAtaProgram extends
     | string
     | IAccountMeta<string> = 'ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL',
@@ -100,14 +98,14 @@ export type CreateVirtualDeviceInstruction<
     ]
   >;
 
-export type CreateVirtualDeviceInstructionData = {
+export type CreateDeviceInstructionData = {
   discriminator: number;
   challenge: number;
 };
 
-export type CreateVirtualDeviceInstructionDataArgs = { challenge: number };
+export type CreateDeviceInstructionDataArgs = { challenge: number };
 
-export function getCreateVirtualDeviceInstructionDataEncoder(): Encoder<CreateVirtualDeviceInstructionDataArgs> {
+export function getCreateDeviceInstructionDataEncoder(): Encoder<CreateDeviceInstructionDataArgs> {
   return transformEncoder(
     getStructEncoder([
       ['discriminator', getU8Encoder()],
@@ -117,24 +115,24 @@ export function getCreateVirtualDeviceInstructionDataEncoder(): Encoder<CreateVi
   );
 }
 
-export function getCreateVirtualDeviceInstructionDataDecoder(): Decoder<CreateVirtualDeviceInstructionData> {
+export function getCreateDeviceInstructionDataDecoder(): Decoder<CreateDeviceInstructionData> {
   return getStructDecoder([
     ['discriminator', getU8Decoder()],
     ['challenge', getU8Decoder()],
   ]);
 }
 
-export function getCreateVirtualDeviceInstructionDataCodec(): Codec<
-  CreateVirtualDeviceInstructionDataArgs,
-  CreateVirtualDeviceInstructionData
+export function getCreateDeviceInstructionDataCodec(): Codec<
+  CreateDeviceInstructionDataArgs,
+  CreateDeviceInstructionData
 > {
   return combineCodec(
-    getCreateVirtualDeviceInstructionDataEncoder(),
-    getCreateVirtualDeviceInstructionDataDecoder()
+    getCreateDeviceInstructionDataEncoder(),
+    getCreateDeviceInstructionDataDecoder()
   );
 }
 
-export type CreateVirtualDeviceInput<
+export type CreateDeviceInput<
   TAccountProgramPda extends string = string,
   TAccountPayer extends string = string,
   TAccountSystemProgram extends string = string,
@@ -156,7 +154,7 @@ export type CreateVirtualDeviceInput<
   /** The system program */
   systemProgram?: Address<TAccountSystemProgram>;
   /** The SPL Token 2022 program */
-  token2022Program?: Address<TAccountToken2022Program>;
+  token2022Program: Address<TAccountToken2022Program>;
   /** The associated token program */
   ataProgram?: Address<TAccountAtaProgram>;
   /** DePHY ID program id */
@@ -175,10 +173,10 @@ export type CreateVirtualDeviceInput<
   deviceMint: Address<TAccountDeviceMint>;
   /** The associated token account for the device */
   deviceAtoken: Address<TAccountDeviceAtoken>;
-  challenge: CreateVirtualDeviceInstructionDataArgs['challenge'];
+  challenge: CreateDeviceInstructionDataArgs['challenge'];
 };
 
-export function getCreateVirtualDeviceInstruction<
+export function getCreateDeviceInstruction<
   TAccountProgramPda extends string,
   TAccountPayer extends string,
   TAccountSystemProgram extends string,
@@ -193,7 +191,7 @@ export function getCreateVirtualDeviceInstruction<
   TAccountDeviceMint extends string,
   TAccountDeviceAtoken extends string,
 >(
-  input: CreateVirtualDeviceInput<
+  input: CreateDeviceInput<
     TAccountProgramPda,
     TAccountPayer,
     TAccountSystemProgram,
@@ -208,7 +206,7 @@ export function getCreateVirtualDeviceInstruction<
     TAccountDeviceMint,
     TAccountDeviceAtoken
   >
-): CreateVirtualDeviceInstruction<
+): CreateDeviceInstruction<
   typeof PRODUCT_PROGRAM_PROGRAM_ADDRESS,
   TAccountProgramPda,
   TAccountPayer,
@@ -259,10 +257,6 @@ export function getCreateVirtualDeviceInstruction<
     accounts.systemProgram.value =
       '11111111111111111111111111111111' as Address<'11111111111111111111111111111111'>;
   }
-  if (!accounts.token2022Program.value) {
-    accounts.token2022Program.value =
-      'TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb' as Address<'TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb'>;
-  }
   if (!accounts.ataProgram.value) {
     accounts.ataProgram.value =
       'ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL' as Address<'ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL'>;
@@ -286,10 +280,10 @@ export function getCreateVirtualDeviceInstruction<
       getAccountMeta(accounts.deviceAtoken),
     ],
     programAddress,
-    data: getCreateVirtualDeviceInstructionDataEncoder().encode(
-      args as CreateVirtualDeviceInstructionDataArgs
+    data: getCreateDeviceInstructionDataEncoder().encode(
+      args as CreateDeviceInstructionDataArgs
     ),
-  } as CreateVirtualDeviceInstruction<
+  } as CreateDeviceInstruction<
     typeof PRODUCT_PROGRAM_PROGRAM_ADDRESS,
     TAccountProgramPda,
     TAccountPayer,
@@ -309,7 +303,7 @@ export function getCreateVirtualDeviceInstruction<
   return instruction;
 }
 
-export type ParsedCreateVirtualDeviceInstruction<
+export type ParsedCreateDeviceInstruction<
   TProgram extends string = typeof PRODUCT_PROGRAM_PROGRAM_ADDRESS,
   TAccountMetas extends readonly IAccountMeta[] = readonly IAccountMeta[],
 > = {
@@ -342,17 +336,17 @@ export type ParsedCreateVirtualDeviceInstruction<
     /** The associated token account for the device */
     deviceAtoken: TAccountMetas[12];
   };
-  data: CreateVirtualDeviceInstructionData;
+  data: CreateDeviceInstructionData;
 };
 
-export function parseCreateVirtualDeviceInstruction<
+export function parseCreateDeviceInstruction<
   TProgram extends string,
   TAccountMetas extends readonly IAccountMeta[],
 >(
   instruction: IInstruction<TProgram> &
     IInstructionWithAccounts<TAccountMetas> &
     IInstructionWithData<Uint8Array>
-): ParsedCreateVirtualDeviceInstruction<TProgram, TAccountMetas> {
+): ParsedCreateDeviceInstruction<TProgram, TAccountMetas> {
   if (instruction.accounts.length < 13) {
     // TODO: Coded error.
     throw new Error('Not enough accounts');
@@ -380,8 +374,6 @@ export function parseCreateVirtualDeviceInstruction<
       deviceMint: getNextAccount(),
       deviceAtoken: getNextAccount(),
     },
-    data: getCreateVirtualDeviceInstructionDataDecoder().decode(
-      instruction.data
-    ),
+    data: getCreateDeviceInstructionDataDecoder().decode(instruction.data),
   };
 }

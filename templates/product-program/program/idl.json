@@ -84,7 +84,7 @@
       }
     },
     {
-      "name": "CreateVirtualDevice",
+      "name": "CreateDevice",
       "accounts": [
         {
           "name": "programPda",
@@ -193,9 +193,9 @@
       ],
       "args": [
         {
-          "name": "createVirtualDeviceArgs",
+          "name": "createDeviceArgs",
           "type": {
-            "defined": "CreateVirtualDeviceArgs"
+            "defined": "CreateDeviceArgs"
           }
         }
       ],
@@ -262,7 +262,7 @@
       }
     },
     {
-      "name": "CreateVirtualDeviceArgs",
+      "name": "CreateDeviceArgs",
       "type": {
         "kind": "struct",
         "fields": [

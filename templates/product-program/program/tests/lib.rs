@@ -1,6 +1,6 @@
 use dephy_id_program_client::find_device_mint;
 use dephy_id_product_program::{
-    instruction::{CreateVirtualDeviceArgs, ProgramInstruction, InitArgs},
+    instruction::{CreateDeviceArgs, ProgramInstruction, InitArgs},
     utils::find_device,
     state::ProgramAccount,
 };
@@ -52,7 +52,7 @@ async fn test_all() {
 
     let owner = Keypair::new();
 
-    test_create_virtual_device(
+    test_create_device(
         &mut ctx,
         program_id,
         program_account_pubkey,
@@ -118,7 +118,7 @@ async fn test_init(
     assert_eq!(program_account.data.len(), ProgramAccount::LEN);
 }
 
-async fn test_create_virtual_device(
+async fn test_create_device(
     ctx: &mut ProgramTestContext,
     program_id: Pubkey,
     program_account_pubkey: Pubkey,
@@ -146,7 +146,7 @@ async fn test_create_virtual_device(
     let mut transaction = Transaction::new_with_payer(
         &[SolanaInstruction::new_with_borsh(
             program_id,
-            &ProgramInstruction::CreateVirtualDevice(CreateVirtualDeviceArgs { challenge: 42 }),
+            &ProgramInstruction::CreateDevice(CreateDeviceArgs { challenge: 42 }),
             vec![
                 // #[account(0, writable, name="program_pda", desc = "The program derived address of the program account to increment (seeds: ['Program'])")]
                 AccountMeta::new(program_account_pubkey, false),
@@ -166,7 +166,7 @@ async fn test_create_virtual_device(
                 AccountMeta::new(product_mint_pubkey, false),
                 // #[account(8, name="owner", desc="The device's owner")]
                 AccountMeta::new(owner.pubkey(), false),
-                // #[account(9, name="device", desc = "PDA of the virtual device (seeds: ['DEVICE', owner])")]
+                // #[account(9, name="device", desc = "PDA of the device (seeds: ['DEVICE', owner])")]
                 AccountMeta::new(device_pubkey, false),
                 // #[account(10, writable, name="product_atoken", desc="The associated token account of the product")]
                 AccountMeta::new(product_atoken_pubkey, false),

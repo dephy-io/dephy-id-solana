@@ -8,7 +8,7 @@
 
 import { containsBytes, getU8Encoder, type Address } from '@solana/web3.js';
 import {
-  type ParsedCreateVirtualDeviceInstruction,
+  type ParsedCreateDeviceInstruction,
   type ParsedInitInstruction,
 } from '../instructions';
 import { Key, getKeyEncoder } from '../types';
@@ -34,7 +34,7 @@ export function identifyProductProgramAccount(
 
 export enum ProductProgramInstruction {
   Init,
-  CreateVirtualDevice,
+  CreateDevice,
 }
 
 export function identifyProductProgramInstruction(
@@ -46,7 +46,7 @@ export function identifyProductProgramInstruction(
     return ProductProgramInstruction.Init;
   }
   if (containsBytes(data, getU8Encoder().encode(1), 0)) {
-    return ProductProgramInstruction.CreateVirtualDevice;
+    return ProductProgramInstruction.CreateDevice;
   }
   throw new Error(
     'The provided instruction could not be identified as a productProgram instruction.'
@@ -60,5 +60,5 @@ export type ParsedProductProgramInstruction<
       instructionType: ProductProgramInstruction.Init;
     } & ParsedInitInstruction<TProgram>)
   | ({
-      instructionType: ProductProgramInstruction.CreateVirtualDevice;
-    } & ParsedCreateVirtualDeviceInstruction<TProgram>);
+      instructionType: ProductProgramInstruction.CreateDevice;
+    } & ParsedCreateDeviceInstruction<TProgram>);

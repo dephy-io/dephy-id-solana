@@ -16,7 +16,7 @@ pub enum ProgramInstruction {
     #[account(7, writable, name="product_mint", desc="PDA of the product mint account (program: dephy_id, seeds: ['DePHY_ID-PRODUCT', vendor, PRODUCT_NAME])")]
     Init(InitArgs),
 
-    /// Create a Virtual Device
+    /// Create a  Device
     #[account(0, writable, name="program_pda", desc = "The program derived address of the program account to create (seeds: ['Program'])")]
     #[account(1, writable, signer, name="payer", desc = "The account paying for the storage fees")]
     #[account(2, name="system_program", desc = "The system program")]
@@ -30,7 +30,7 @@ pub enum ProgramInstruction {
     #[account(10, writable, name="product_atoken", desc="The associated token account of the product")]
     #[account(11, writable, name="device_mint", desc="The mint account of the device")]
     #[account(12, writable, name="device_atoken", desc="The associated token account for the device")]
-    CreateVirtualDevice(CreateVirtualDeviceArgs),
+    CreateDevice(CreateDeviceArgs),
 }
 
 
@@ -45,7 +45,7 @@ pub struct InitArgs {
 
 #[repr(C)]
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
-pub struct CreateVirtualDeviceArgs {
+pub struct CreateDeviceArgs {
     pub challenge: u8,
 }
 

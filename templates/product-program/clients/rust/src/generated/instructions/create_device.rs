@@ -9,7 +9,7 @@ use borsh::BorshDeserialize;
 use borsh::BorshSerialize;
 
 /// Accounts.
-pub struct CreateVirtualDevice {
+pub struct CreateDevice {
     /// The program derived address of the program account to create (seeds: ['Program'])
     pub program_pda: solana_program::pubkey::Pubkey,
     /// The account paying for the storage fees
@@ -38,17 +38,17 @@ pub struct CreateVirtualDevice {
     pub device_atoken: solana_program::pubkey::Pubkey,
 }
 
-impl CreateVirtualDevice {
+impl CreateDevice {
     pub fn instruction(
         &self,
-        args: CreateVirtualDeviceInstructionArgs,
+        args: CreateDeviceInstructionArgs,
     ) -> solana_program::instruction::Instruction {
         self.instruction_with_remaining_accounts(args, &[])
     }
     #[allow(clippy::vec_init_then_push)]
     pub fn instruction_with_remaining_accounts(
         &self,
-        args: CreateVirtualDeviceInstructionArgs,
+        args: CreateDeviceInstructionArgs,
         remaining_accounts: &[solana_program::instruction::AccountMeta],
     ) -> solana_program::instruction::Instruction {
         let mut accounts = Vec::with_capacity(13 + remaining_accounts.len());
@@ -103,7 +103,7 @@ impl CreateVirtualDevice {
             false,
         ));
         accounts.extend_from_slice(remaining_accounts);
-        let mut data = borsh::to_vec(&CreateVirtualDeviceInstructionData::new()).unwrap();
+        let mut data = borsh::to_vec(&CreateDeviceInstructionData::new()).unwrap();
         let mut args = borsh::to_vec(&args).unwrap();
         data.append(&mut args);
 
@@ -116,17 +116,17 @@ impl CreateVirtualDevice {
 }
 
 #[derive(BorshDeserialize, BorshSerialize)]
-pub struct CreateVirtualDeviceInstructionData {
+pub struct CreateDeviceInstructionData {
     discriminator: u8,
 }
 
-impl CreateVirtualDeviceInstructionData {
+impl CreateDeviceInstructionData {
     pub fn new() -> Self {
         Self { discriminator: 1 }
     }
 }
 
-impl Default for CreateVirtualDeviceInstructionData {
+impl Default for CreateDeviceInstructionData {
     fn default() -> Self {
         Self::new()
     }
@@ -134,18 +134,18 @@ impl Default for CreateVirtualDeviceInstructionData {
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-pub struct CreateVirtualDeviceInstructionArgs {
+pub struct CreateDeviceInstructionArgs {
     pub challenge: u8,
 }
 
-/// Instruction builder for `CreateVirtualDevice`.
+/// Instruction builder for `CreateDevice`.
 ///
 /// ### Accounts:
 ///
 ///   0. `[writable]` program_pda
 ///   1. `[writable, signer]` payer
 ///   2. `[optional]` system_program (default to `11111111111111111111111111111111`)
-///   3. `[optional]` token2022_program (default to `TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb`)
+///   3. `[]` token2022_program
 ///   4. `[optional]` ata_program (default to `ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL`)
 ///   5. `[]` dephy_id_program
 ///   6. `[]` vendor
@@ -156,7 +156,7 @@ pub struct CreateVirtualDeviceInstructionArgs {
 ///   11. `[writable]` device_mint
 ///   12. `[writable]` device_atoken
 #[derive(Clone, Debug, Default)]
-pub struct CreateVirtualDeviceBuilder {
+pub struct CreateDeviceBuilder {
     program_pda: Option<solana_program::pubkey::Pubkey>,
     payer: Option<solana_program::pubkey::Pubkey>,
     system_program: Option<solana_program::pubkey::Pubkey>,
@@ -174,7 +174,7 @@ pub struct CreateVirtualDeviceBuilder {
     __remaining_accounts: Vec<solana_program::instruction::AccountMeta>,
 }
 
-impl CreateVirtualDeviceBuilder {
+impl CreateDeviceBuilder {
     pub fn new() -> Self {
         Self::default()
     }
@@ -197,7 +197,6 @@ impl CreateVirtualDeviceBuilder {
         self.system_program = Some(system_program);
         self
     }
-    /// `[optional account, default to 'TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb']`
     /// The SPL Token 2022 program
     #[inline(always)]
     pub fn token2022_program(
@@ -290,15 +289,15 @@ impl CreateVirtualDeviceBuilder {
     }
     #[allow(clippy::clone_on_copy)]
     pub fn instruction(&self) -> solana_program::instruction::Instruction {
-        let accounts = CreateVirtualDevice {
+        let accounts = CreateDevice {
             program_pda: self.program_pda.expect("program_pda is not set"),
             payer: self.payer.expect("payer is not set"),
             system_program: self
                 .system_program
                 .unwrap_or(solana_program::pubkey!("11111111111111111111111111111111")),
-            token2022_program: self.token2022_program.unwrap_or(solana_program::pubkey!(
-                "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb"
-            )),
+            token2022_program: self
+                .token2022_program
+                .expect("token2022_program is not set"),
             ata_program: self.ata_program.unwrap_or(solana_program::pubkey!(
                 "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
             )),
@@ -311,7 +310,7 @@ impl CreateVirtualDeviceBuilder {
             device_mint: self.device_mint.expect("device_mint is not set"),
             device_atoken: self.device_atoken.expect("device_atoken is not set"),
         };
-        let args = CreateVirtualDeviceInstructionArgs {
+        let args = CreateDeviceInstructionArgs {
             challenge: self.challenge.clone().expect("challenge is not set"),
         };
 
@@ -319,8 +318,8 @@ impl CreateVirtualDeviceBuilder {
     }
 }
 
-/// `create_virtual_device` CPI accounts.
-pub struct CreateVirtualDeviceCpiAccounts<'a, 'b> {
+/// `create_device` CPI accounts.
+pub struct CreateDeviceCpiAccounts<'a, 'b> {
     /// The program derived address of the program account to create (seeds: ['Program'])
     pub program_pda: &'b solana_program::account_info::AccountInfo<'a>,
     /// The account paying for the storage fees
@@ -349,8 +348,8 @@ pub struct CreateVirtualDeviceCpiAccounts<'a, 'b> {
     pub device_atoken: &'b solana_program::account_info::AccountInfo<'a>,
 }
 
-/// `create_virtual_device` CPI instruction.
-pub struct CreateVirtualDeviceCpi<'a, 'b> {
+/// `create_device` CPI instruction.
+pub struct CreateDeviceCpi<'a, 'b> {
     /// The program to invoke.
     pub __program: &'b solana_program::account_info::AccountInfo<'a>,
     /// The program derived address of the program account to create (seeds: ['Program'])
@@ -380,14 +379,14 @@ pub struct CreateVirtualDeviceCpi<'a, 'b> {
     /// The associated token account for the device
     pub device_atoken: &'b solana_program::account_info::AccountInfo<'a>,
     /// The arguments for the instruction.
-    pub __args: CreateVirtualDeviceInstructionArgs,
+    pub __args: CreateDeviceInstructionArgs,
 }
 
-impl<'a, 'b> CreateVirtualDeviceCpi<'a, 'b> {
+impl<'a, 'b> CreateDeviceCpi<'a, 'b> {
     pub fn new(
         program: &'b solana_program::account_info::AccountInfo<'a>,
-        accounts: CreateVirtualDeviceCpiAccounts<'a, 'b>,
-        args: CreateVirtualDeviceInstructionArgs,
+        accounts: CreateDeviceCpiAccounts<'a, 'b>,
+        args: CreateDeviceInstructionArgs,
     ) -> Self {
         Self {
             __program: program,
@@ -500,7 +499,7 @@ impl<'a, 'b> CreateVirtualDeviceCpi<'a, 'b> {
                 is_writable: remaining_account.2,
             })
         });
-        let mut data = borsh::to_vec(&CreateVirtualDeviceInstructionData::new()).unwrap();
+        let mut data = borsh::to_vec(&CreateDeviceInstructionData::new()).unwrap();
         let mut args = borsh::to_vec(&self.__args).unwrap();
         data.append(&mut args);
 
@@ -536,7 +535,7 @@ impl<'a, 'b> CreateVirtualDeviceCpi<'a, 'b> {
     }
 }
 
-/// Instruction builder for `CreateVirtualDevice` via CPI.
+/// Instruction builder for `CreateDevice` via CPI.
 ///
 /// ### Accounts:
 ///
@@ -554,13 +553,13 @@ impl<'a, 'b> CreateVirtualDeviceCpi<'a, 'b> {
 ///   11. `[writable]` device_mint
 ///   12. `[writable]` device_atoken
 #[derive(Clone, Debug)]
-pub struct CreateVirtualDeviceCpiBuilder<'a, 'b> {
-    instruction: Box<CreateVirtualDeviceCpiBuilderInstruction<'a, 'b>>,
+pub struct CreateDeviceCpiBuilder<'a, 'b> {
+    instruction: Box<CreateDeviceCpiBuilderInstruction<'a, 'b>>,
 }
 
-impl<'a, 'b> CreateVirtualDeviceCpiBuilder<'a, 'b> {
+impl<'a, 'b> CreateDeviceCpiBuilder<'a, 'b> {
     pub fn new(program: &'b solana_program::account_info::AccountInfo<'a>) -> Self {
-        let instruction = Box::new(CreateVirtualDeviceCpiBuilderInstruction {
+        let instruction = Box::new(CreateDeviceCpiBuilderInstruction {
             __program: program,
             program_pda: None,
             payer: None,
@@ -737,14 +736,14 @@ impl<'a, 'b> CreateVirtualDeviceCpiBuilder<'a, 'b> {
         &self,
         signers_seeds: &[&[&[u8]]],
     ) -> solana_program::entrypoint::ProgramResult {
-        let args = CreateVirtualDeviceInstructionArgs {
+        let args = CreateDeviceInstructionArgs {
             challenge: self
                 .instruction
                 .challenge
                 .clone()
                 .expect("challenge is not set"),
         };
-        let instruction = CreateVirtualDeviceCpi {
+        let instruction = CreateDeviceCpi {
             __program: self.instruction.__program,
 
             program_pda: self
@@ -809,7 +808,7 @@ impl<'a, 'b> CreateVirtualDeviceCpiBuilder<'a, 'b> {
 }
 
 #[derive(Clone, Debug)]
-struct CreateVirtualDeviceCpiBuilderInstruction<'a, 'b> {
+struct CreateDeviceCpiBuilderInstruction<'a, 'b> {
     __program: &'b solana_program::account_info::AccountInfo<'a>,
     program_pda: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     payer: Option<&'b solana_program::account_info::AccountInfo<'a>>,

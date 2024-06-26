@@ -6,5 +6,5 @@
  * @see https://github.com/kinobi-so/kinobi
  */
 
-export * from './createVirtualDevice';
+export * from './createDevice';
 export * from './init';

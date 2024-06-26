@@ -5,8 +5,8 @@
 //! <https://github.com/kinobi-so/kinobi>
 //!
 
-pub(crate) mod r#create_virtual_device;
+pub(crate) mod r#create_device;
 pub(crate) mod r#init;
 
-pub use self::r#create_virtual_device::*;
+pub use self::r#create_device::*;
 pub use self::r#init::*;
