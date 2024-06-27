@@ -5,6 +5,10 @@ sidebar_label: Prerequisites
 
 # Prerequisites
 
+## Tech Background
+
+Please read the [**article**](/docs/tutorial-basics/tech_background.md) about DePHY Tech Background.
+
 ## Setup Environment
 
 ### Install Rust
