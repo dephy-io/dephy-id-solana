@@ -1,9 +1,11 @@
-import { TypedDocumentNode } from '@graphql-typed-document-node/core';
+import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
 import { parse } from 'graphql'
 import { gql, GraphQLClient } from 'graphql-request'
-import { GetProductQuery, GetProductQueryVariables, GetProductsQuery, GetVendorQuery, GetVendorQueryVariables, GetDeviceQuery, GetDeviceQueryVariables } from './gql'
+import type { GetProductQuery, GetProductQueryVariables, GetProductsQuery, GetVendorQuery, GetVendorQueryVariables, GetDeviceQuery, GetDeviceQueryVariables } from './gql/graphql'
 
-const endpoint = 'http://localhost:10700/branch/main/graphql'
+const endpoint = 'http://localhost:10701/branch/main/graphql'
+// const endpoint = 'https://indexer-dev-api.dephy.id/branch/main/graphql/explore'
+
 export const gqlClient = new GraphQLClient(endpoint)
 
 export async function getProducts() {
@@ -30,7 +32,6 @@ export async function getProducts() {
 
   return await gqlClient.request(query, variables)
 }
-
 
 export async function getProduct(mint_account: string, offset: number, limit: number) {
   const query: TypedDocumentNode<GetProductQuery> = parse(gql`
@@ -82,7 +83,6 @@ export async function getProduct(mint_account: string, offset: number, limit: nu
   return await gqlClient.request(query, variables)
 }
 
-
 export async function getVendor(vendor_pubkey: string) {
   const query: TypedDocumentNode<GetVendorQuery> = parse(gql`
     query getVendor($vendor_pubkey: String) {
@@ -113,7 +113,6 @@ export async function getVendor(vendor_pubkey: string) {
 
   return await gqlClient.request(query, variables)
 }
-
 
 export async function getDevice(device_pubkey: string) {
   const query: TypedDocumentNode<GetDeviceQuery> = parse(gql`

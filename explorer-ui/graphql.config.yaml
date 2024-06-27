@@ -1,0 +1,4 @@
+schema:
+  - http://localhost:10700/branch/main/graphql:
+      headers:
+        x-hasura-admin-secret: nhost-admin-secret
