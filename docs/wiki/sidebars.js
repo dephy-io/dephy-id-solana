@@ -23,11 +23,7 @@ const sidebars = {
       label: 'Quickstart',
       // dirName: 'quickstart',
       items: ['quickstart/prerequisites',
-       'quickstart/register', 'quickstart/activate', 'quickstart/device',
-       'quickstart/led',  'quickstart/thermometer-1', 'quickstart/thermometer-2',
-       'quickstart/communicate', 'quickstart/staking',
-       'quickstart/lock', 'quickstart/data',
-      ],
+       'quickstart/register', 'quickstart/activate',],
     },
   ],
 
