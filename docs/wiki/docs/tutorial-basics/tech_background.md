@@ -3,13 +3,9 @@ sidebar_position: 0
 sidebar_label: Tech Background
 ---
 
-## Technical Background
+# Tech Background
 
-## What is DePHY Network
-
-Decentralized low-latency off-chain network for DePIN with verifiability and composability
-
-### Why Web3 needs real-world
+## Why Web3 needs real-world
 
 - The physical and blockchain worlds exist as separate entities, yet there’s a critical interplace between them
 
@@ -20,6 +16,11 @@ Decentralized low-latency off-chain network for DePIN with verifiability and com
 - Revolutionizing economics through digital integration:
     - Historically, translating real-world actions into valuable digital assets or incentives has been a slow and complex process.
     - The prevailing trend of data monopolization by centralized entities (often large corporations) underscores the need for a new economic model that leverages decentralized technologies.
+
+## What is DePHY Network
+
+Decentralized low-latency off-chain network for DePIN with verifiability and composability
+
 
 ## How does DePHY work?
 
