@@ -5,7 +5,8 @@ import styles from './styles.module.css';
 const FeatureList = [
   {
     title: 'Cost Efficiency',
-    Svg: require('@site/static/img/undraw_docusaurus_mountain.svg').default,
+    // scale: 10.0,
+    Svg: require('@site/static/img/lan.svg').default,
     description: (
       <>
         DePHY offers an open-source hardware solution, complemented by SDKs and tools,
@@ -15,7 +16,7 @@ const FeatureList = [
   },
   {
     title: 'Low Latency',
-    Svg: require('@site/static/img/undraw_docusaurus_tree.svg').default,
+    Svg: require('@site/static/img/speed.svg').default,
     description: (
       <>
         DePHY’s node synchronization operates at the 500ms level,
@@ -26,7 +27,7 @@ const FeatureList = [
   },
   {
     title: 'Verifiability',
-    Svg: require('@site/static/img/undraw_docusaurus_react.svg').default,
+    Svg: require('@site/static/img/shield.svg').default,
     description: (
       <>
         DePHY uses Soulbound DID for devices with secure, tamper-proof hardware,
