@@ -4,11 +4,6 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
-patchedDependencies:
-  '@kinobi-so/renderers-rust@0.20.10':
-    hash: 4enzrly4t4usefdxlj442bgdqq
-    path: patches/@kinobi-so__renderers-rust@0.20.10.patch
-
 importers:
 
   .:
@@ -37,7 +32,7 @@ importers:
         version: 0.20.6(fastestsmallesttextencoderdecoder@1.0.22)
       '@kinobi-so/renderers-rust':
         specifier: ^0.20.10
-        version: 0.20.10(patch_hash=4enzrly4t4usefdxlj442bgdqq)(fastestsmallesttextencoderdecoder@1.0.22)
+        version: 0.20.10(fastestsmallesttextencoderdecoder@1.0.22)
       kinobi:
         specifier: ^0.20.4
         version: 0.20.4
@@ -2796,7 +2791,7 @@ snapshots:
       - chokidar
       - fastestsmallesttextencoderdecoder
 
-  '@kinobi-so/renderers-rust@0.20.10(patch_hash=4enzrly4t4usefdxlj442bgdqq)(fastestsmallesttextencoderdecoder@1.0.22)':
+  '@kinobi-so/renderers-rust@0.20.10(fastestsmallesttextencoderdecoder@1.0.22)':
     dependencies:
       '@kinobi-so/errors': 0.20.4
       '@kinobi-so/nodes': 0.20.4
