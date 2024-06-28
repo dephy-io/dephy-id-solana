@@ -71,13 +71,18 @@ const config = {
   themeConfig:
     /** @type {import('@docusaurus/preset-classic').ThemeConfig} */
     ({
+
+      colorMode:{
+        defaultMode: 'light',
+      },
       // Replace with your project's social card
-      image: 'img/dephy.jpg',
+      image: 'img/dephy.svg',
       navbar: {
         title: 'DePHY',
         logo: {
-          alt: 'Logo',
-          src: 'img/dephy.svg',
+          alt: 'DePHY Logo',
+          srcDark: "img/logo.svg",
+          src: "img/logo_dark.svg",
         },
         items: [
           {
@@ -92,7 +97,7 @@ const config = {
             position: 'left',
             label: 'Guides',
           },
-          {to: '/blog', label: 'Blog', position: 'left'},
+          // {to: '/blog', label: 'Blog', position: 'left'},
           {
             label: 'Twitter',
             position: 'right',
