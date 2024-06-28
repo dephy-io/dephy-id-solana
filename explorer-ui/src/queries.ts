@@ -3,10 +3,12 @@ import { parse } from 'graphql'
 import { gql, GraphQLClient } from 'graphql-request'
 import type { GetProductQuery, GetProductQueryVariables, GetProductsQuery, GetVendorQuery, GetVendorQueryVariables, GetDeviceQuery, GetDeviceQueryVariables } from './gql/graphql'
 
-const endpoint = 'http://localhost:10701/branch/main/graphql'
+import { env } from '@/env';
+
+// const endpoint = 'http://localhost:10701/branch/main/graphql'
 // const endpoint = 'https://indexer-dev-api.dephy.id/branch/main/graphql/explore'
 
-export const gqlClient = new GraphQLClient(endpoint)
+export const gqlClient = new GraphQLClient(env.NEXT_PUBLIC_GRAPHQL_URI)
 
 export async function getProducts() {
   const query: TypedDocumentNode<GetProductsQuery> = parse(gql`
