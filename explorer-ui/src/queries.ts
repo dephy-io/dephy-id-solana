@@ -159,3 +159,15 @@ export async function getDevice(device_pubkey: string) {
 
   return await gqlClient.request(query, variables)
 }
+
+// export async function getDeviceCount() {
+//   const query: TypedDocumentNode<GetDeviceCountQuery> = parse(gpl`
+//     query getDeviceCount {
+//       count(Device)
+//     }
+//     `)
+
+//   const variables = {}
+
+//   return await GraphQLClient.request(query, variables)
+// }
