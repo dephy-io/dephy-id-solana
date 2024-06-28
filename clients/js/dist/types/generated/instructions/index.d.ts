@@ -6,6 +6,7 @@
  * @see https://github.com/kinobi-so/kinobi
  */
 export * from './activateDevice';
+export * from './createActivatedDevice';
 export * from './createDevice';
 export * from './createProduct';
 export * from './initialize';

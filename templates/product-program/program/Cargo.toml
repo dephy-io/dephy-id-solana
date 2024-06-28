@@ -1,0 +1,34 @@
+[package]
+name = "dephy-id-product-program"
+version = "0.0.1"
+authors.workspace = true
+homepage.workspace = true
+repository.workspace = true
+license.workspace = true
+readme = "README.md"
+edition = "2021"
+publish = false
+
+[package.metadata.solana]
+program-id = "8QFRWuQBMgkGrQFQAbHBRhXVw8BUGBLK5FJ4jiJWuu8G"
+program-dependencies = []
+account-dependencies = []
+
+[lib]
+crate-type = ["cdylib", "lib"]
+
+[dependencies]
+borsh = { workspace = true }
+shank = { workspace = true }
+num-derive = { workspace = true }
+num-traits = { workspace = true }
+thiserror = { workspace = true }
+solana-program = { workspace = true }
+spl-token-2022 = { workspace = true, features = ["no-entrypoint"] }
+spl-token-metadata-interface = { workspace = true }
+spl-associated-token-account = { workspace = true, features = ["no-entrypoint"] }
+dephy-id-program-client = { workspace = true }
+
+[dev-dependencies]
+solana-program-test = { workspace = true }
+solana-sdk = { workspace = true }

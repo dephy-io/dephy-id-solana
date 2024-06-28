@@ -6,7 +6,7 @@
  * @see https://github.com/kinobi-so/kinobi
  */
 import { type Address } from '@solana/web3.js';
-import { type ParsedActivateDeviceInstruction, type ParsedCreateDeviceInstruction, type ParsedCreateProductInstruction, type ParsedInitializeInstruction } from '../instructions';
+import { type ParsedActivateDeviceInstruction, type ParsedCreateActivatedDeviceInstruction, type ParsedCreateDeviceInstruction, type ParsedCreateProductInstruction, type ParsedInitializeInstruction } from '../instructions';
 export declare const DEPHY_ID_PROGRAM_ADDRESS: Address<"hdMghjD73uASxgJXi6e1mGPsXqnADMsrqB1bveqABP1">;
 export declare enum DephyIdAccount {
     ProgramDataAccount = 0
@@ -18,7 +18,8 @@ export declare enum DephyIdInstruction {
     Initialize = 0,
     CreateProduct = 1,
     CreateDevice = 2,
-    ActivateDevice = 3
+    ActivateDevice = 3,
+    CreateActivatedDevice = 4
 }
 export declare function identifyDephyIdInstruction(instruction: {
     data: Uint8Array;
@@ -31,5 +32,7 @@ export type ParsedDephyIdInstruction<TProgram extends string = 'hdMghjD73uASxgJX
     instructionType: DephyIdInstruction.CreateDevice;
 } & ParsedCreateDeviceInstruction<TProgram>) | ({
     instructionType: DephyIdInstruction.ActivateDevice;
-} & ParsedActivateDeviceInstruction<TProgram>);
+} & ParsedActivateDeviceInstruction<TProgram>) | ({
+    instructionType: DephyIdInstruction.CreateActivatedDevice;
+} & ParsedCreateActivatedDeviceInstruction<TProgram>);
 //# sourceMappingURL=dephyId.d.ts.map
