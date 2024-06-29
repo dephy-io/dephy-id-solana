@@ -18,6 +18,8 @@ serde = { workspace = true, optional = true, features = ["derive"] }
 serde_with = { workspace = true, optional = true }
 solana-program = { workspace = true }
 thiserror = { workspace = true }
+spl-token-2022 = { workspace = true }
+spl-associated-token-account = { workspace = true }
 
 [dev-dependencies]
 assert_matches = { workspace = true }

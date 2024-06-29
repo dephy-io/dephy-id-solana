@@ -44,7 +44,7 @@ export type CreateDeviceInput<TAccountSystemProgram extends string = string, TAc
     /** The associated token program */
     ataProgram?: Address<TAccountAtaProgram>;
     /** The account paying for the storage fees */
-    payer: TransactionSigner<TAccountPayer>;
+    payer?: TransactionSigner<TAccountPayer>;
     /** The vendor */
     vendor: TransactionSigner<TAccountVendor>;
     /** The mint account of the product */

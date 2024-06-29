@@ -5,7 +5,10 @@
  *
  * @see https://github.com/kinobi-so/kinobi
  */
+export * from './deviceAToken';
 export * from './deviceMint';
+export * from './productAToken';
 export * from './productMint';
+export * from './programData';
 export * from './programDataAccount';
 //# sourceMappingURL=index.d.ts.map

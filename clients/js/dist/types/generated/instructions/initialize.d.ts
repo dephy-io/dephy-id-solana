@@ -28,7 +28,7 @@ export type InitializeInput<TAccountSystemProgram extends string = string, TAcco
     /** The system program */
     systemProgram?: Address<TAccountSystemProgram>;
     /** The account paying for the storage fees */
-    payer: TransactionSigner<TAccountPayer>;
+    payer?: TransactionSigner<TAccountPayer>;
     /** The program data account for the program */
     programData: Address<TAccountProgramData>;
     /** The authority account of the program */

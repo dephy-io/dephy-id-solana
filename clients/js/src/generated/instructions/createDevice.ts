@@ -39,7 +39,11 @@ import {
   type WritableSignerAccount,
 } from '@solana/web3.js';
 import { DEPHY_ID_PROGRAM_ADDRESS } from '../programs';
-import { getAccountMetaFactory, type ResolvedAccount } from '../shared';
+import {
+  expectSome,
+  getAccountMetaFactory,
+  type ResolvedAccount,
+} from '../shared';
 import {
   getDeviceSigningAlgorithmDecoder,
   getDeviceSigningAlgorithmEncoder,
@@ -184,7 +188,7 @@ export type CreateDeviceInput<
   /** The associated token program */
   ataProgram?: Address<TAccountAtaProgram>;
   /** The account paying for the storage fees */
-  payer: TransactionSigner<TAccountPayer>;
+  payer?: TransactionSigner<TAccountPayer>;
   /** The vendor */
   vendor: TransactionSigner<TAccountVendor>;
   /** The mint account of the product */
@@ -276,6 +280,9 @@ export function getCreateDeviceInstruction<
   if (!accounts.ataProgram.value) {
     accounts.ataProgram.value =
       'ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL' as Address<'ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL'>;
+  }
+  if (!accounts.payer.value) {
+    accounts.payer.value = expectSome(accounts.vendor.value);
   }
 
   const getAccountMeta = getAccountMetaFactory(programAddress, 'programId');
