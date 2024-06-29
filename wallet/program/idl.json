@@ -1,0 +1,281 @@
+{
+  "version": "0.0.0",
+  "name": "dephy_id_wallet",
+  "instructions": [
+    {
+      "name": "Create",
+      "accounts": [
+        {
+          "name": "wallet",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "The program derived address of the wallet account to create (seeds: ['WALLET', authority])"
+          ]
+        },
+        {
+          "name": "authority",
+          "isMut": false,
+          "isSigner": true,
+          "docs": [
+            "The authority of the wallet"
+          ]
+        },
+        {
+          "name": "vault",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The wallet vault (seeds: ['VAULT', wallet])"
+          ]
+        },
+        {
+          "name": "vendor",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The vendor"
+          ]
+        },
+        {
+          "name": "productMint",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The mint account for the product"
+          ]
+        },
+        {
+          "name": "productAssociatedToken",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The associated token account for the product"
+          ]
+        },
+        {
+          "name": "device",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The device"
+          ]
+        },
+        {
+          "name": "deviceMint",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The mint account for the device"
+          ]
+        },
+        {
+          "name": "deviceAssociatedToken",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "DID associated token owned by authority"
+          ]
+        },
+        {
+          "name": "payer",
+          "isMut": true,
+          "isSigner": true,
+          "docs": [
+            "The account paying for the storage fees"
+          ]
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The system program"
+          ]
+        },
+        {
+          "name": "token2022Program",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The SPL Token 2022 program"
+          ]
+        },
+        {
+          "name": "ataProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The associated token program"
+          ]
+        }
+      ],
+      "args": [
+        {
+          "name": "bump",
+          "type": "u8"
+        }
+      ],
+      "discriminant": {
+        "type": "u8",
+        "value": 0
+      }
+    },
+    {
+      "name": "ProxyCall",
+      "accounts": [
+        {
+          "name": "wallet",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The program derived address of the wallet account to increment (seeds: ['WALLET', authority])"
+          ]
+        },
+        {
+          "name": "authority",
+          "isMut": false,
+          "isSigner": true,
+          "docs": [
+            "The authority of the wallet"
+          ]
+        },
+        {
+          "name": "vault",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The wallet vault (seeds: ['VAULT', wallet])"
+          ]
+        },
+        {
+          "name": "targetProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The proxy called program"
+          ]
+        }
+      ],
+      "args": [
+        {
+          "name": "ixData",
+          "type": "bytes"
+        }
+      ],
+      "discriminant": {
+        "type": "u8",
+        "value": 1
+      }
+    }
+  ],
+  "accounts": [
+    {
+      "name": "Wallet",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "key",
+            "type": {
+              "defined": "Key"
+            }
+          },
+          {
+            "name": "authority",
+            "type": "publicKey"
+          },
+          {
+            "name": "device",
+            "type": "publicKey"
+          },
+          {
+            "name": "vault",
+            "type": "publicKey"
+          },
+          {
+            "name": "vaultBump",
+            "type": "u8"
+          }
+        ]
+      }
+    }
+  ],
+  "types": [
+    {
+      "name": "Key",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Uninitialized"
+          },
+          {
+            "name": "Wallet"
+          }
+        ]
+      }
+    }
+  ],
+  "errors": [
+    {
+      "code": 0,
+      "name": "DeserializationError",
+      "msg": "Error deserializing an account"
+    },
+    {
+      "code": 1,
+      "name": "SerializationError",
+      "msg": "Error serializing an account"
+    },
+    {
+      "code": 2,
+      "name": "InvalidProgramOwner",
+      "msg": "Invalid program owner. This likely mean the provided account does not exist"
+    },
+    {
+      "code": 3,
+      "name": "InvalidPda",
+      "msg": "Invalid PDA derivation"
+    },
+    {
+      "code": 4,
+      "name": "ExpectedEmptyAccount",
+      "msg": "Expected empty account"
+    },
+    {
+      "code": 5,
+      "name": "ExpectedNonEmptyAccount",
+      "msg": "Expected non empty account"
+    },
+    {
+      "code": 6,
+      "name": "ExpectedSignerAccount",
+      "msg": "Expected signer account"
+    },
+    {
+      "code": 7,
+      "name": "ExpectedWritableAccount",
+      "msg": "Expected writable account"
+    },
+    {
+      "code": 8,
+      "name": "AccountMismatch",
+      "msg": "Account mismatch"
+    },
+    {
+      "code": 9,
+      "name": "InvalidAccountKey",
+      "msg": "Invalid account key"
+    },
+    {
+      "code": 10,
+      "name": "NumericalOverflow",
+      "msg": "Numerical overflow"
+    }
+  ],
+  "metadata": {
+    "origin": "shank",
+    "address": "5ZYZAwmhpkVUbXQWmzEnBCBRxiWdEcYYykwyApWJdEUv"
+  }
+}
