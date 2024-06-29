@@ -1,4 +1,5 @@
 use borsh::BorshDeserialize;
+use dephy_id_program_client::{find_device_mint, find_product_mint, get_device_atoken};
 use solana_program::{
     account_info::AccountInfo,
     entrypoint::ProgramResult,
@@ -8,10 +9,12 @@ use solana_program::{
     pubkey::Pubkey,
     system_program,
 };
+use spl_token_2022::{extension::{BaseStateWithExtensions, StateWithExtensions}, state::{Account, Mint}};
+use spl_token_metadata_interface::state::TokenMetadata;
 
-use crate::{assertions::{
+use crate::assertions::{
     assert_pda, assert_program_owner, assert_same_pubkeys, assert_signer, assert_writable,
-}};
+};
 use crate::instruction::accounts::{CreateAccounts, ProxyCallAccounts};
 use crate::instruction::WalletInstruction;
 use crate::state::{Key, Wallet};
@@ -30,7 +33,7 @@ pub fn process_instruction<'a>(
         }
         WalletInstruction::ProxyCall { ix_data } => {
             msg!("Ix: ProxyCall");
-            proxy_call(accounts, ix_data.as_ref())
+            proxy_call(program_id, accounts, ix_data.as_ref())
         }
     }
 }
@@ -38,6 +41,10 @@ pub fn process_instruction<'a>(
 fn create<'a>(program_id: &Pubkey, accounts: &'a [AccountInfo<'a>], _bump: u8) -> ProgramResult {
     // Accounts.
     let ctx = CreateAccounts::context(accounts)?;
+    let vendor_pubkey = ctx.accounts.vendor.key;
+    let device_pubkey = ctx.accounts.device.key;
+    let vault_pubkey = ctx.accounts.vault.key;
+    let authority_pubkey = ctx.accounts.authority.key;
 
     // Guards.
     let mut seeds = Wallet::seeds(ctx.accounts.device.key, ctx.accounts.authority.key);
@@ -45,7 +52,7 @@ fn create<'a>(program_id: &Pubkey, accounts: &'a [AccountInfo<'a>], _bump: u8) -
     let vault_bump = assert_pda(
         "vault",
         ctx.accounts.vault,
-        &crate::ID,
+        program_id,
         &[b"VAULT", ctx.accounts.wallet.key.as_ref()],
     )?;
     assert_signer("authority", ctx.accounts.authority)?;
@@ -57,6 +64,29 @@ fn create<'a>(program_id: &Pubkey, accounts: &'a [AccountInfo<'a>], _bump: u8) -
         &system_program::id(),
     )?;
 
+    let product_metadata = {
+        let product_mint_data = ctx.accounts.product_mint.data.borrow();
+        let product_mint_state = StateWithExtensions::<Mint>::unpack(&product_mint_data)?;
+        assert_eq!(product_mint_state.base.decimals, 0);
+
+        product_mint_state.get_variable_len_extension::<TokenMetadata>()?
+    };
+    let (product_mint_pubkey, _) = find_product_mint(vendor_pubkey, product_metadata.name, &dephy_id_program_client::ID);
+    assert_same_pubkeys("product_mint", ctx.accounts.product_mint, &product_mint_pubkey)?;
+
+    let (device_mint_pubkey, _) = find_device_mint(&product_mint_pubkey, device_pubkey, &dephy_id_program_client::ID);
+    assert_same_pubkeys("device_mint", ctx.accounts.device_mint, &device_mint_pubkey)?;
+
+    let device_atoken_pubkey = get_device_atoken(authority_pubkey, &device_mint_pubkey);
+    assert_same_pubkeys("device_atoken", ctx.accounts.device_associated_token, &device_atoken_pubkey)?;
+    {
+        let device_atoken_data = ctx.accounts.device_associated_token.data.borrow();
+        let device_atoken_state = StateWithExtensions::<Account>::unpack(&device_atoken_data)?;
+        assert_eq!(device_atoken_state.base.mint, device_mint_pubkey);
+        assert_eq!(device_atoken_state.base.owner, *device_pubkey);
+        assert_eq!(device_atoken_state.base.amount, 1);
+    }
+
     // Do nothing if the domain already exists.
     if !ctx.accounts.wallet.data_is_empty() {
         return Ok(());
@@ -65,9 +95,9 @@ fn create<'a>(program_id: &Pubkey, accounts: &'a [AccountInfo<'a>], _bump: u8) -
     // Create Counter PDA.
     let wallet = Wallet {
         key: Key::Wallet,
-        authority: *ctx.accounts.authority.key,
+        authority: *authority_pubkey,
         device: *ctx.accounts.device.key,
-        vault: *ctx.accounts.vault.key,
+        vault: *vault_pubkey,
         vault_bump,
     };
     let bump = [wallet_bump];
@@ -77,19 +107,20 @@ fn create<'a>(program_id: &Pubkey, accounts: &'a [AccountInfo<'a>], _bump: u8) -
         ctx.accounts.payer,
         ctx.accounts.system_program,
         Wallet::LEN,
-        &crate::ID,
+        program_id,
         Some(&[&seeds]),
     )?;
 
     wallet.save(ctx.accounts.wallet)
 }
 
-fn proxy_call<'a>(accounts: &'a [AccountInfo<'a>], instruction_data: &[u8]) -> ProgramResult {
+fn proxy_call<'a>(program_id: &Pubkey, accounts: &'a [AccountInfo<'a>], instruction_data: &[u8]) -> ProgramResult {
     // Accounts.
     let ctx = ProxyCallAccounts::context(accounts)?;
-    assert_program_owner("wallet", ctx.accounts.wallet, &crate::id())?;
+    assert_program_owner("wallet", ctx.accounts.wallet, program_id)?;
 
     let wallet_account = Wallet::load(ctx.accounts.wallet)?;
+    assert_same_pubkeys("authority", ctx.accounts.authority, &wallet_account.authority)?;
 
     let mut wallet_seed = Wallet::seeds(&wallet_account.device, &wallet_account.authority);
     let bump = [wallet_account.vault_bump];
@@ -100,10 +131,6 @@ fn proxy_call<'a>(accounts: &'a [AccountInfo<'a>], instruction_data: &[u8]) -> P
         ctx.accounts.wallet.key.as_ref(),
         &[wallet_account.vault_bump],
     ];
-
-    for a in ctx.remaining_accounts {
-        msg!("{:?}", a)
-    }
 
     let ix_accounts = ctx
         .remaining_accounts

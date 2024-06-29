@@ -566,6 +566,9 @@ dependencies = [
  "num-traits",
  "shank",
  "solana-program",
+ "spl-associated-token-account",
+ "spl-token-2022",
+ "spl-token-metadata-interface",
  "thiserror",
 ]
 
