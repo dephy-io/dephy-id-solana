@@ -9,8 +9,8 @@ import {getAllProgramIdls, workingDirectory} from "./utils.mjs";
 import {renderVisitor as renderUmiVisitor} from "@kinobi-so/renderers-js-umi";
 
 // Instanciate Kinobi.
-const [idl, ...additionalIdls] = getAllProgramIdls().filter(fs.existsSync).map(idl => rootNodeFromAnchor(require(idl)))
-const kinobi = k.createFromRoot(idl, additionalIdls);
+const idls = getAllProgramIdls().filter(fs.existsSync).map(idl => rootNodeFromAnchor(require(idl)))
+const kinobi = k.createFromRoot(idls.find(idl => idl.program.name == 'dephyIdProgram'))
 
 // Update programs.
 kinobi.update(
@@ -33,6 +33,11 @@ kinobi.update(
 kinobi.update(
     k.addPdasVisitor({
         dephyId: [{
+            name: 'programData',
+            seeds: [
+                k.constantPdaSeedNodeFromString('utf8', "DePHY_ID"),
+            ]
+        }, {
             name: 'productMint',
             seeds: [
                 k.constantPdaSeedNodeFromString('utf8', "DePHY_ID-PRODUCT"),
@@ -46,6 +51,22 @@ kinobi.update(
                 k.variablePdaSeedNode('product_mint_pubkey', k.publicKeyTypeNode()),
                 k.variablePdaSeedNode('device_pubkey', k.publicKeyTypeNode()),
             ]
+        }, {
+            name: 'productAToken',
+            // programAddress: 'ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL',
+            seeds: [
+                k.variablePdaSeedNode('device_pubkey', k.publicKeyTypeNode()),
+                k.constantPdaSeedNode(k.publicKeyTypeNode(), k.publicKeyValueNode('TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb')),
+                k.variablePdaSeedNode('product_mint_pubkey', k.publicKeyTypeNode()),
+            ]
+        }, {
+            name: 'deviceAToken',
+            // programAddress: 'ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL',
+            seeds: [
+                k.variablePdaSeedNode('owner_pubkey', k.publicKeyTypeNode()),
+                k.constantPdaSeedNode(k.publicKeyTypeNode(), k.publicKeyValueNode('TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb')),
+                k.variablePdaSeedNode('device_mint_pubkey', k.publicKeyTypeNode()),
+            ]
         }]
     })
 );
@@ -54,6 +75,11 @@ kinobi.update(
 // Update instructions.
 kinobi.update(
     k.updateInstructionsVisitor({
+        initialize: {
+            accounts: {
+                payer: { defaultValue: k.accountValueNode("authority") },
+            },
+        },
         createProduct: {
             accounts: {
                 token2022Program: { defaultValue: k.publicKeyValueNode('TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb') },
@@ -69,8 +95,20 @@ kinobi.update(
         createDevice: {
             accounts: {
                 token2022Program: { defaultValue: k.publicKeyValueNode('TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb') },
+                payer: { defaultValue: k.accountValueNode("vendor") },
             },
         },
+        activateDevice: {
+            accounts: {
+                token2022Program: { defaultValue: k.publicKeyValueNode('TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb') },
+            },
+        },
+        createActivatedDevice: {
+            accounts: {
+                token2022Program: { defaultValue: k.publicKeyValueNode('TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb') },
+                payer: { defaultValue: k.accountValueNode("vendor") },
+            },
+        }
     })
 );
 
