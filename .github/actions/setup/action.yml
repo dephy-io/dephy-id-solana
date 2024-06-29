@@ -7,14 +7,13 @@ runs:
       uses: pnpm/action-setup@v4
       with:
         version: 9.4.0
-        run_install: false
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
         node-version: 20
         cache: "pnpm"
     - name: Install dependencies
-      run: pnpm install --frozen-lockfile
+      run: pnpm install
       shell: bash
     - name: Install Solana
       uses: metaplex-foundation/actions/install-solana@v1
