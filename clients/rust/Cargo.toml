@@ -27,4 +27,3 @@ solana-sdk = { workspace = true }
 [features]
 test-sbf = []
 serde = ["dep:serde", "dep:serde_with"]
-

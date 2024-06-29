@@ -1,3 +1,5 @@
+#![cfg(feature = "test-sbf")]
+
 use dephy_id_program_client::find_device_mint;
 use dephy_id_product_program::{
     instruction::{CreateDeviceArgs, ProgramInstruction, InitArgs},
