@@ -1,33 +1,25 @@
 name: Setup environment
 
-inputs:
-  cache:
-    description: Enable caching
-    default: "true"
-  node:
-    description: The Node.js version to install
-    required: true
-  solana:
-    description: The Solana version to install
-
 runs:
   using: "composite"
   steps:
-    - name: Setup pnpm
-      uses: pnpm/action-setup@v3
+    - name: Install pnpm
+      uses: pnpm/action-setup@v4
+      with:
+        version: 9.4.0
+        run_install: false
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
-        node-version: ${{ inputs.node }}
+        node-version: 20
         cache: "pnpm"
     - name: Install dependencies
       run: pnpm install --frozen-lockfile
       shell: bash
     - name: Install Solana
-      if: ${{ inputs.solana != '' }}
       uses: metaplex-foundation/actions/install-solana@v1
       with:
-        version: ${{ inputs.solana }}
-        cache: ${{ inputs.cache }}
+        version: 1.18.15
+        cache: "true"
     - name: Install Protoc
       uses: arduino/setup-protoc@v3
