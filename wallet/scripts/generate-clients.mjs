@@ -87,7 +87,7 @@ kinobi.update(
         deviceMint: {
           defaultValue: k.pdaValueNode(k.pdaLinkNode('deviceMint', '@dephy-io/dephy-id-program-client'), [
             k.pdaSeedValueNode('productMintPubkey', k.accountValueNode('productMint')),
-            k.pdaSeedValueNode('devicePubkey', k.accountValueNode('vendor')),
+            k.pdaSeedValueNode('devicePubkey', k.accountValueNode('device')),
           ])
         },
         // #[account(8, name="did_atoken", desc = "DID atoken owned by authority")]

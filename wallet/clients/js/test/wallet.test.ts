@@ -12,16 +12,15 @@ test.before('prepare dephy-id', async () => {
 
 test('it creates a wallet with did token', async (t) => {
     const productName = 'Test Wallet Product'
-    const owner = await generateKeyPairSignerWithSol(client)
+    const authority = await generateKeyPairSignerWithSol(client)
 
     const {
         vendor,
         productAssociatedToken,
         device,
         deviceAssociatedToken
-    } = await createProductAndDevice(client, owner, productName)
+    } = await createProductAndDevice(client, authority, productName)
 
-    const authority = await generateKeyPairSignerWithSol(client)
     const createIx = await getCreateInstructionAsync({
         authority,
         vendor: vendor.address,

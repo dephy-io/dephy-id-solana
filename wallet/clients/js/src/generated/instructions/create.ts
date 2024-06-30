@@ -297,7 +297,7 @@ export async function getCreateInstructionAsync<
   if (!accounts.deviceMint.value) {
     accounts.deviceMint.value = await findDeviceMintPda({
       productMintPubkey: expectAddress(accounts.productMint.value),
-      devicePubkey: expectAddress(accounts.vendor.value),
+      devicePubkey: expectAddress(accounts.device.value),
     });
   }
   if (!accounts.payer.value) {

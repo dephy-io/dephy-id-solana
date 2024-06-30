@@ -73,6 +73,13 @@ fn create<'a>(program_id: &Pubkey, accounts: &'a [AccountInfo<'a>], _bump: u8) -
     };
     let (product_mint_pubkey, _) = find_product_mint(vendor_pubkey, product_metadata.name, &dephy_id_program_client::ID);
     assert_same_pubkeys("product_mint", ctx.accounts.product_mint, &product_mint_pubkey)?;
+    {
+        let product_atoken_data = ctx.accounts.product_associated_token.data.borrow();
+        let product_atoken_state = StateWithExtensions::<Account>::unpack(&product_atoken_data)?;
+        assert_eq!(product_atoken_state.base.mint, product_mint_pubkey);
+        assert_eq!(product_atoken_state.base.owner, *device_pubkey);
+        assert_eq!(product_atoken_state.base.amount, 1);
+    }
 
     let (device_mint_pubkey, _) = find_device_mint(&product_mint_pubkey, device_pubkey, &dephy_id_program_client::ID);
     assert_same_pubkeys("device_mint", ctx.accounts.device_mint, &device_mint_pubkey)?;
@@ -83,7 +90,7 @@ fn create<'a>(program_id: &Pubkey, accounts: &'a [AccountInfo<'a>], _bump: u8) -
         let device_atoken_data = ctx.accounts.device_associated_token.data.borrow();
         let device_atoken_state = StateWithExtensions::<Account>::unpack(&device_atoken_data)?;
         assert_eq!(device_atoken_state.base.mint, device_mint_pubkey);
-        assert_eq!(device_atoken_state.base.owner, *device_pubkey);
+        assert_eq!(device_atoken_state.base.owner, *authority_pubkey);
         assert_eq!(device_atoken_state.base.amount, 1);
     }
 
