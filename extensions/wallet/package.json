@@ -25,7 +25,7 @@
     "kinobi": "^0.20.4",
     "typescript": "^5.5.2",
     "zx": "^7.2.3",
-    "@dephy-io/dephy-id-program-client": "file:../clients/js"
+    "@dephy-io/dephy-id-program-client": "file:../../clients/js"
   },
   "packageManager": "pnpm@9.4.0"
 }

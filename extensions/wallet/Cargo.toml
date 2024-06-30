@@ -3,4 +3,4 @@ resolver = "2"
 members = ["program"]
 
 [workspace.metadata.solana]
-external-programs-output = "../target/deploy"
+external-programs-output = "../../target/deploy"

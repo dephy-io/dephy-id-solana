@@ -3,7 +3,7 @@
 ## Test
 
 ```sh
-# if `../target/deploy/dephy_id_program.so` not exist, build it in parent first
+# if `../../target/deploy/dephy_id_program.so` not exist, build it in parent first
 cd ..
 cargo build-sbf
 

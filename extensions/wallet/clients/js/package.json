@@ -6,7 +6,7 @@
   },
   "dependencies": {
     "@solana/web3.js": "2.0.0-preview.3",
-    "@dephy-io/dephy-id-program-client": "file:../../../clients/js"
+    "@dephy-io/dephy-id-program-client": "file:../../../../clients/js"
   },
   "devDependencies": {
     "@ava/typescript": "^5.0.0",
