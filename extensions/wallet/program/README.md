@@ -1,7 +1,5 @@
-DePHY ID Solana program
+DePHY ID wallet Solana program
 ====
-
-> Run all commands in the root of the repo
 
 > Note: Use `Solana 1.18.15` or later
 
@@ -22,5 +20,5 @@ cargo-test-sbf
 ### Deploy program
 
 ```sh
-solana -u l program deploy target/deploy/dephy_id_program.so --program-id ./program/keypair.json
+solana -u l program deploy target/deploy/dephy_id_wallet.so --program-id ./program/keypair.json
 ```

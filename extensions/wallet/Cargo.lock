@@ -558,7 +558,7 @@ dependencies = [
 
 [[package]]
 name = "dephy-id-wallet"
-version = "0.0.0"
+version = "0.0.1"
 dependencies = [
  "borsh 1.5.1",
  "dephy-id-program-client",

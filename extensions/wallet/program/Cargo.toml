@@ -1,9 +1,12 @@
 [package]
 name = "dephy-id-wallet"
-version = "0.0.0"
+version = "0.0.1"
+authors.workspace = true
+homepage.workspace = true
+repository.workspace = true
+license.workspace = true
+readme = "README.md"
 edition = "2021"
-readme = "./README.md"
-license-file = "../LICENSE"
 publish = false
 
 [package.metadata.solana]
@@ -17,14 +20,14 @@ dephy_id_program = "hdMghjD73uASxgJXi6e1mGPsXqnADMsrqB1bveqABP1"
 crate-type = ["cdylib", "lib"]
 
 [dependencies]
-borsh = "1.5.1"
-shank = "^0.4.2"
-num-derive = "0.4.2"
-num-traits = "^0.2"
-solana-program = "~2.0"
-thiserror = "^1.0"
-dephy-id-program-client = { path = "../../../clients/rust" }
-spl-token-2022 = { version = "4.0.0", features = ["no-entrypoint"] }
-spl-associated-token-account = { version = "4.0.0", features = ["no-entrypoint"] }
-spl-token-metadata-interface = "0.4.0"
+borsh = { workspace = true }
+shank = { workspace = true }
+num-derive = { workspace = true }
+num-traits = { workspace = true }
+solana-program = { workspace = true }
+thiserror = { workspace = true }
+dephy-id-program-client = { workspace = true }
+spl-token-2022 = { workspace = true, features = ["no-entrypoint"] }
+spl-associated-token-account = { workspace = true, features = ["no-entrypoint"] }
+spl-token-metadata-interface = { workspace = true }
 
