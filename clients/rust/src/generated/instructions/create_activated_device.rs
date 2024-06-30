@@ -133,7 +133,7 @@ pub struct CreateActivatedDeviceInstructionArgs {
 /// ### Accounts:
 ///
 ///   0. `[optional]` system_program (default to `11111111111111111111111111111111`)
-///   1. `[]` token2022_program
+///   1. `[optional]` token2022_program (default to `TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb`)
 ///   2. `[optional]` ata_program (default to `ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL`)
 ///   3. `[writable, signer]` payer
 ///   4. `[]` vendor
@@ -173,6 +173,7 @@ impl CreateActivatedDeviceBuilder {
         self.system_program = Some(system_program);
         self
     }
+    /// `[optional account, default to 'TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb']`
     /// The SPL Token 2022 program
     #[inline(always)]
     pub fn token2022_program(
@@ -282,9 +283,9 @@ impl CreateActivatedDeviceBuilder {
             system_program: self
                 .system_program
                 .unwrap_or(solana_program::pubkey!("11111111111111111111111111111111")),
-            token2022_program: self
-                .token2022_program
-                .expect("token2022_program is not set"),
+            token2022_program: self.token2022_program.unwrap_or(solana_program::pubkey!(
+                "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb"
+            )),
             ata_program: self.ata_program.unwrap_or(solana_program::pubkey!(
                 "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
             )),

@@ -4,6 +4,21 @@ var web3_js = require('@solana/web3.js');
 
 // env-shim.ts
 var __DEV__ = /* @__PURE__ */ (() => process["env"].NODE_ENV === "development")();
+async function findDeviceATokenPda(seeds, config = {}) {
+  const {
+    programAddress = "hdMghjD73uASxgJXi6e1mGPsXqnADMsrqB1bveqABP1"
+  } = config;
+  return await web3_js.getProgramDerivedAddress({
+    programAddress,
+    seeds: [
+      web3_js.getAddressEncoder().encode(seeds.ownerPubkey),
+      web3_js.getAddressEncoder().encode(
+        web3_js.address("TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb")
+      ),
+      web3_js.getAddressEncoder().encode(seeds.deviceMintPubkey)
+    ]
+  });
+}
 async function findDeviceMintPda(seeds, config = {}) {
   const {
     programAddress = "hdMghjD73uASxgJXi6e1mGPsXqnADMsrqB1bveqABP1"
@@ -14,6 +29,21 @@ async function findDeviceMintPda(seeds, config = {}) {
       web3_js.getUtf8Encoder().encode("DePHY_ID-DEVICE"),
       web3_js.getAddressEncoder().encode(seeds.productMintPubkey),
       web3_js.getAddressEncoder().encode(seeds.devicePubkey)
+    ]
+  });
+}
+async function findProductATokenPda(seeds, config = {}) {
+  const {
+    programAddress = "hdMghjD73uASxgJXi6e1mGPsXqnADMsrqB1bveqABP1"
+  } = config;
+  return await web3_js.getProgramDerivedAddress({
+    programAddress,
+    seeds: [
+      web3_js.getAddressEncoder().encode(seeds.devicePubkey),
+      web3_js.getAddressEncoder().encode(
+        web3_js.address("TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb")
+      ),
+      web3_js.getAddressEncoder().encode(seeds.productMintPubkey)
     ]
   });
 }
@@ -28,6 +58,15 @@ async function findProductMintPda(seeds, config = {}) {
       web3_js.getAddressEncoder().encode(seeds.vendorPubkey),
       web3_js.getUtf8Encoder().encode(seeds.productName)
     ]
+  });
+}
+async function findProgramDataPda(config = {}) {
+  const {
+    programAddress = "hdMghjD73uASxgJXi6e1mGPsXqnADMsrqB1bveqABP1"
+  } = config;
+  return await web3_js.getProgramDerivedAddress({
+    programAddress,
+    seeds: [web3_js.getUtf8Encoder().encode("DePHY_ID")]
   });
 }
 async function findProgramDataAccountPda(config = {}) {
@@ -190,13 +229,13 @@ function decodeProgramDataAccount(encodedAccount) {
     getProgramDataAccountDecoder()
   );
 }
-async function fetchProgramDataAccount(rpc, address, config) {
-  const maybeAccount = await fetchMaybeProgramDataAccount(rpc, address, config);
+async function fetchProgramDataAccount(rpc, address3, config) {
+  const maybeAccount = await fetchMaybeProgramDataAccount(rpc, address3, config);
   web3_js.assertAccountExists(maybeAccount);
   return maybeAccount;
 }
-async function fetchMaybeProgramDataAccount(rpc, address, config) {
-  const maybeAccount = await web3_js.fetchEncodedAccount(rpc, address, config);
+async function fetchMaybeProgramDataAccount(rpc, address3, config) {
+  const maybeAccount = await web3_js.fetchEncodedAccount(rpc, address3, config);
   return decodeProgramDataAccount(maybeAccount);
 }
 async function fetchAllProgramDataAccount(rpc, addresses, config) {
@@ -224,8 +263,8 @@ async function fetchProgramDataAccountFromSeeds(rpc, config = {}) {
 }
 async function fetchMaybeProgramDataAccountFromSeeds(rpc, config = {}) {
   const { programAddress, ...fetchConfig } = config;
-  const [address] = await findProgramDataAccountPda({ programAddress });
-  return await fetchMaybeProgramDataAccount(rpc, address, fetchConfig);
+  const [address3] = await findProgramDataAccountPda({ programAddress });
+  return await fetchMaybeProgramDataAccount(rpc, address3, fetchConfig);
 }
 
 // src/generated/errors/dephyId.ts
@@ -308,6 +347,12 @@ function identifyDephyIdInstruction(instruction) {
   throw new Error(
     "The provided instruction could not be identified as a dephyId instruction."
   );
+}
+function expectSome(value) {
+  if (value == null) {
+    throw new Error("Expected a value but received null or undefined.");
+  }
+  return value;
 }
 function expectAddress(value) {
   if (!value) {
@@ -393,6 +438,9 @@ function getActivateDeviceInstruction(input) {
   const args = { ...input };
   if (!accounts.systemProgram.value) {
     accounts.systemProgram.value = "11111111111111111111111111111111";
+  }
+  if (!accounts.token2022Program.value) {
+    accounts.token2022Program.value = "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb";
   }
   if (!accounts.ataProgram.value) {
     accounts.ataProgram.value = "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL";
@@ -517,8 +565,14 @@ function getCreateActivatedDeviceInstruction(input) {
   if (!accounts.systemProgram.value) {
     accounts.systemProgram.value = "11111111111111111111111111111111";
   }
+  if (!accounts.token2022Program.value) {
+    accounts.token2022Program.value = "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb";
+  }
   if (!accounts.ataProgram.value) {
     accounts.ataProgram.value = "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL";
+  }
+  if (!accounts.payer.value) {
+    accounts.payer.value = expectSome(accounts.vendor.value);
   }
   const getAccountMeta = getAccountMetaFactory(programAddress);
   const instruction = {
@@ -644,6 +698,9 @@ function getCreateDeviceInstruction(input) {
   }
   if (!accounts.ataProgram.value) {
     accounts.ataProgram.value = "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL";
+  }
+  if (!accounts.payer.value) {
+    accounts.payer.value = expectSome(accounts.vendor.value);
   }
   const getAccountMeta = getAccountMetaFactory(programAddress);
   const instruction = {
@@ -826,6 +883,9 @@ function getInitializeInstruction(input) {
   if (!accounts.systemProgram.value) {
     accounts.systemProgram.value = "11111111111111111111111111111111";
   }
+  if (!accounts.payer.value) {
+    accounts.payer.value = expectSome(accounts.authority.value);
+  }
   const getAccountMeta = getAccountMetaFactory(programAddress);
   const instruction = {
     accounts: [
@@ -889,9 +949,12 @@ exports.fetchMaybeProgramDataAccount = fetchMaybeProgramDataAccount;
 exports.fetchMaybeProgramDataAccountFromSeeds = fetchMaybeProgramDataAccountFromSeeds;
 exports.fetchProgramDataAccount = fetchProgramDataAccount;
 exports.fetchProgramDataAccountFromSeeds = fetchProgramDataAccountFromSeeds;
+exports.findDeviceATokenPda = findDeviceATokenPda;
 exports.findDeviceMintPda = findDeviceMintPda;
+exports.findProductATokenPda = findProductATokenPda;
 exports.findProductMintPda = findProductMintPda;
 exports.findProgramDataAccountPda = findProgramDataAccountPda;
+exports.findProgramDataPda = findProgramDataPda;
 exports.getActivateDeviceInstruction = getActivateDeviceInstruction;
 exports.getActivateDeviceInstructionDataCodec = getActivateDeviceInstructionDataCodec;
 exports.getActivateDeviceInstructionDataDecoder = getActivateDeviceInstructionDataDecoder;

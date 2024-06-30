@@ -29,7 +29,11 @@ import {
   type WritableSignerAccount,
 } from '@solana/web3.js';
 import { DEPHY_ID_PROGRAM_ADDRESS } from '../programs';
-import { getAccountMetaFactory, type ResolvedAccount } from '../shared';
+import {
+  expectSome,
+  getAccountMetaFactory,
+  type ResolvedAccount,
+} from '../shared';
 
 export type InitializeInstruction<
   TProgram extends string = typeof DEPHY_ID_PROGRAM_ADDRESS,
@@ -102,7 +106,7 @@ export type InitializeInput<
   /** The system program */
   systemProgram?: Address<TAccountSystemProgram>;
   /** The account paying for the storage fees */
-  payer: TransactionSigner<TAccountPayer>;
+  payer?: TransactionSigner<TAccountPayer>;
   /** The program data account for the program */
   programData: Address<TAccountProgramData>;
   /** The authority account of the program */
@@ -151,6 +155,9 @@ export function getInitializeInstruction<
   if (!accounts.systemProgram.value) {
     accounts.systemProgram.value =
       '11111111111111111111111111111111' as Address<'11111111111111111111111111111111'>;
+  }
+  if (!accounts.payer.value) {
+    accounts.payer.value = expectSome(accounts.authority.value);
   }
 
   const getAccountMeta = getAccountMetaFactory(programAddress, 'programId');
