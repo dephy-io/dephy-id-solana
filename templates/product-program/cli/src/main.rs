@@ -125,12 +125,11 @@ fn init_program(args: InitProgramCliArgs) {
     let (program_account_pubkey, _) = ProgramAccount::find_pda();
     let (vendor_pubkey, _) = Pubkey::find_program_address(&[b"VENDOR"], &program_id);
 
-    let product_name = "Demo".to_string();
     let (product_mint_pubkey, _) = Pubkey::find_program_address(
         &[
             dephy_id_program_client::PRODUCT_MINT_SEED_PREFIX,
             vendor_pubkey.as_ref(),
-            product_name.as_ref(),
+            args.name.as_ref(),
         ],
         &dephy_id_program_client::ID,
     );
@@ -144,9 +143,9 @@ fn init_program(args: InitProgramCliArgs) {
             program_id,
             &ProgramInstruction::Init(InitArgs {
                 name: args.name,
-                symbol: "DEMO".to_string(),
-                uri: "https://example.com".to_string(),
-                additional_metadata: vec![],
+                symbol: args.symbol,
+                uri: args.url,
+                additional_metadata: args.additional_metadata,
             }),
             vec![
                 // #[account(0, writable, name="program_pda", desc = "The program derived address of the program account to create (seeds: ['Program'])")]
