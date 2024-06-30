@@ -262,6 +262,10 @@ export class Indexer {
                 "@ix_index": e.int16(meta.index),
             })),
         }).run(dbTx)
+
+        if (this.programAddress == initialize.accounts.programData.address) {
+            await this.ensureProgramDataAccount(this.programAddress)
+        }
     }
 
     async handleCreateProduct(dbTx: Executor, createProduct: ParsedCreateProductInstruction<string, readonly IAccountMeta[]>, meta: IxMeta) {
@@ -281,6 +285,11 @@ export class Indexer {
         } else {
             vendorQuery = e.insert(e.Vendor, {
                 pubkey: createProduct.accounts.vendor.address,
+                program: e.select(e.Program, () => ({
+                    filter_single: {
+                        pubkey: this.programPda!.address
+                    }
+                }))
             })
         }
 

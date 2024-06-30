@@ -1,7 +1,7 @@
 import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
 import { parse } from 'graphql'
 import { gql, GraphQLClient } from 'graphql-request'
-import type { GetProductQuery, GetProductQueryVariables, GetProductsQuery, GetVendorQuery, GetVendorQueryVariables, GetDeviceQuery, GetDeviceQueryVariables } from './gql/graphql'
+import type { GetProductQuery, GetProductQueryVariables, GetProductsQuery, GetVendorQuery, GetVendorQueryVariables, GetDeviceQuery, GetDeviceQueryVariables, GetProgramsQuery } from './gql/graphql'
 
 import { env } from '@/env';
 
@@ -91,6 +91,7 @@ export async function getVendor(vendor_pubkey: string) {
       Vendor(filter: { pubkey: {eq: $vendor_pubkey} }) {
         pubkey
         products_count
+        devices_count
         products {
           mint_account
           mint_authority
@@ -162,14 +163,22 @@ export async function getDevice(device_pubkey: string) {
   return await gqlClient.request(query, variables)
 }
 
-// export async function getDeviceCount() {
-//   const query: TypedDocumentNode<GetDeviceCountQuery> = parse(gpl`
-//     query getDeviceCount {
-//       count(Device)
-//     }
-//     `)
+export async function getPrograms() {
+  const query: TypedDocumentNode<GetProgramsQuery> = parse(gql`
+    query getPrograms {
+      Program {
+        pubkey
+        authority {
+          pubkey
+        }
+        vendors_count
+        products_count
+        devices_count
+      }
+    }
+  `)
 
-//   const variables = {}
+  const variables = {}
 
-//   return await GraphQLClient.request(query, variables)
-// }
+  return await gqlClient.request(query, variables)
+}

@@ -54,12 +54,20 @@ module default {
 
     type Program extending SolanaAccount, WithIx {
         required authority: Admin;
+
+        multi vendors := .<program[is Vendor];
+
+        vendors_count := count(.vendors);
+        products_count := count(.vendors.products);
+        devices_count := count(.vendors.products.devices);
     }
 
     type Vendor extending SolanaAccount {
+        required program: Program;
         multi products := .<vendor[is Product];
 
-        products_count := count(__source__.products);
+        products_count := count(.products);
+        devices_count := count(.products.devices);
     }
 
     type Product extending SplMint, WithIx {
@@ -67,7 +75,7 @@ module default {
 
         multi devices := .<product[is Device];
 
-        devices_count := count(__source__.devices);
+        devices_count := count(.devices);
     }
 
     scalar type DeviceSigningAlgorithm extending enum<Ed25519, Secp256k1>;
@@ -85,7 +93,7 @@ module default {
     type User extending SolanaAccount {
         multi dids := .<owner[is DID];
 
-        dids_count := count(__source__.dids);
+        dids_count := count(.dids);
     }
 
     type DID extending SplMint, SplAccount, WithIx {

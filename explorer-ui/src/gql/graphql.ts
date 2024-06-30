@@ -144,7 +144,7 @@ export type Device = {
   id: Scalars['ID']['output'];
   product: Product;
   pubkey: Scalars['String']['output'];
-  signing_alg: DeviceSigningAlgorithm;
+  signing_alg?: Maybe<DeviceSigningAlgorithm>;
   token_account?: Maybe<Scalars['String']['output']>;
   tx: Transaction;
 };
@@ -190,7 +190,7 @@ export type Device_Type = BaseObject & Device & Object & SolanaAccount & SplAcco
   id: Scalars['ID']['output'];
   product: Product;
   pubkey: Scalars['String']['output'];
-  signing_alg: DeviceSigningAlgorithm;
+  signing_alg?: Maybe<DeviceSigningAlgorithm>;
   token_account?: Maybe<Scalars['String']['output']>;
   tx: Transaction;
 };
@@ -409,11 +409,15 @@ export type FilterProduct = {
 export type FilterProgram = {
   and?: InputMaybe<Array<FilterProgram>>;
   authority?: InputMaybe<NestedFilterAdmin>;
+  devices_count?: InputMaybe<FilterInt64>;
   id?: InputMaybe<FilterId>;
   not?: InputMaybe<FilterProgram>;
   or?: InputMaybe<Array<FilterProgram>>;
+  products_count?: InputMaybe<FilterInt64>;
   pubkey?: InputMaybe<FilterString>;
   tx?: InputMaybe<NestedFilterTransaction>;
+  vendors?: InputMaybe<NestedFilterVendor>;
+  vendors_count?: InputMaybe<FilterInt64>;
 };
 
 export type FilterSolanaAccount = {
@@ -489,11 +493,13 @@ export type FilterUser = {
 
 export type FilterVendor = {
   and?: InputMaybe<Array<FilterVendor>>;
+  devices_count?: InputMaybe<FilterInt64>;
   id?: InputMaybe<FilterId>;
   not?: InputMaybe<FilterVendor>;
   or?: InputMaybe<Array<FilterVendor>>;
   products?: InputMaybe<NestedFilterProduct>;
   products_count?: InputMaybe<FilterInt64>;
+  program?: InputMaybe<NestedFilterProgram>;
   pubkey?: InputMaybe<FilterString>;
 };
 
@@ -522,7 +528,7 @@ export type InsertDid = {
 export type InsertDevice = {
   product: NestedInsertProduct;
   pubkey: Scalars['String']['input'];
-  signing_alg: DeviceSigningAlgorithm;
+  signing_alg?: InputMaybe<DeviceSigningAlgorithm>;
   token_account: Scalars['String']['input'];
   tx: NestedInsertTransaction;
 };
@@ -560,6 +566,7 @@ export type InsertUser = {
 };
 
 export type InsertVendor = {
+  program: NestedInsertProgram;
   pubkey: Scalars['String']['input'];
 };
 
@@ -925,6 +932,18 @@ export type NestedFilterProduct = {
   vendor?: InputMaybe<NestedFilterVendor>;
 };
 
+export type NestedFilterProgram = {
+  authority?: InputMaybe<NestedFilterAdmin>;
+  devices_count?: InputMaybe<FilterInt64>;
+  exists?: InputMaybe<Scalars['Boolean']['input']>;
+  id?: InputMaybe<FilterId>;
+  products_count?: InputMaybe<FilterInt64>;
+  pubkey?: InputMaybe<FilterString>;
+  tx?: InputMaybe<NestedFilterTransaction>;
+  vendors?: InputMaybe<NestedFilterVendor>;
+  vendors_count?: InputMaybe<FilterInt64>;
+};
+
 export type NestedFilterTokenMetadata = {
   exists?: InputMaybe<Scalars['Boolean']['input']>;
   id?: InputMaybe<FilterId>;
@@ -952,10 +971,12 @@ export type NestedFilterUser = {
 };
 
 export type NestedFilterVendor = {
+  devices_count?: InputMaybe<FilterInt64>;
   exists?: InputMaybe<Scalars['Boolean']['input']>;
   id?: InputMaybe<FilterId>;
   products?: InputMaybe<NestedFilterProduct>;
   products_count?: InputMaybe<FilterInt64>;
+  program?: InputMaybe<NestedFilterProgram>;
   pubkey?: InputMaybe<FilterString>;
 };
 
@@ -987,6 +1008,16 @@ export type NestedInsertProduct = {
   first?: InputMaybe<Scalars['Int']['input']>;
   last?: InputMaybe<Scalars['Int']['input']>;
   order?: InputMaybe<OrderProduct>;
+};
+
+export type NestedInsertProgram = {
+  after?: InputMaybe<Scalars['String']['input']>;
+  before?: InputMaybe<Scalars['String']['input']>;
+  data?: InputMaybe<InsertProgram>;
+  filter?: InputMaybe<FilterProgram>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  last?: InputMaybe<Scalars['Int']['input']>;
+  order?: InputMaybe<OrderProgram>;
 };
 
 export type NestedInsertTokenMetadata = {
@@ -1054,6 +1085,15 @@ export type NestedUpdateProduct = {
   first?: InputMaybe<Scalars['Int']['input']>;
   last?: InputMaybe<Scalars['Int']['input']>;
   order?: InputMaybe<OrderProduct>;
+};
+
+export type NestedUpdateProgram = {
+  after?: InputMaybe<Scalars['String']['input']>;
+  before?: InputMaybe<Scalars['String']['input']>;
+  filter?: InputMaybe<FilterProgram>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  last?: InputMaybe<Scalars['Int']['input']>;
+  order?: InputMaybe<OrderProgram>;
 };
 
 export type NestedUpdateTokenMetadata = {
@@ -1143,9 +1183,12 @@ export type OrderProduct = {
 
 export type OrderProgram = {
   authority?: InputMaybe<OrderAdmin>;
+  devices_count?: InputMaybe<Ordering>;
   id?: InputMaybe<Ordering>;
+  products_count?: InputMaybe<Ordering>;
   pubkey?: InputMaybe<Ordering>;
   tx?: InputMaybe<OrderTransaction>;
+  vendors_count?: InputMaybe<Ordering>;
 };
 
 export type OrderSolanaAccount = {
@@ -1188,8 +1231,10 @@ export type OrderUser = {
 };
 
 export type OrderVendor = {
+  devices_count?: InputMaybe<Ordering>;
   id?: InputMaybe<Ordering>;
   products_count?: InputMaybe<Ordering>;
+  program?: InputMaybe<OrderProgram>;
   pubkey?: InputMaybe<Ordering>;
 };
 
@@ -1308,9 +1353,13 @@ export type Product_TypeVendorArgs = {
 
 export type Program = {
   authority: Admin;
+  devices_count: Scalars['Int64']['output'];
   id: Scalars['ID']['output'];
+  products_count: Scalars['Int64']['output'];
   pubkey: Scalars['String']['output'];
   tx: Transaction;
+  vendors?: Maybe<Array<Vendor>>;
+  vendors_count: Scalars['Int64']['output'];
 };
 
 
@@ -1333,12 +1382,26 @@ export type ProgramTxArgs = {
   order?: InputMaybe<OrderTransaction>;
 };
 
+
+export type ProgramVendorsArgs = {
+  after?: InputMaybe<Scalars['String']['input']>;
+  before?: InputMaybe<Scalars['String']['input']>;
+  filter?: InputMaybe<FilterVendor>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  last?: InputMaybe<Scalars['Int']['input']>;
+  order?: InputMaybe<OrderVendor>;
+};
+
 export type Program_Type = BaseObject & Object & Program & SolanaAccount & WithIx & {
   __typename?: 'Program_Type';
   authority: Admin;
+  devices_count: Scalars['Int64']['output'];
   id: Scalars['ID']['output'];
+  products_count: Scalars['Int64']['output'];
   pubkey: Scalars['String']['output'];
   tx: Transaction;
+  vendors?: Maybe<Array<Vendor>>;
+  vendors_count: Scalars['Int64']['output'];
 };
 
 
@@ -1359,6 +1422,16 @@ export type Program_TypeTxArgs = {
   first?: InputMaybe<Scalars['Int']['input']>;
   last?: InputMaybe<Scalars['Int']['input']>;
   order?: InputMaybe<OrderTransaction>;
+};
+
+
+export type Program_TypeVendorsArgs = {
+  after?: InputMaybe<Scalars['String']['input']>;
+  before?: InputMaybe<Scalars['String']['input']>;
+  filter?: InputMaybe<FilterVendor>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  last?: InputMaybe<Scalars['Int']['input']>;
+  order?: InputMaybe<OrderVendor>;
 };
 
 export type Query = {
@@ -1717,6 +1790,10 @@ export type UpdateOp_Product_Device = {
   set?: InputMaybe<NestedUpdateProduct>;
 };
 
+export type UpdateOp_Program_Vendor = {
+  set?: InputMaybe<NestedUpdateProgram>;
+};
+
 export type UpdateOp_Pubkey_Admin = {
   append?: InputMaybe<Scalars['String']['input']>;
   prepend?: InputMaybe<Scalars['String']['input']>;
@@ -1767,6 +1844,7 @@ export type UpdateOp_Signature_Transaction = {
 };
 
 export type UpdateOp_Signing_Alg_Device = {
+  clear?: InputMaybe<Scalars['Boolean']['input']>;
   set?: InputMaybe<DeviceSigningAlgorithm>;
 };
 
@@ -1886,6 +1964,7 @@ export type UpdateUser = {
 };
 
 export type UpdateVendor = {
+  program?: InputMaybe<UpdateOp_Program_Vendor>;
   pubkey?: InputMaybe<UpdateOp_Pubkey_Vendor>;
 };
 
@@ -1929,9 +2008,11 @@ export type User_TypeDidsArgs = {
 };
 
 export type Vendor = {
+  devices_count: Scalars['Int64']['output'];
   id: Scalars['ID']['output'];
   products?: Maybe<Array<Product>>;
   products_count: Scalars['Int64']['output'];
+  program: Program;
   pubkey: Scalars['String']['output'];
 };
 
@@ -1945,11 +2026,23 @@ export type VendorProductsArgs = {
   order?: InputMaybe<OrderProduct>;
 };
 
+
+export type VendorProgramArgs = {
+  after?: InputMaybe<Scalars['String']['input']>;
+  before?: InputMaybe<Scalars['String']['input']>;
+  filter?: InputMaybe<FilterProgram>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  last?: InputMaybe<Scalars['Int']['input']>;
+  order?: InputMaybe<OrderProgram>;
+};
+
 export type Vendor_Type = BaseObject & Object & SolanaAccount & Vendor & {
   __typename?: 'Vendor_Type';
+  devices_count: Scalars['Int64']['output'];
   id: Scalars['ID']['output'];
   products?: Maybe<Array<Product>>;
   products_count: Scalars['Int64']['output'];
+  program: Program;
   pubkey: Scalars['String']['output'];
 };
 
@@ -1961,6 +2054,16 @@ export type Vendor_TypeProductsArgs = {
   first?: InputMaybe<Scalars['Int']['input']>;
   last?: InputMaybe<Scalars['Int']['input']>;
   order?: InputMaybe<OrderProduct>;
+};
+
+
+export type Vendor_TypeProgramArgs = {
+  after?: InputMaybe<Scalars['String']['input']>;
+  before?: InputMaybe<Scalars['String']['input']>;
+  filter?: InputMaybe<FilterProgram>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  last?: InputMaybe<Scalars['Int']['input']>;
+  order?: InputMaybe<OrderProgram>;
 };
 
 export type WithIx = {
@@ -2002,24 +2105,30 @@ export type GetProductQueryVariables = Exact<{
 }>;
 
 
-export type GetProductQuery = { __typename?: 'Query', Product?: Array<{ __typename?: 'Product_Type', mint_account: string, mint_authority?: string | null, devices_count: any, metadata?: { __typename?: 'TokenMetadata_Type', name?: string | null, symbol?: string | null, uri?: string | null, additional: Array<any> } | null, vendor: { __typename?: 'Vendor_Type', pubkey: string }, devices?: Array<{ __typename?: 'Device_Type', pubkey: string, signing_alg: DeviceSigningAlgorithm, token_account?: string | null, tx: { __typename?: 'Transaction_Type', block_ts?: string | null }, did?: { __typename?: 'DID_Type', token_account?: string | null, mint_account: string, metadata?: { __typename?: 'TokenMetadata_Type', name?: string | null, symbol?: string | null, uri?: string | null, additional: Array<any> } | null, owner?: { __typename?: 'User_Type', pubkey: string } | null } | null }> | null }> | null };
+export type GetProductQuery = { __typename?: 'Query', Product?: Array<{ __typename?: 'Product_Type', mint_account: string, mint_authority?: string | null, devices_count: any, metadata?: { __typename?: 'TokenMetadata_Type', name?: string | null, symbol?: string | null, uri?: string | null, additional: Array<any> } | null, vendor: { __typename?: 'Vendor_Type', pubkey: string }, devices?: Array<{ __typename?: 'Device_Type', pubkey: string, signing_alg?: DeviceSigningAlgorithm | null, token_account?: string | null, tx: { __typename?: 'Transaction_Type', block_ts?: string | null }, did?: { __typename?: 'DID_Type', token_account?: string | null, mint_account: string, metadata?: { __typename?: 'TokenMetadata_Type', name?: string | null, symbol?: string | null, uri?: string | null, additional: Array<any> } | null, owner?: { __typename?: 'User_Type', pubkey: string } | null } | null }> | null }> | null };
 
 export type GetVendorQueryVariables = Exact<{
   vendor_pubkey?: InputMaybe<Scalars['String']['input']>;
 }>;
 
 
-export type GetVendorQuery = { __typename?: 'Query', Vendor?: Array<{ __typename?: 'Vendor_Type', pubkey: string, products_count: any, products?: Array<{ __typename?: 'Product_Type', mint_account: string, mint_authority?: string | null, devices_count: any, metadata?: { __typename?: 'TokenMetadata_Type', name?: string | null, symbol?: string | null, uri?: string | null, additional: Array<any> } | null, tx: { __typename?: 'Transaction_Type', block_ts?: string | null } }> | null }> | null };
+export type GetVendorQuery = { __typename?: 'Query', Vendor?: Array<{ __typename?: 'Vendor_Type', pubkey: string, products_count: any, devices_count: any, products?: Array<{ __typename?: 'Product_Type', mint_account: string, mint_authority?: string | null, devices_count: any, metadata?: { __typename?: 'TokenMetadata_Type', name?: string | null, symbol?: string | null, uri?: string | null, additional: Array<any> } | null, tx: { __typename?: 'Transaction_Type', block_ts?: string | null } }> | null }> | null };
 
 export type GetDeviceQueryVariables = Exact<{
   device_pubkey?: InputMaybe<Scalars['String']['input']>;
 }>;
 
 
-export type GetDeviceQuery = { __typename?: 'Query', Device?: Array<{ __typename?: 'Device_Type', pubkey: string, signing_alg: DeviceSigningAlgorithm, token_account?: string | null, tx: { __typename?: 'Transaction_Type', block_ts?: string | null }, product: { __typename?: 'Product_Type', mint_account: string, metadata?: { __typename?: 'TokenMetadata_Type', name?: string | null, symbol?: string | null, uri?: string | null, additional: Array<any> } | null, vendor: { __typename?: 'Vendor_Type', pubkey: string } }, did?: { __typename?: 'DID_Type', mint_account: string, mint_authority?: string | null, metadata?: { __typename?: 'TokenMetadata_Type', name?: string | null, symbol?: string | null, uri?: string | null, additional: Array<any> } | null, owner?: { __typename?: 'User_Type', pubkey: string } | null } | null }> | null };
+export type GetDeviceQuery = { __typename?: 'Query', Device?: Array<{ __typename?: 'Device_Type', pubkey: string, signing_alg?: DeviceSigningAlgorithm | null, token_account?: string | null, tx: { __typename?: 'Transaction_Type', block_ts?: string | null }, product: { __typename?: 'Product_Type', mint_account: string, metadata?: { __typename?: 'TokenMetadata_Type', name?: string | null, symbol?: string | null, uri?: string | null, additional: Array<any> } | null, vendor: { __typename?: 'Vendor_Type', pubkey: string } }, did?: { __typename?: 'DID_Type', mint_account: string, mint_authority?: string | null, metadata?: { __typename?: 'TokenMetadata_Type', name?: string | null, symbol?: string | null, uri?: string | null, additional: Array<any> } | null, owner?: { __typename?: 'User_Type', pubkey: string } | null } | null }> | null };
+
+export type GetProgramsQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export const GetProductsDocument = { "kind": "Document", "definitions": [{ "kind": "OperationDefinition", "operation": "query", "name": { "kind": "Name", "value": "getProducts" }, "selectionSet": { "kind": "SelectionSet", "selections": [{ "kind": "Field", "name": { "kind": "Name", "value": "Product" }, "selectionSet": { "kind": "SelectionSet", "selections": [{ "kind": "Field", "name": { "kind": "Name", "value": "mint_account" } }, { "kind": "Field", "name": { "kind": "Name", "value": "mint_authority" } }, { "kind": "Field", "name": { "kind": "Name", "value": "devices_count" } }, { "kind": "Field", "name": { "kind": "Name", "value": "metadata" }, "selectionSet": { "kind": "SelectionSet", "selections": [{ "kind": "Field", "name": { "kind": "Name", "value": "name" } }, { "kind": "Field", "name": { "kind": "Name", "value": "symbol" } }, { "kind": "Field", "name": { "kind": "Name", "value": "uri" } }, { "kind": "Field", "name": { "kind": "Name", "value": "additional" } }] } }, { "kind": "Field", "name": { "kind": "Name", "value": "vendor" }, "selectionSet": { "kind": "SelectionSet", "selections": [{ "kind": "Field", "name": { "kind": "Name", "value": "pubkey" } }] } }] } }] } }] } as unknown as DocumentNode<GetProductsQuery, GetProductsQueryVariables>;
-export const GetProductDocument = { "kind": "Document", "definitions": [{ "kind": "OperationDefinition", "operation": "query", "name": { "kind": "Name", "value": "getProduct" }, "variableDefinitions": [{ "kind": "VariableDefinition", "variable": { "kind": "Variable", "name": { "kind": "Name", "value": "mint_account" } }, "type": { "kind": "NamedType", "name": { "kind": "Name", "value": "String" } } }, { "kind": "VariableDefinition", "variable": { "kind": "Variable", "name": { "kind": "Name", "value": "limit" } }, "type": { "kind": "NamedType", "name": { "kind": "Name", "value": "Int" } } }, { "kind": "VariableDefinition", "variable": { "kind": "Variable", "name": { "kind": "Name", "value": "offset" } }, "type": { "kind": "NamedType", "name": { "kind": "Name", "value": "String" } } }], "selectionSet": { "kind": "SelectionSet", "selections": [{ "kind": "Field", "name": { "kind": "Name", "value": "Product" }, "arguments": [{ "kind": "Argument", "name": { "kind": "Name", "value": "filter" }, "value": { "kind": "ObjectValue", "fields": [{ "kind": "ObjectField", "name": { "kind": "Name", "value": "mint_account" }, "value": { "kind": "ObjectValue", "fields": [{ "kind": "ObjectField", "name": { "kind": "Name", "value": "eq" }, "value": { "kind": "Variable", "name": { "kind": "Name", "value": "mint_account" } } }] } }] } }], "selectionSet": { "kind": "SelectionSet", "selections": [{ "kind": "Field", "name": { "kind": "Name", "value": "mint_account" } }, { "kind": "Field", "name": { "kind": "Name", "value": "mint_authority" } }, { "kind": "Field", "name": { "kind": "Name", "value": "devices_count" } }, { "kind": "Field", "name": { "kind": "Name", "value": "metadata" }, "selectionSet": { "kind": "SelectionSet", "selections": [{ "kind": "Field", "name": { "kind": "Name", "value": "name" } }, { "kind": "Field", "name": { "kind": "Name", "value": "symbol" } }, { "kind": "Field", "name": { "kind": "Name", "value": "uri" } }, { "kind": "Field", "name": { "kind": "Name", "value": "additional" } }] } }, { "kind": "Field", "name": { "kind": "Name", "value": "vendor" }, "selectionSet": { "kind": "SelectionSet", "selections": [{ "kind": "Field", "name": { "kind": "Name", "value": "pubkey" } }] } }, { "kind": "Field", "name": { "kind": "Name", "value": "devices" }, "arguments": [{ "kind": "Argument", "name": { "kind": "Name", "value": "order" }, "value": { "kind": "ObjectValue", "fields": [{ "kind": "ObjectField", "name": { "kind": "Name", "value": "tx" }, "value": { "kind": "ObjectValue", "fields": [{ "kind": "ObjectField", "name": { "kind": "Name", "value": "slot" }, "value": { "kind": "ObjectValue", "fields": [{ "kind": "ObjectField", "name": { "kind": "Name", "value": "dir" }, "value": { "kind": "EnumValue", "value": "ASC" } }] } }] } }] } }, { "kind": "Argument", "name": { "kind": "Name", "value": "first" }, "value": { "kind": "Variable", "name": { "kind": "Name", "value": "limit" } } }, { "kind": "Argument", "name": { "kind": "Name", "value": "after" }, "value": { "kind": "Variable", "name": { "kind": "Name", "value": "offset" } } }], "selectionSet": { "kind": "SelectionSet", "selections": [{ "kind": "Field", "name": { "kind": "Name", "value": "pubkey" } }, { "kind": "Field", "name": { "kind": "Name", "value": "signing_alg" } }, { "kind": "Field", "name": { "kind": "Name", "value": "token_account" } }, { "kind": "Field", "name": { "kind": "Name", "value": "tx" }, "selectionSet": { "kind": "SelectionSet", "selections": [{ "kind": "Field", "name": { "kind": "Name", "value": "block_ts" } }] } }, { "kind": "Field", "name": { "kind": "Name", "value": "did" }, "selectionSet": { "kind": "SelectionSet", "selections": [{ "kind": "Field", "name": { "kind": "Name", "value": "token_account" } }, { "kind": "Field", "name": { "kind": "Name", "value": "mint_account" } }, { "kind": "Field", "name": { "kind": "Name", "value": "metadata" }, "selectionSet": { "kind": "SelectionSet", "selections": [{ "kind": "Field", "name": { "kind": "Name", "value": "name" } }, { "kind": "Field", "name": { "kind": "Name", "value": "symbol" } }, { "kind": "Field", "name": { "kind": "Name", "value": "uri" } }, { "kind": "Field", "name": { "kind": "Name", "value": "additional" } }] } }, { "kind": "Field", "name": { "kind": "Name", "value": "owner" }, "selectionSet": { "kind": "SelectionSet", "selections": [{ "kind": "Field", "name": { "kind": "Name", "value": "pubkey" } }] } }] } }] } }] } }] } }] } as unknown as DocumentNode<GetProductQuery, GetProductQueryVariables>;
-export const GetVendorDocument = { "kind": "Document", "definitions": [{ "kind": "OperationDefinition", "operation": "query", "name": { "kind": "Name", "value": "getVendor" }, "variableDefinitions": [{ "kind": "VariableDefinition", "variable": { "kind": "Variable", "name": { "kind": "Name", "value": "vendor_pubkey" } }, "type": { "kind": "NamedType", "name": { "kind": "Name", "value": "String" } } }], "selectionSet": { "kind": "SelectionSet", "selections": [{ "kind": "Field", "name": { "kind": "Name", "value": "Vendor" }, "arguments": [{ "kind": "Argument", "name": { "kind": "Name", "value": "filter" }, "value": { "kind": "ObjectValue", "fields": [{ "kind": "ObjectField", "name": { "kind": "Name", "value": "pubkey" }, "value": { "kind": "ObjectValue", "fields": [{ "kind": "ObjectField", "name": { "kind": "Name", "value": "eq" }, "value": { "kind": "Variable", "name": { "kind": "Name", "value": "vendor_pubkey" } } }] } }] } }], "selectionSet": { "kind": "SelectionSet", "selections": [{ "kind": "Field", "name": { "kind": "Name", "value": "pubkey" } }, { "kind": "Field", "name": { "kind": "Name", "value": "products_count" } }, { "kind": "Field", "name": { "kind": "Name", "value": "products" }, "selectionSet": { "kind": "SelectionSet", "selections": [{ "kind": "Field", "name": { "kind": "Name", "value": "mint_account" } }, { "kind": "Field", "name": { "kind": "Name", "value": "mint_authority" } }, { "kind": "Field", "name": { "kind": "Name", "value": "metadata" }, "selectionSet": { "kind": "SelectionSet", "selections": [{ "kind": "Field", "name": { "kind": "Name", "value": "name" } }, { "kind": "Field", "name": { "kind": "Name", "value": "symbol" } }, { "kind": "Field", "name": { "kind": "Name", "value": "uri" } }, { "kind": "Field", "name": { "kind": "Name", "value": "additional" } }] } }, { "kind": "Field", "name": { "kind": "Name", "value": "devices_count" } }, { "kind": "Field", "name": { "kind": "Name", "value": "tx" }, "selectionSet": { "kind": "SelectionSet", "selections": [{ "kind": "Field", "name": { "kind": "Name", "value": "block_ts" } }] } }] } }] } }] } }] } as unknown as DocumentNode<GetVendorQuery, GetVendorQueryVariables>;
-export const GetDeviceDocument = { "kind": "Document", "definitions": [{ "kind": "OperationDefinition", "operation": "query", "name": { "kind": "Name", "value": "getDevice" }, "variableDefinitions": [{ "kind": "VariableDefinition", "variable": { "kind": "Variable", "name": { "kind": "Name", "value": "device_pubkey" } }, "type": { "kind": "NamedType", "name": { "kind": "Name", "value": "String" } } }], "selectionSet": { "kind": "SelectionSet", "selections": [{ "kind": "Field", "name": { "kind": "Name", "value": "Device" }, "arguments": [{ "kind": "Argument", "name": { "kind": "Name", "value": "filter" }, "value": { "kind": "ObjectValue", "fields": [{ "kind": "ObjectField", "name": { "kind": "Name", "value": "pubkey" }, "value": { "kind": "ObjectValue", "fields": [{ "kind": "ObjectField", "name": { "kind": "Name", "value": "eq" }, "value": { "kind": "Variable", "name": { "kind": "Name", "value": "device_pubkey" } } }] } }] } }], "selectionSet": { "kind": "SelectionSet", "selections": [{ "kind": "Field", "name": { "kind": "Name", "value": "pubkey" } }, { "kind": "Field", "name": { "kind": "Name", "value": "signing_alg" } }, { "kind": "Field", "name": { "kind": "Name", "value": "token_account" } }, { "kind": "Field", "name": { "kind": "Name", "value": "tx" }, "selectionSet": { "kind": "SelectionSet", "selections": [{ "kind": "Field", "name": { "kind": "Name", "value": "block_ts" } }] } }, { "kind": "Field", "name": { "kind": "Name", "value": "product" }, "selectionSet": { "kind": "SelectionSet", "selections": [{ "kind": "Field", "name": { "kind": "Name", "value": "mint_account" } }, { "kind": "Field", "name": { "kind": "Name", "value": "metadata" }, "selectionSet": { "kind": "SelectionSet", "selections": [{ "kind": "Field", "name": { "kind": "Name", "value": "name" } }, { "kind": "Field", "name": { "kind": "Name", "value": "symbol" } }, { "kind": "Field", "name": { "kind": "Name", "value": "uri" } }, { "kind": "Field", "name": { "kind": "Name", "value": "additional" } }] } }, { "kind": "Field", "name": { "kind": "Name", "value": "vendor" }, "selectionSet": { "kind": "SelectionSet", "selections": [{ "kind": "Field", "name": { "kind": "Name", "value": "pubkey" } }] } }] } }, { "kind": "Field", "name": { "kind": "Name", "value": "did" }, "selectionSet": { "kind": "SelectionSet", "selections": [{ "kind": "Field", "name": { "kind": "Name", "value": "mint_account" } }, { "kind": "Field", "name": { "kind": "Name", "value": "mint_authority" } }, { "kind": "Field", "name": { "kind": "Name", "value": "metadata" }, "selectionSet": { "kind": "SelectionSet", "selections": [{ "kind": "Field", "name": { "kind": "Name", "value": "name" } }, { "kind": "Field", "name": { "kind": "Name", "value": "symbol" } }, { "kind": "Field", "name": { "kind": "Name", "value": "uri" } }, { "kind": "Field", "name": { "kind": "Name", "value": "additional" } }] } }, { "kind": "Field", "name": { "kind": "Name", "value": "owner" }, "selectionSet": { "kind": "SelectionSet", "selections": [{ "kind": "Field", "name": { "kind": "Name", "value": "pubkey" } }] } }] } }] } }] } }] } as unknown as DocumentNode<GetDeviceQuery, GetDeviceQueryVariables>;
+export type GetProgramsQuery = { __typename?: 'Query', Program?: Array<{ __typename?: 'Program_Type', pubkey: string, vendors_count: any, products_count: any, devices_count: any, authority: { __typename?: 'Admin_Type', pubkey: string } }> | null };
+
+
+export const GetProductsDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"getProducts"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"Product"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"mint_account"}},{"kind":"Field","name":{"kind":"Name","value":"mint_authority"}},{"kind":"Field","name":{"kind":"Name","value":"devices_count"}},{"kind":"Field","name":{"kind":"Name","value":"metadata"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"symbol"}},{"kind":"Field","name":{"kind":"Name","value":"uri"}},{"kind":"Field","name":{"kind":"Name","value":"additional"}}]}},{"kind":"Field","name":{"kind":"Name","value":"vendor"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"pubkey"}}]}}]}}]}}]} as unknown as DocumentNode<GetProductsQuery, GetProductsQueryVariables>;
+export const GetProductDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"getProduct"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"mint_account"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"limit"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"Int"}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"offset"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"Product"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"filter"},"value":{"kind":"ObjectValue","fields":[{"kind":"ObjectField","name":{"kind":"Name","value":"mint_account"},"value":{"kind":"ObjectValue","fields":[{"kind":"ObjectField","name":{"kind":"Name","value":"eq"},"value":{"kind":"Variable","name":{"kind":"Name","value":"mint_account"}}}]}}]}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"mint_account"}},{"kind":"Field","name":{"kind":"Name","value":"mint_authority"}},{"kind":"Field","name":{"kind":"Name","value":"devices_count"}},{"kind":"Field","name":{"kind":"Name","value":"metadata"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"symbol"}},{"kind":"Field","name":{"kind":"Name","value":"uri"}},{"kind":"Field","name":{"kind":"Name","value":"additional"}}]}},{"kind":"Field","name":{"kind":"Name","value":"vendor"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"pubkey"}}]}},{"kind":"Field","name":{"kind":"Name","value":"devices"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"order"},"value":{"kind":"ObjectValue","fields":[{"kind":"ObjectField","name":{"kind":"Name","value":"tx"},"value":{"kind":"ObjectValue","fields":[{"kind":"ObjectField","name":{"kind":"Name","value":"slot"},"value":{"kind":"ObjectValue","fields":[{"kind":"ObjectField","name":{"kind":"Name","value":"dir"},"value":{"kind":"EnumValue","value":"ASC"}}]}}]}}]}},{"kind":"Argument","name":{"kind":"Name","value":"first"},"value":{"kind":"Variable","name":{"kind":"Name","value":"limit"}}},{"kind":"Argument","name":{"kind":"Name","value":"after"},"value":{"kind":"Variable","name":{"kind":"Name","value":"offset"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"pubkey"}},{"kind":"Field","name":{"kind":"Name","value":"signing_alg"}},{"kind":"Field","name":{"kind":"Name","value":"token_account"}},{"kind":"Field","name":{"kind":"Name","value":"tx"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"block_ts"}}]}},{"kind":"Field","name":{"kind":"Name","value":"did"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"token_account"}},{"kind":"Field","name":{"kind":"Name","value":"mint_account"}},{"kind":"Field","name":{"kind":"Name","value":"metadata"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"symbol"}},{"kind":"Field","name":{"kind":"Name","value":"uri"}},{"kind":"Field","name":{"kind":"Name","value":"additional"}}]}},{"kind":"Field","name":{"kind":"Name","value":"owner"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"pubkey"}}]}}]}}]}}]}}]}}]} as unknown as DocumentNode<GetProductQuery, GetProductQueryVariables>;
+export const GetVendorDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"getVendor"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"vendor_pubkey"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"Vendor"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"filter"},"value":{"kind":"ObjectValue","fields":[{"kind":"ObjectField","name":{"kind":"Name","value":"pubkey"},"value":{"kind":"ObjectValue","fields":[{"kind":"ObjectField","name":{"kind":"Name","value":"eq"},"value":{"kind":"Variable","name":{"kind":"Name","value":"vendor_pubkey"}}}]}}]}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"pubkey"}},{"kind":"Field","name":{"kind":"Name","value":"products_count"}},{"kind":"Field","name":{"kind":"Name","value":"devices_count"}},{"kind":"Field","name":{"kind":"Name","value":"products"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"mint_account"}},{"kind":"Field","name":{"kind":"Name","value":"mint_authority"}},{"kind":"Field","name":{"kind":"Name","value":"metadata"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"symbol"}},{"kind":"Field","name":{"kind":"Name","value":"uri"}},{"kind":"Field","name":{"kind":"Name","value":"additional"}}]}},{"kind":"Field","name":{"kind":"Name","value":"devices_count"}},{"kind":"Field","name":{"kind":"Name","value":"tx"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"block_ts"}}]}}]}}]}}]}}]} as unknown as DocumentNode<GetVendorQuery, GetVendorQueryVariables>;
+export const GetDeviceDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"getDevice"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"device_pubkey"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"Device"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"filter"},"value":{"kind":"ObjectValue","fields":[{"kind":"ObjectField","name":{"kind":"Name","value":"pubkey"},"value":{"kind":"ObjectValue","fields":[{"kind":"ObjectField","name":{"kind":"Name","value":"eq"},"value":{"kind":"Variable","name":{"kind":"Name","value":"device_pubkey"}}}]}}]}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"pubkey"}},{"kind":"Field","name":{"kind":"Name","value":"signing_alg"}},{"kind":"Field","name":{"kind":"Name","value":"token_account"}},{"kind":"Field","name":{"kind":"Name","value":"tx"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"block_ts"}}]}},{"kind":"Field","name":{"kind":"Name","value":"product"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"mint_account"}},{"kind":"Field","name":{"kind":"Name","value":"metadata"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"symbol"}},{"kind":"Field","name":{"kind":"Name","value":"uri"}},{"kind":"Field","name":{"kind":"Name","value":"additional"}}]}},{"kind":"Field","name":{"kind":"Name","value":"vendor"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"pubkey"}}]}}]}},{"kind":"Field","name":{"kind":"Name","value":"did"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"mint_account"}},{"kind":"Field","name":{"kind":"Name","value":"mint_authority"}},{"kind":"Field","name":{"kind":"Name","value":"metadata"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"symbol"}},{"kind":"Field","name":{"kind":"Name","value":"uri"}},{"kind":"Field","name":{"kind":"Name","value":"additional"}}]}},{"kind":"Field","name":{"kind":"Name","value":"owner"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"pubkey"}}]}}]}}]}}]}}]} as unknown as DocumentNode<GetDeviceQuery, GetDeviceQueryVariables>;
+export const GetProgramsDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"getPrograms"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"Program"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"pubkey"}},{"kind":"Field","name":{"kind":"Name","value":"authority"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"pubkey"}}]}},{"kind":"Field","name":{"kind":"Name","value":"vendors_count"}},{"kind":"Field","name":{"kind":"Name","value":"products_count"}},{"kind":"Field","name":{"kind":"Name","value":"devices_count"}}]}}]}}]} as unknown as DocumentNode<GetProgramsQuery, GetProgramsQueryVariables>;
