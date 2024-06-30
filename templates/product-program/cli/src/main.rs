@@ -144,7 +144,7 @@ fn init_program(args: InitProgramCliArgs) {
             &ProgramInstruction::Init(InitArgs {
                 name: args.name,
                 symbol: args.symbol,
-                uri: args.url,
+                uri: args.uri,
                 additional_metadata: args.additional_metadata,
             }),
             vec![
