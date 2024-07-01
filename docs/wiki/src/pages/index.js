@@ -19,7 +19,7 @@ function HomepageHeader() {
         <div className={styles.buttons}>
           <Link
             className="button button--secondary button--lg"
-            to="/docs/quickstart/prerequisites">
+            to="/docs/tutorial-basics/tech_background">
             Start Building With DePHY - 3min ⏱️
           </Link>
         </div>

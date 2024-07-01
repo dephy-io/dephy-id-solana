@@ -7,9 +7,11 @@ sidebar_label: Glossary
 
 ## DePIN
 
-DePIN stands for Decentralized Physical Infrastructure Network, which is an umbrella term for networks that leverage blockchain technology to decentralize control and ownership of physical infrastructure in the real world.
+DePIN stands for Decentralized Physical Infrastructure Network, an umbrella term for networks leveraging blockchain technology to decentralize control and ownership of physical infrastructure in the real world.
 
-In the traditional world, physical infrastructure like data networks, transportation or electrical grids have been owned and managed by centralized entities. DePIN projects seek to replace this by creating peer-to-peer (P2P) networks where individuals can contribute their own physical resources and own shared control over the network.
+Traditionally, physical infrastructure like data networks, transportation or electrical grids have been owned and managed by centralized entities.
+
+DePIN projects seek to replace this by creating peer-to-peer (P2P) networks where individuals can contribute their own physical resources and own shared control over the network, while also maintaining control over users’ data.
 
 ## DID
 

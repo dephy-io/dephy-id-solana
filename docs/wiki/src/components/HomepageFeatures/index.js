@@ -9,8 +9,8 @@ const FeatureList = [
     Svg: require('@site/static/img/lan.svg').default,
     description: (
       <>
-        DePHY offers an open-source hardware solution, complemented by SDKs and tools,
-        that greatly reduces both manufacturing and network messaging costs involved in bridging hardware products to blockchains.
+        DePHY’s open-source hardware solutions, complemented by SDKs and tools,
+        greatly reduces both manufacturing and network messaging costs involved in bridging hardware products to blockchains
       </>
     ),
   },
@@ -19,9 +19,8 @@ const FeatureList = [
     Svg: require('@site/static/img/speed.svg').default,
     description: (
       <>
-        DePHY’s node synchronization operates at the 500ms level,
-        which is significantly lower than the 10 minutes
-        level required by the current blockchain system.
+       DePHY’s node synchronization operates at the 500ms level,
+       significantly lower than the 10 minutes required by current blockchain systems
       </>
     ),
   },
@@ -30,11 +29,11 @@ const FeatureList = [
     Svg: require('@site/static/img/shield.svg').default,
     description: (
       <>
-        DePHY uses Soulbound DID for devices with secure, tamper-proof hardware,
-        and ZK technology in Oracles, ensuring traceable, confidential, and verifiable network messages.
+        DePHY utilizes Soulbound Device Identities (DIDs) to ensure secure, tamper-proof hardware, and ZK technology in Oracles,
+        to ensure traceable, confidential, and verifiable network messages
       </>
     ),
-  },
+  }
 ];
 
 function Feature({Svg, title, description}) {
