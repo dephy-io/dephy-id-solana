@@ -30,8 +30,8 @@ import {
     parseCreateProductInstruction,
     parseCreateActivatedDeviceInstruction,
     ParsedCreateActivatedDeviceInstruction,
-// } from "@dephy-io/dephy-id-program-client";
-} from "./generated";
+} from "@dephy-io/dephy-id-program-client";
+// } from "./generated";
 
 interface Config {
     rpcUrl?: string
