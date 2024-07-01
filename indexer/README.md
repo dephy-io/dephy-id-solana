@@ -1,5 +1,4 @@
-DePHY ID indexer
-====
+# DePHY ID indexer
 
 This is a very basic indexer implementation for indexing vendors, products, devices, and their owners.
 
@@ -25,7 +24,7 @@ bun generate:edgeql
 ### Public GraphQL endpoints and allow CORS
 
 ```sh
-edgedb configure set cors_allow_origins *
+edgedb configure set cors_allow_origins '*'
 ```
 
 ```sh
@@ -62,6 +61,8 @@ Mainnet
 Run EdgeDB Web UI
 
 `edgedb ui`
+
+local edgedb url and port can be found here
 
 Generate EdgeDB migrations
 

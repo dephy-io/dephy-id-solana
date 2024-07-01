@@ -1,10 +1,14 @@
-import { TypedDocumentNode } from '@graphql-typed-document-node/core';
+import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
 import { parse } from 'graphql'
 import { gql, GraphQLClient } from 'graphql-request'
-import { GetProductQuery, GetProductQueryVariables, GetProductsQuery, GetVendorQuery, GetVendorQueryVariables, GetDeviceQuery, GetDeviceQueryVariables } from './gql'
+import type { GetProductQuery, GetProductQueryVariables, GetProductsQuery, GetVendorQuery, GetVendorQueryVariables, GetDeviceQuery, GetDeviceQueryVariables, GetProgramsQuery } from './gql/graphql'
 
-const endpoint = 'http://localhost:10700/branch/main/graphql'
-export const gqlClient = new GraphQLClient(endpoint)
+import { env } from '@/env';
+
+// const endpoint = 'http://localhost:10701/branch/main/graphql'
+// const endpoint = 'https://indexer-dev-api.dephy.id/branch/main/graphql/explore'
+
+export const gqlClient = new GraphQLClient(env.NEXT_PUBLIC_GRAPHQL_URI)
 
 export async function getProducts() {
   const query: TypedDocumentNode<GetProductsQuery> = parse(gql`
@@ -30,7 +34,6 @@ export async function getProducts() {
 
   return await gqlClient.request(query, variables)
 }
-
 
 export async function getProduct(mint_account: string, offset: number, limit: number) {
   const query: TypedDocumentNode<GetProductQuery> = parse(gql`
@@ -82,13 +85,13 @@ export async function getProduct(mint_account: string, offset: number, limit: nu
   return await gqlClient.request(query, variables)
 }
 
-
 export async function getVendor(vendor_pubkey: string) {
   const query: TypedDocumentNode<GetVendorQuery> = parse(gql`
     query getVendor($vendor_pubkey: String) {
       Vendor(filter: { pubkey: {eq: $vendor_pubkey} }) {
         pubkey
         products_count
+        devices_count
         products {
           mint_account
           mint_authority
@@ -113,7 +116,6 @@ export async function getVendor(vendor_pubkey: string) {
 
   return await gqlClient.request(query, variables)
 }
-
 
 export async function getDevice(device_pubkey: string) {
   const query: TypedDocumentNode<GetDeviceQuery> = parse(gql`
@@ -157,6 +159,26 @@ export async function getDevice(device_pubkey: string) {
   const variables: GetDeviceQueryVariables = {
     device_pubkey
   }
+
+  return await gqlClient.request(query, variables)
+}
+
+export async function getPrograms() {
+  const query: TypedDocumentNode<GetProgramsQuery> = parse(gql`
+    query getPrograms {
+      Program {
+        pubkey
+        authority {
+          pubkey
+        }
+        vendors_count
+        products_count
+        devices_count
+      }
+    }
+  `)
+
+  const variables = {}
 
   return await gqlClient.request(query, variables)
 }
