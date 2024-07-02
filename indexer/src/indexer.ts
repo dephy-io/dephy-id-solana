@@ -31,8 +31,8 @@ import {
     parseCreateActivatedDeviceInstruction,
     ParsedCreateActivatedDeviceInstruction,
     parseCreateActivatedDeviceNonSignerInstruction,
+    fetchMaybeProgramDataAccount,
 } from "@dephy-io/dephy-id-program-client";
-// } from "./generated";
 
 interface Config {
     rpcUrl?: string
@@ -125,22 +125,25 @@ export class Indexer {
     public async ensureProgramDataAccount(programId: string) {
         const [programPdaPubkey, bump] = await findProgramDataAccountPda({ programAddress: address(programId) })
 
-        let programPda = await fetchProgramDataAccount(this.rpc, programPdaPubkey)
-        assertAccountDecoded<ProgramDataAccount>(programPda)
-        assert.equal(programId, programPda.programAddress)
-        assert.equal(bump, programPda.data.data.bump)
-        assert.equal(false, programPda.executable)
+        let programPda = await fetchMaybeProgramDataAccount(this.rpc, programPdaPubkey)
 
-        this.programPda = programPda
-        console.log('Program:   ', programPda.programAddress)
-        console.log('Account:   ', programPda.address)
-        console.log('Authority: ', programPda.data.authority)
+        if (programPda.exists) {
+            assertAccountDecoded<ProgramDataAccount>(programPda)
+            assert.equal(programId, programPda.programAddress)
+            assert.equal(bump, programPda.data.data.bump)
+            assert.equal(false, programPda.executable)
+
+            this.programPda = programPda
+            console.log('Program:   ', programPda.programAddress)
+            console.log('Account:   ', programPda.address)
+            console.log('Authority: ', programPda.data.authority)
+        }
     }
 
 
     public async run(programId: string, commitment: Commitment = 'finalized') {
         this.programAddress = address(programId)
-        // await this.ensureProgramDataAccount(programAddress)
+        await this.ensureProgramDataAccount(this.programAddress)
 
         const notifications = await this.subscribeLogs(this.programAddress, commitment)
         console.log('logs subscribed')
