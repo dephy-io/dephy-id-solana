@@ -16,8 +16,8 @@ pub enum ProgramInstruction {
     #[account(7, writable, name="product_mint", desc="PDA of the product mint account (program: dephy_id, seeds: ['DePHY_ID-PRODUCT', vendor, PRODUCT_NAME])")]
     Init(InitArgs),
 
-    /// Create a  Device
-    #[account(0, writable, name="program_pda", desc = "The program derived address of the program account to create (seeds: ['Program'])")]
+    /// Create a Device
+    #[account(0, name="program_pda", desc = "The program derived address of the program account to create (seeds: ['Program'])")]
     #[account(1, writable, signer, name="payer", desc = "The account paying for the storage fees")]
     #[account(2, name="system_program", desc = "The system program")]
     #[account(3, name="token_2022_program", desc = "The SPL Token 2022 program")]
