@@ -30,6 +30,7 @@ import {
     parseCreateProductInstruction,
     parseCreateActivatedDeviceInstruction,
     ParsedCreateActivatedDeviceInstruction,
+    parseCreateActivatedDeviceNonSignerInstruction,
 } from "@dephy-io/dephy-id-program-client";
 // } from "./generated";
 
@@ -389,7 +390,7 @@ export class Indexer {
         })).run(dbTx)
     }
 
-    async handleCreateActivatedDevice(dbTx: Executor, createActivatedDevice: ParsedCreateActivatedDeviceInstruction<string, IAccountMeta[]>, meta: IxMeta) {
+    async handleCreateActivatedDevice(dbTx: Executor, createActivatedDevice: ParsedCreateActivatedDeviceInstruction<string, readonly IAccountMeta[]>, meta: IxMeta) {
         const product = await e.select(e.Product, () => ({
             metadata: {
                 name: true,
@@ -446,10 +447,10 @@ export class Indexer {
                 })),
             }),
             metadata: e.insert(e.TokenMetadata, {
-                name: createActivatedDevice.data.name,
+                name: createActivatedDevice.data.createActivatedDeviceArgs.name,
                 symbol: product?.metadata?.symbol,
-                uri: createActivatedDevice.data.uri,
-                additional: createActivatedDevice.data.additionalMetadata as [string, string][],
+                uri: createActivatedDevice.data.createActivatedDeviceArgs.uri,
+                additional: createActivatedDevice.data.createActivatedDeviceArgs.additionalMetadata as [string, string][],
             }),
         }).run(dbTx)
     }
@@ -485,6 +486,11 @@ export class Indexer {
             case DephyIdInstruction.CreateActivatedDevice:
                 let createActivatedDevice = parseCreateActivatedDeviceInstruction(programIx)
                 await this.handleCreateActivatedDevice(dbTx, createActivatedDevice, meta)
+                break
+
+            case DephyIdInstruction.CreateActivatedDeviceNonSigner:
+                let createActivatedDeviceNonSigner = parseCreateActivatedDeviceNonSignerInstruction(programIx)
+                await this.handleCreateActivatedDevice(dbTx, createActivatedDeviceNonSigner, meta)
                 break
 
             default:
