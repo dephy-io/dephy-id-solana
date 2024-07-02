@@ -7,13 +7,14 @@
  */
 import { type Address, type Codec, type Decoder, type Encoder, type IAccountMeta, type IAccountSignerMeta, type IInstruction, type IInstructionWithAccounts, type IInstructionWithData, type ReadonlyAccount, type ReadonlySignerAccount, type TransactionSigner, type WritableAccount, type WritableSignerAccount } from '@solana/web3.js';
 import { DEPHY_ID_PROGRAM_ADDRESS } from '../programs';
+import { type CreateActivatedDeviceArgs, type CreateActivatedDeviceArgsArgs } from '../types';
 export type CreateActivatedDeviceInstruction<TProgram extends string = typeof DEPHY_ID_PROGRAM_ADDRESS, TAccountSystemProgram extends string | IAccountMeta<string> = '11111111111111111111111111111111', TAccountToken2022Program extends string | IAccountMeta<string> = 'TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb', TAccountAtaProgram extends string | IAccountMeta<string> = 'ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL', TAccountPayer extends string | IAccountMeta<string> = string, TAccountVendor extends string | IAccountMeta<string> = string, TAccountProductMint extends string | IAccountMeta<string> = string, TAccountProductAssociatedToken extends string | IAccountMeta<string> = string, TAccountDevice extends string | IAccountMeta<string> = string, TAccountDeviceMint extends string | IAccountMeta<string> = string, TAccountDeviceAssociatedToken extends string | IAccountMeta<string> = string, TAccountOwner extends string | IAccountMeta<string> = string, TRemainingAccounts extends readonly IAccountMeta<string>[] = []> = IInstruction<TProgram> & IInstructionWithData<Uint8Array> & IInstructionWithAccounts<[
     TAccountSystemProgram extends string ? ReadonlyAccount<TAccountSystemProgram> : TAccountSystemProgram,
     TAccountToken2022Program extends string ? ReadonlyAccount<TAccountToken2022Program> : TAccountToken2022Program,
     TAccountAtaProgram extends string ? ReadonlyAccount<TAccountAtaProgram> : TAccountAtaProgram,
     TAccountPayer extends string ? WritableSignerAccount<TAccountPayer> & IAccountSignerMeta<TAccountPayer> : TAccountPayer,
-    TAccountVendor extends string ? ReadonlyAccount<TAccountVendor> : TAccountVendor,
-    TAccountProductMint extends string ? ReadonlyAccount<TAccountProductMint> : TAccountProductMint,
+    TAccountVendor extends string ? ReadonlySignerAccount<TAccountVendor> & IAccountSignerMeta<TAccountVendor> : TAccountVendor,
+    TAccountProductMint extends string ? WritableAccount<TAccountProductMint> : TAccountProductMint,
     TAccountProductAssociatedToken extends string ? WritableAccount<TAccountProductAssociatedToken> : TAccountProductAssociatedToken,
     TAccountDevice extends string ? ReadonlySignerAccount<TAccountDevice> & IAccountSignerMeta<TAccountDevice> : TAccountDevice,
     TAccountDeviceMint extends string ? WritableAccount<TAccountDeviceMint> : TAccountDeviceMint,
@@ -23,14 +24,10 @@ export type CreateActivatedDeviceInstruction<TProgram extends string = typeof DE
 ]>;
 export type CreateActivatedDeviceInstructionData = {
     discriminator: number;
-    name: string;
-    uri: string;
-    additionalMetadata: Array<readonly [string, string]>;
+    createActivatedDeviceArgs: CreateActivatedDeviceArgs;
 };
 export type CreateActivatedDeviceInstructionDataArgs = {
-    name: string;
-    uri: string;
-    additionalMetadata: Array<readonly [string, string]>;
+    createActivatedDeviceArgs: CreateActivatedDeviceArgsArgs;
 };
 export declare function getCreateActivatedDeviceInstructionDataEncoder(): Encoder<CreateActivatedDeviceInstructionDataArgs>;
 export declare function getCreateActivatedDeviceInstructionDataDecoder(): Decoder<CreateActivatedDeviceInstructionData>;
@@ -45,7 +42,7 @@ export type CreateActivatedDeviceInput<TAccountSystemProgram extends string = st
     /** The account paying for the storage fees */
     payer?: TransactionSigner<TAccountPayer>;
     /** The vendor */
-    vendor: Address<TAccountVendor>;
+    vendor: TransactionSigner<TAccountVendor>;
     /** The mint account for the product */
     productMint: Address<TAccountProductMint>;
     /** The associated token account for the product */
@@ -58,9 +55,7 @@ export type CreateActivatedDeviceInput<TAccountSystemProgram extends string = st
     deviceAssociatedToken: Address<TAccountDeviceAssociatedToken>;
     /** The device's owner */
     owner: Address<TAccountOwner>;
-    name: CreateActivatedDeviceInstructionDataArgs['name'];
-    uri: CreateActivatedDeviceInstructionDataArgs['uri'];
-    additionalMetadata: CreateActivatedDeviceInstructionDataArgs['additionalMetadata'];
+    createActivatedDeviceArgs: CreateActivatedDeviceInstructionDataArgs['createActivatedDeviceArgs'];
 };
 export declare function getCreateActivatedDeviceInstruction<TAccountSystemProgram extends string, TAccountToken2022Program extends string, TAccountAtaProgram extends string, TAccountPayer extends string, TAccountVendor extends string, TAccountProductMint extends string, TAccountProductAssociatedToken extends string, TAccountDevice extends string, TAccountDeviceMint extends string, TAccountDeviceAssociatedToken extends string, TAccountOwner extends string>(input: CreateActivatedDeviceInput<TAccountSystemProgram, TAccountToken2022Program, TAccountAtaProgram, TAccountPayer, TAccountVendor, TAccountProductMint, TAccountProductAssociatedToken, TAccountDevice, TAccountDeviceMint, TAccountDeviceAssociatedToken, TAccountOwner>): CreateActivatedDeviceInstruction<typeof DEPHY_ID_PROGRAM_ADDRESS, TAccountSystemProgram, TAccountToken2022Program, TAccountAtaProgram, TAccountPayer, TAccountVendor, TAccountProductMint, TAccountProductAssociatedToken, TAccountDevice, TAccountDeviceMint, TAccountDeviceAssociatedToken, TAccountOwner>;
 export type ParsedCreateActivatedDeviceInstruction<TProgram extends string = typeof DEPHY_ID_PROGRAM_ADDRESS, TAccountMetas extends readonly IAccountMeta[] = readonly IAccountMeta[]> = {

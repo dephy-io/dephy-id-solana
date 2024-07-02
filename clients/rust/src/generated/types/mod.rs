@@ -5,11 +5,13 @@
 //! <https://github.com/kinobi-so/kinobi>
 //!
 
+pub(crate) mod r#create_activated_device_args;
 pub(crate) mod r#device_activation_signature;
 pub(crate) mod r#device_signing_algorithm;
 pub(crate) mod r#key;
 pub(crate) mod r#program_data;
 
+pub use self::r#create_activated_device_args::*;
 pub use self::r#device_activation_signature::*;
 pub use self::r#device_signing_algorithm::*;
 pub use self::r#key::*;
