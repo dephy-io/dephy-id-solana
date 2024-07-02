@@ -52,14 +52,28 @@ pub enum Instruction {
     #[account(1, name="token_2022_program", desc="The SPL Token 2022 program")]
     #[account(2, name="ata_program", desc="The associated token program")]
     #[account(3, writable, signer, name="payer", desc="The account paying for the storage fees")]
-    #[account(4, name="vendor", desc="The vendor")]
-    #[account(5, name="product_mint", desc="The mint account for the product")]
+    #[account(4, signer, name="vendor", desc="The vendor")]
+    #[account(5, writable, name="product_mint", desc="The mint account for the product")]
     #[account(6, writable, name="product_associated_token", desc="The associated token account for the product")]
     #[account(7, signer, name="device", desc="The device")]
     #[account(8, writable, name="device_mint", desc="The mint account for the device")]
     #[account(9, writable, name="device_associated_token", desc="The associated token account for the device")]
     #[account(10, name="owner", desc="The device's owner")]
     CreateActivatedDevice(CreateActivatedDeviceArgs),
+
+    /// Vendor create an activated Device (the device doesn't need to sign)
+    #[account(0, name="system_program", desc="The system program")]
+    #[account(1, name="token_2022_program", desc="The SPL Token 2022 program")]
+    #[account(2, name="ata_program", desc="The associated token program")]
+    #[account(3, writable, signer, name="payer", desc="The account paying for the storage fees")]
+    #[account(4, signer, name="vendor", desc="The vendor")]
+    #[account(5, writable, name="product_mint", desc="The mint account for the product")]
+    #[account(6, writable, name="product_associated_token", desc="The associated token account for the product")]
+    #[account(7, name="device", desc="The device")]
+    #[account(8, writable, name="device_mint", desc="The mint account for the device")]
+    #[account(9, writable, name="device_associated_token", desc="The associated token account for the device")]
+    #[account(10, name="owner", desc="The device's owner")]
+    CreateActivatedDeviceNonSigner(CreateActivatedDeviceArgs),
 }
 
 #[repr(C)]
