@@ -18,7 +18,6 @@
     "clients:rust:lint": "zx ./scripts/client/lint-rust.mjs"
   },
   "devDependencies": {
-    "@graphql-codegen/cli": "^5.0.2",
     "@iarna/toml": "^2.2.5",
     "@kinobi-so/nodes-from-anchor": "^0.20.6",
     "@kinobi-so/renderers-js": "^0.20.9",
@@ -29,8 +28,9 @@
     "zx": "^7.2.3"
   },
   "packageManager": "pnpm@9.4.0",
-  "dependencies": {
-    "@graphql-typed-document-node/core": "^3.2.0",
-    "graphql": "^16.9.0"
+  "pnpm": {
+    "patchedDependencies": {
+      "@kinobi-so/renderers-rust@0.20.10": "patches/@kinobi-so__renderers-rust@0.20.10.patch"
+    }
   }
 }
