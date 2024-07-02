@@ -32,3 +32,6 @@ dephy-id-program-client = { workspace = true }
 [dev-dependencies]
 solana-program-test = { workspace = true }
 solana-sdk = { workspace = true }
+
+[features]
+test-sbf = []

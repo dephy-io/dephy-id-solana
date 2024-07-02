@@ -9,11 +9,16 @@ use dephy_id_product_program::{
 use solana_program::pubkey::Pubkey;
 use solana_program_test::{tokio, ProgramTest, ProgramTestContext};
 use solana_sdk::{
+    account::ReadableAccount,
     instruction::{AccountMeta, Instruction as SolanaInstruction},
     signature::Keypair,
     signer::Signer,
     system_program,
     transaction::Transaction,
+};
+use spl_token_2022::{
+    extension::StateWithExtensions,
+    state::Account,
 };
 
 #[tokio::test]
@@ -21,6 +26,8 @@ async fn test_all() {
     let program_id = dephy_id_product_program::id();
 
     let mut program_test = ProgramTest::new("dephy_id_product_program", program_id, None);
+
+    std::env::set_var("SBF_OUT_DIR", std::env::current_dir().unwrap().join("../../../target/deploy"));
     program_test.add_program("dephy_id_program", dephy_id_program_client::ID, None);
 
     let mut ctx = program_test.start_with_context().await;
@@ -87,17 +94,17 @@ async fn test_init(
                 // #[account(0, writable, name="program_pda", desc = "The program derived address of the program account to create (seeds: ['Program'])")]
                 AccountMeta::new(program_account_pubkey, false),
                 // #[account(1, signer, name="authority", desc = "The authority of the program")]
-                AccountMeta::new(authority.pubkey(), true),
+                AccountMeta::new_readonly(authority.pubkey(), true),
                 // #[account(2, writable, signer, name="payer", desc = "The account paying for the storage fees")]
                 AccountMeta::new(ctx.payer.pubkey(), true),
                 // #[account(3, name="system_program", desc = "The system program")]
-                AccountMeta::new(system_program::id(), false),
+                AccountMeta::new_readonly(system_program::id(), false),
                 // #[account(4, name="token_2022_program", desc="The SPL Token 2022 program")]
-                AccountMeta::new(spl_token_2022::id(), false),
+                AccountMeta::new_readonly(spl_token_2022::id(), false),
                 // #[account(5, name="dephy_id", desc = "DePHY ID program id")]
-                AccountMeta::new(dephy_id_program_client::ID, false),
+                AccountMeta::new_readonly(dephy_id_program_client::ID, false),
                 // #[account(6, name="vendor", desc="PDA as product vendor (seeds: ['VENDOR'])")]
-                AccountMeta::new(vendor_pubkey, false),
+                AccountMeta::new_readonly(vendor_pubkey, false),
                 // #[account(7, writable, name="product_mint", desc="PDA of the product mint account (program: dephy_id, seeds: ['DePHY_ID-PRODUCT', vendor, PRODUCT_NAME])")]
                 AccountMeta::new(product_mint_pubkey, false),
             ],
@@ -137,10 +144,10 @@ async fn test_create_device(
             &spl_token_2022::id(),
         );
     let (device_mint_pubkey, _) =
-        find_device_mint(&product_mint_pubkey, &device_pubkey, &program_id);
+        find_device_mint(&product_mint_pubkey, &device_pubkey, &dephy_id_program_client::ID);
     let device_atoken_pubkey =
         spl_associated_token_account::get_associated_token_address_with_program_id(
-            &device_pubkey,
+            &owner.pubkey(),
             &device_mint_pubkey,
             &spl_token_2022::id(),
         );
@@ -150,26 +157,26 @@ async fn test_create_device(
             program_id,
             &ProgramInstruction::CreateDevice(CreateDeviceArgs { challenge: 42 }),
             vec![
-                // #[account(0, writable, name="program_pda", desc = "The program derived address of the program account to increment (seeds: ['Program'])")]
+                // #[account(0, name="program_pda", desc = "The program derived address of the program account to increment (seeds: ['Program'])")]
                 AccountMeta::new(program_account_pubkey, false),
                 // #[account(1, writable, signer, name="payer", desc = "The account paying for the storage fees")]
-                AccountMeta::new(ctx.payer.pubkey(), true),
+                AccountMeta::new_readonly(ctx.payer.pubkey(), true),
                 // #[account(2, name="system_program", desc = "The system program")]
-                AccountMeta::new(system_program::id(), false),
+                AccountMeta::new_readonly(system_program::id(), false),
                 // #[account(3, name="token_2022_program", desc = "The SPL Token 2022 program")]
-                AccountMeta::new(spl_token_2022::id(), false),
+                AccountMeta::new_readonly(spl_token_2022::id(), false),
                 // #[account(4, name="ata_program", desc = "The associated token program")]
-                AccountMeta::new(spl_associated_token_account::id(), false),
+                AccountMeta::new_readonly(spl_associated_token_account::id(), false),
                 // #[account(5, name="dephy_id", desc = "DePHY ID program id")]
-                AccountMeta::new(dephy_id_program_client::ID, false),
+                AccountMeta::new_readonly(dephy_id_program_client::ID, false),
                 // #[account(6, name="vendor", desc = "PDA as product vendor (seeds: ['VENDOR'])")]
-                AccountMeta::new(vendor_pubkey, false),
-                // #[account(7, name="product_mint", desc = "PDA of the product mint account (program: dephy_id, seeds: ['DePHY_ID-PRODUCT', vendor, PRODUCT_NAME])")]
+                AccountMeta::new_readonly(vendor_pubkey, false),
+                // #[account(7, writable, name="product_mint", desc = "PDA of the product mint account (program: dephy_id, seeds: ['DePHY_ID-PRODUCT', vendor, PRODUCT_NAME])")]
                 AccountMeta::new(product_mint_pubkey, false),
                 // #[account(8, name="owner", desc="The device's owner")]
-                AccountMeta::new(owner.pubkey(), false),
+                AccountMeta::new_readonly(owner.pubkey(), false),
                 // #[account(9, name="device", desc = "PDA of the device (seeds: ['DEVICE', owner])")]
-                AccountMeta::new(device_pubkey, false),
+                AccountMeta::new_readonly(device_pubkey, false),
                 // #[account(10, writable, name="product_atoken", desc="The associated token account of the product")]
                 AccountMeta::new(product_atoken_pubkey, false),
                 // #[account(11, writable, name="device_mint", desc="The mint account of the device")]
@@ -185,4 +192,13 @@ async fn test_create_device(
         .process_transaction(transaction)
         .await
         .unwrap();
+
+    let device_atoken = ctx
+        .banks_client
+        .get_account(device_atoken_pubkey)
+        .await
+        .expect("get_account")
+        .expect("atoken account not none");
+    let device_atoken_data = StateWithExtensions::<Account>::unpack(device_atoken.data()).unwrap();
+    assert_eq!(device_atoken_data.base.amount, 1, "Token amount is 1");
 }

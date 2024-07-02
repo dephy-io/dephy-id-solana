@@ -8,6 +8,7 @@
 
 export * from './activateDevice';
 export * from './createActivatedDevice';
+export * from './createActivatedDeviceNonSigner';
 export * from './createDevice';
 export * from './createProduct';
 export * from './initialize';

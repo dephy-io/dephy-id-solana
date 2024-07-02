@@ -10,7 +10,7 @@ use borsh::BorshDeserialize;
 use borsh::BorshSerialize;
 
 /// Accounts.
-pub struct CreateActivatedDevice {
+pub struct CreateActivatedDeviceNonSigner {
     /// The system program
     pub system_program: solana_program::pubkey::Pubkey,
     /// The SPL Token 2022 program
@@ -35,17 +35,17 @@ pub struct CreateActivatedDevice {
     pub owner: solana_program::pubkey::Pubkey,
 }
 
-impl CreateActivatedDevice {
+impl CreateActivatedDeviceNonSigner {
     pub fn instruction(
         &self,
-        args: CreateActivatedDeviceInstructionArgs,
+        args: CreateActivatedDeviceNonSignerInstructionArgs,
     ) -> solana_program::instruction::Instruction {
         self.instruction_with_remaining_accounts(args, &[])
     }
     #[allow(clippy::vec_init_then_push)]
     pub fn instruction_with_remaining_accounts(
         &self,
-        args: CreateActivatedDeviceInstructionArgs,
+        args: CreateActivatedDeviceNonSignerInstructionArgs,
         remaining_accounts: &[solana_program::instruction::AccountMeta],
     ) -> solana_program::instruction::Instruction {
         let mut accounts = Vec::with_capacity(11 + remaining_accounts.len());
@@ -78,7 +78,7 @@ impl CreateActivatedDevice {
         ));
         accounts.push(solana_program::instruction::AccountMeta::new_readonly(
             self.device,
-            true,
+            false,
         ));
         accounts.push(solana_program::instruction::AccountMeta::new(
             self.device_mint,
@@ -92,7 +92,8 @@ impl CreateActivatedDevice {
             self.owner, false,
         ));
         accounts.extend_from_slice(remaining_accounts);
-        let mut data = borsh::to_vec(&CreateActivatedDeviceInstructionData::new()).unwrap();
+        let mut data =
+            borsh::to_vec(&CreateActivatedDeviceNonSignerInstructionData::new()).unwrap();
         let mut args = borsh::to_vec(&args).unwrap();
         data.append(&mut args);
 
@@ -105,17 +106,17 @@ impl CreateActivatedDevice {
 }
 
 #[derive(BorshDeserialize, BorshSerialize)]
-pub struct CreateActivatedDeviceInstructionData {
+pub struct CreateActivatedDeviceNonSignerInstructionData {
     discriminator: u8,
 }
 
-impl CreateActivatedDeviceInstructionData {
+impl CreateActivatedDeviceNonSignerInstructionData {
     pub fn new() -> Self {
-        Self { discriminator: 4 }
+        Self { discriminator: 5 }
     }
 }
 
-impl Default for CreateActivatedDeviceInstructionData {
+impl Default for CreateActivatedDeviceNonSignerInstructionData {
     fn default() -> Self {
         Self::new()
     }
@@ -123,27 +124,27 @@ impl Default for CreateActivatedDeviceInstructionData {
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-pub struct CreateActivatedDeviceInstructionArgs {
+pub struct CreateActivatedDeviceNonSignerInstructionArgs {
     pub create_activated_device_args: CreateActivatedDeviceArgs,
 }
 
-/// Instruction builder for `CreateActivatedDevice`.
+/// Instruction builder for `CreateActivatedDeviceNonSigner`.
 ///
 /// ### Accounts:
 ///
 ///   0. `[optional]` system_program (default to `11111111111111111111111111111111`)
-///   1. `[optional]` token2022_program (default to `TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb`)
+///   1. `[]` token2022_program
 ///   2. `[optional]` ata_program (default to `ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL`)
 ///   3. `[writable, signer]` payer
 ///   4. `[signer]` vendor
 ///   5. `[writable]` product_mint
 ///   6. `[writable]` product_associated_token
-///   7. `[signer]` device
+///   7. `[]` device
 ///   8. `[writable]` device_mint
 ///   9. `[writable]` device_associated_token
 ///   10. `[]` owner
 #[derive(Clone, Debug, Default)]
-pub struct CreateActivatedDeviceBuilder {
+pub struct CreateActivatedDeviceNonSignerBuilder {
     system_program: Option<solana_program::pubkey::Pubkey>,
     token2022_program: Option<solana_program::pubkey::Pubkey>,
     ata_program: Option<solana_program::pubkey::Pubkey>,
@@ -159,7 +160,7 @@ pub struct CreateActivatedDeviceBuilder {
     __remaining_accounts: Vec<solana_program::instruction::AccountMeta>,
 }
 
-impl CreateActivatedDeviceBuilder {
+impl CreateActivatedDeviceNonSignerBuilder {
     pub fn new() -> Self {
         Self::default()
     }
@@ -170,7 +171,6 @@ impl CreateActivatedDeviceBuilder {
         self.system_program = Some(system_program);
         self
     }
-    /// `[optional account, default to 'TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb']`
     /// The SPL Token 2022 program
     #[inline(always)]
     pub fn token2022_program(
@@ -269,13 +269,13 @@ impl CreateActivatedDeviceBuilder {
     }
     #[allow(clippy::clone_on_copy)]
     pub fn instruction(&self) -> solana_program::instruction::Instruction {
-        let accounts = CreateActivatedDevice {
+        let accounts = CreateActivatedDeviceNonSigner {
             system_program: self
                 .system_program
                 .unwrap_or(solana_program::pubkey!("11111111111111111111111111111111")),
-            token2022_program: self.token2022_program.unwrap_or(solana_program::pubkey!(
-                "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb"
-            )),
+            token2022_program: self
+                .token2022_program
+                .expect("token2022_program is not set"),
             ata_program: self.ata_program.unwrap_or(solana_program::pubkey!(
                 "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
             )),
@@ -292,7 +292,7 @@ impl CreateActivatedDeviceBuilder {
                 .expect("device_associated_token is not set"),
             owner: self.owner.expect("owner is not set"),
         };
-        let args = CreateActivatedDeviceInstructionArgs {
+        let args = CreateActivatedDeviceNonSignerInstructionArgs {
             create_activated_device_args: self
                 .create_activated_device_args
                 .clone()
@@ -303,8 +303,8 @@ impl CreateActivatedDeviceBuilder {
     }
 }
 
-/// `create_activated_device` CPI accounts.
-pub struct CreateActivatedDeviceCpiAccounts<'a, 'b> {
+/// `create_activated_device_non_signer` CPI accounts.
+pub struct CreateActivatedDeviceNonSignerCpiAccounts<'a, 'b> {
     /// The system program
     pub system_program: &'b solana_program::account_info::AccountInfo<'a>,
     /// The SPL Token 2022 program
@@ -329,8 +329,8 @@ pub struct CreateActivatedDeviceCpiAccounts<'a, 'b> {
     pub owner: &'b solana_program::account_info::AccountInfo<'a>,
 }
 
-/// `create_activated_device` CPI instruction.
-pub struct CreateActivatedDeviceCpi<'a, 'b> {
+/// `create_activated_device_non_signer` CPI instruction.
+pub struct CreateActivatedDeviceNonSignerCpi<'a, 'b> {
     /// The program to invoke.
     pub __program: &'b solana_program::account_info::AccountInfo<'a>,
     /// The system program
@@ -356,14 +356,14 @@ pub struct CreateActivatedDeviceCpi<'a, 'b> {
     /// The device's owner
     pub owner: &'b solana_program::account_info::AccountInfo<'a>,
     /// The arguments for the instruction.
-    pub __args: CreateActivatedDeviceInstructionArgs,
+    pub __args: CreateActivatedDeviceNonSignerInstructionArgs,
 }
 
-impl<'a, 'b> CreateActivatedDeviceCpi<'a, 'b> {
+impl<'a, 'b> CreateActivatedDeviceNonSignerCpi<'a, 'b> {
     pub fn new(
         program: &'b solana_program::account_info::AccountInfo<'a>,
-        accounts: CreateActivatedDeviceCpiAccounts<'a, 'b>,
-        args: CreateActivatedDeviceInstructionArgs,
+        accounts: CreateActivatedDeviceNonSignerCpiAccounts<'a, 'b>,
+        args: CreateActivatedDeviceNonSignerInstructionArgs,
     ) -> Self {
         Self {
             __program: program,
@@ -445,7 +445,7 @@ impl<'a, 'b> CreateActivatedDeviceCpi<'a, 'b> {
         ));
         accounts.push(solana_program::instruction::AccountMeta::new_readonly(
             *self.device.key,
-            true,
+            false,
         ));
         accounts.push(solana_program::instruction::AccountMeta::new(
             *self.device_mint.key,
@@ -466,7 +466,8 @@ impl<'a, 'b> CreateActivatedDeviceCpi<'a, 'b> {
                 is_writable: remaining_account.2,
             })
         });
-        let mut data = borsh::to_vec(&CreateActivatedDeviceInstructionData::new()).unwrap();
+        let mut data =
+            borsh::to_vec(&CreateActivatedDeviceNonSignerInstructionData::new()).unwrap();
         let mut args = borsh::to_vec(&self.__args).unwrap();
         data.append(&mut args);
 
@@ -500,7 +501,7 @@ impl<'a, 'b> CreateActivatedDeviceCpi<'a, 'b> {
     }
 }
 
-/// Instruction builder for `CreateActivatedDevice` via CPI.
+/// Instruction builder for `CreateActivatedDeviceNonSigner` via CPI.
 ///
 /// ### Accounts:
 ///
@@ -511,18 +512,18 @@ impl<'a, 'b> CreateActivatedDeviceCpi<'a, 'b> {
 ///   4. `[signer]` vendor
 ///   5. `[writable]` product_mint
 ///   6. `[writable]` product_associated_token
-///   7. `[signer]` device
+///   7. `[]` device
 ///   8. `[writable]` device_mint
 ///   9. `[writable]` device_associated_token
 ///   10. `[]` owner
 #[derive(Clone, Debug)]
-pub struct CreateActivatedDeviceCpiBuilder<'a, 'b> {
-    instruction: Box<CreateActivatedDeviceCpiBuilderInstruction<'a, 'b>>,
+pub struct CreateActivatedDeviceNonSignerCpiBuilder<'a, 'b> {
+    instruction: Box<CreateActivatedDeviceNonSignerCpiBuilderInstruction<'a, 'b>>,
 }
 
-impl<'a, 'b> CreateActivatedDeviceCpiBuilder<'a, 'b> {
+impl<'a, 'b> CreateActivatedDeviceNonSignerCpiBuilder<'a, 'b> {
     pub fn new(program: &'b solana_program::account_info::AccountInfo<'a>) -> Self {
-        let instruction = Box::new(CreateActivatedDeviceCpiBuilderInstruction {
+        let instruction = Box::new(CreateActivatedDeviceNonSignerCpiBuilderInstruction {
             __program: program,
             system_program: None,
             token2022_program: None,
@@ -682,14 +683,14 @@ impl<'a, 'b> CreateActivatedDeviceCpiBuilder<'a, 'b> {
         &self,
         signers_seeds: &[&[&[u8]]],
     ) -> solana_program::entrypoint::ProgramResult {
-        let args = CreateActivatedDeviceInstructionArgs {
+        let args = CreateActivatedDeviceNonSignerInstructionArgs {
             create_activated_device_args: self
                 .instruction
                 .create_activated_device_args
                 .clone()
                 .expect("create_activated_device_args is not set"),
         };
-        let instruction = CreateActivatedDeviceCpi {
+        let instruction = CreateActivatedDeviceNonSignerCpi {
             __program: self.instruction.__program,
 
             system_program: self
@@ -744,7 +745,7 @@ impl<'a, 'b> CreateActivatedDeviceCpiBuilder<'a, 'b> {
 }
 
 #[derive(Clone, Debug)]
-struct CreateActivatedDeviceCpiBuilderInstruction<'a, 'b> {
+struct CreateActivatedDeviceNonSignerCpiBuilderInstruction<'a, 'b> {
     __program: &'b solana_program::account_info::AccountInfo<'a>,
     system_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     token2022_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,

@@ -10,6 +10,7 @@ import { containsBytes, getU8Encoder, type Address } from '@solana/web3.js';
 import {
   type ParsedActivateDeviceInstruction,
   type ParsedCreateActivatedDeviceInstruction,
+  type ParsedCreateActivatedDeviceNonSignerInstruction,
   type ParsedCreateDeviceInstruction,
   type ParsedCreateProductInstruction,
   type ParsedInitializeInstruction,
@@ -41,6 +42,7 @@ export enum DephyIdInstruction {
   CreateDevice,
   ActivateDevice,
   CreateActivatedDevice,
+  CreateActivatedDeviceNonSigner,
 }
 
 export function identifyDephyIdInstruction(
@@ -62,6 +64,9 @@ export function identifyDephyIdInstruction(
   }
   if (containsBytes(data, getU8Encoder().encode(4), 0)) {
     return DephyIdInstruction.CreateActivatedDevice;
+  }
+  if (containsBytes(data, getU8Encoder().encode(5), 0)) {
+    return DephyIdInstruction.CreateActivatedDeviceNonSigner;
   }
   throw new Error(
     'The provided instruction could not be identified as a dephyId instruction.'
@@ -85,4 +90,7 @@ export type ParsedDephyIdInstruction<
     } & ParsedActivateDeviceInstruction<TProgram>)
   | ({
       instructionType: DephyIdInstruction.CreateActivatedDevice;
-    } & ParsedCreateActivatedDeviceInstruction<TProgram>);
+    } & ParsedCreateActivatedDeviceInstruction<TProgram>)
+  | ({
+      instructionType: DephyIdInstruction.CreateActivatedDeviceNonSigner;
+    } & ParsedCreateActivatedDeviceNonSignerInstruction<TProgram>);

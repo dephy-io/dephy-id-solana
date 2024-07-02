@@ -29,11 +29,7 @@ import {
   type WritableSignerAccount,
 } from '@solana/web3.js';
 import { DEPHY_ID_PROGRAM_ADDRESS } from '../programs';
-import {
-  expectSome,
-  getAccountMetaFactory,
-  type ResolvedAccount,
-} from '../shared';
+import { getAccountMetaFactory, type ResolvedAccount } from '../shared';
 import {
   getCreateActivatedDeviceArgsDecoder,
   getCreateActivatedDeviceArgsEncoder,
@@ -41,14 +37,12 @@ import {
   type CreateActivatedDeviceArgsArgs,
 } from '../types';
 
-export type CreateActivatedDeviceInstruction<
+export type CreateActivatedDeviceNonSignerInstruction<
   TProgram extends string = typeof DEPHY_ID_PROGRAM_ADDRESS,
   TAccountSystemProgram extends
     | string
     | IAccountMeta<string> = '11111111111111111111111111111111',
-  TAccountToken2022Program extends
-    | string
-    | IAccountMeta<string> = 'TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb',
+  TAccountToken2022Program extends string | IAccountMeta<string> = string,
   TAccountAtaProgram extends
     | string
     | IAccountMeta<string> = 'ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL',
@@ -89,8 +83,7 @@ export type CreateActivatedDeviceInstruction<
         ? WritableAccount<TAccountProductAssociatedToken>
         : TAccountProductAssociatedToken,
       TAccountDevice extends string
-        ? ReadonlySignerAccount<TAccountDevice> &
-            IAccountSignerMeta<TAccountDevice>
+        ? ReadonlyAccount<TAccountDevice>
         : TAccountDevice,
       TAccountDeviceMint extends string
         ? WritableAccount<TAccountDeviceMint>
@@ -105,43 +98,43 @@ export type CreateActivatedDeviceInstruction<
     ]
   >;
 
-export type CreateActivatedDeviceInstructionData = {
+export type CreateActivatedDeviceNonSignerInstructionData = {
   discriminator: number;
   createActivatedDeviceArgs: CreateActivatedDeviceArgs;
 };
 
-export type CreateActivatedDeviceInstructionDataArgs = {
+export type CreateActivatedDeviceNonSignerInstructionDataArgs = {
   createActivatedDeviceArgs: CreateActivatedDeviceArgsArgs;
 };
 
-export function getCreateActivatedDeviceInstructionDataEncoder(): Encoder<CreateActivatedDeviceInstructionDataArgs> {
+export function getCreateActivatedDeviceNonSignerInstructionDataEncoder(): Encoder<CreateActivatedDeviceNonSignerInstructionDataArgs> {
   return transformEncoder(
     getStructEncoder([
       ['discriminator', getU8Encoder()],
       ['createActivatedDeviceArgs', getCreateActivatedDeviceArgsEncoder()],
     ]),
-    (value) => ({ ...value, discriminator: 4 })
+    (value) => ({ ...value, discriminator: 5 })
   );
 }
 
-export function getCreateActivatedDeviceInstructionDataDecoder(): Decoder<CreateActivatedDeviceInstructionData> {
+export function getCreateActivatedDeviceNonSignerInstructionDataDecoder(): Decoder<CreateActivatedDeviceNonSignerInstructionData> {
   return getStructDecoder([
     ['discriminator', getU8Decoder()],
     ['createActivatedDeviceArgs', getCreateActivatedDeviceArgsDecoder()],
   ]);
 }
 
-export function getCreateActivatedDeviceInstructionDataCodec(): Codec<
-  CreateActivatedDeviceInstructionDataArgs,
-  CreateActivatedDeviceInstructionData
+export function getCreateActivatedDeviceNonSignerInstructionDataCodec(): Codec<
+  CreateActivatedDeviceNonSignerInstructionDataArgs,
+  CreateActivatedDeviceNonSignerInstructionData
 > {
   return combineCodec(
-    getCreateActivatedDeviceInstructionDataEncoder(),
-    getCreateActivatedDeviceInstructionDataDecoder()
+    getCreateActivatedDeviceNonSignerInstructionDataEncoder(),
+    getCreateActivatedDeviceNonSignerInstructionDataDecoder()
   );
 }
 
-export type CreateActivatedDeviceInput<
+export type CreateActivatedDeviceNonSignerInput<
   TAccountSystemProgram extends string = string,
   TAccountToken2022Program extends string = string,
   TAccountAtaProgram extends string = string,
@@ -157,11 +150,11 @@ export type CreateActivatedDeviceInput<
   /** The system program */
   systemProgram?: Address<TAccountSystemProgram>;
   /** The SPL Token 2022 program */
-  token2022Program?: Address<TAccountToken2022Program>;
+  token2022Program: Address<TAccountToken2022Program>;
   /** The associated token program */
   ataProgram?: Address<TAccountAtaProgram>;
   /** The account paying for the storage fees */
-  payer?: TransactionSigner<TAccountPayer>;
+  payer: TransactionSigner<TAccountPayer>;
   /** The vendor */
   vendor: TransactionSigner<TAccountVendor>;
   /** The mint account for the product */
@@ -169,17 +162,17 @@ export type CreateActivatedDeviceInput<
   /** The associated token account for the product */
   productAssociatedToken: Address<TAccountProductAssociatedToken>;
   /** The device */
-  device: TransactionSigner<TAccountDevice>;
+  device: Address<TAccountDevice>;
   /** The mint account for the device */
   deviceMint: Address<TAccountDeviceMint>;
   /** The associated token account for the device */
   deviceAssociatedToken: Address<TAccountDeviceAssociatedToken>;
   /** The device's owner */
   owner: Address<TAccountOwner>;
-  createActivatedDeviceArgs: CreateActivatedDeviceInstructionDataArgs['createActivatedDeviceArgs'];
+  createActivatedDeviceArgs: CreateActivatedDeviceNonSignerInstructionDataArgs['createActivatedDeviceArgs'];
 };
 
-export function getCreateActivatedDeviceInstruction<
+export function getCreateActivatedDeviceNonSignerInstruction<
   TAccountSystemProgram extends string,
   TAccountToken2022Program extends string,
   TAccountAtaProgram extends string,
@@ -192,7 +185,7 @@ export function getCreateActivatedDeviceInstruction<
   TAccountDeviceAssociatedToken extends string,
   TAccountOwner extends string,
 >(
-  input: CreateActivatedDeviceInput<
+  input: CreateActivatedDeviceNonSignerInput<
     TAccountSystemProgram,
     TAccountToken2022Program,
     TAccountAtaProgram,
@@ -205,7 +198,7 @@ export function getCreateActivatedDeviceInstruction<
     TAccountDeviceAssociatedToken,
     TAccountOwner
   >
-): CreateActivatedDeviceInstruction<
+): CreateActivatedDeviceNonSignerInstruction<
   typeof DEPHY_ID_PROGRAM_ADDRESS,
   TAccountSystemProgram,
   TAccountToken2022Program,
@@ -258,16 +251,9 @@ export function getCreateActivatedDeviceInstruction<
     accounts.systemProgram.value =
       '11111111111111111111111111111111' as Address<'11111111111111111111111111111111'>;
   }
-  if (!accounts.token2022Program.value) {
-    accounts.token2022Program.value =
-      'TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb' as Address<'TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb'>;
-  }
   if (!accounts.ataProgram.value) {
     accounts.ataProgram.value =
       'ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL' as Address<'ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL'>;
-  }
-  if (!accounts.payer.value) {
-    accounts.payer.value = expectSome(accounts.vendor.value);
   }
 
   const getAccountMeta = getAccountMetaFactory(programAddress, 'programId');
@@ -286,10 +272,10 @@ export function getCreateActivatedDeviceInstruction<
       getAccountMeta(accounts.owner),
     ],
     programAddress,
-    data: getCreateActivatedDeviceInstructionDataEncoder().encode(
-      args as CreateActivatedDeviceInstructionDataArgs
+    data: getCreateActivatedDeviceNonSignerInstructionDataEncoder().encode(
+      args as CreateActivatedDeviceNonSignerInstructionDataArgs
     ),
-  } as CreateActivatedDeviceInstruction<
+  } as CreateActivatedDeviceNonSignerInstruction<
     typeof DEPHY_ID_PROGRAM_ADDRESS,
     TAccountSystemProgram,
     TAccountToken2022Program,
@@ -307,7 +293,7 @@ export function getCreateActivatedDeviceInstruction<
   return instruction;
 }
 
-export type ParsedCreateActivatedDeviceInstruction<
+export type ParsedCreateActivatedDeviceNonSignerInstruction<
   TProgram extends string = typeof DEPHY_ID_PROGRAM_ADDRESS,
   TAccountMetas extends readonly IAccountMeta[] = readonly IAccountMeta[],
 > = {
@@ -336,17 +322,17 @@ export type ParsedCreateActivatedDeviceInstruction<
     /** The device's owner */
     owner: TAccountMetas[10];
   };
-  data: CreateActivatedDeviceInstructionData;
+  data: CreateActivatedDeviceNonSignerInstructionData;
 };
 
-export function parseCreateActivatedDeviceInstruction<
+export function parseCreateActivatedDeviceNonSignerInstruction<
   TProgram extends string,
   TAccountMetas extends readonly IAccountMeta[],
 >(
   instruction: IInstruction<TProgram> &
     IInstructionWithAccounts<TAccountMetas> &
     IInstructionWithData<Uint8Array>
-): ParsedCreateActivatedDeviceInstruction<TProgram, TAccountMetas> {
+): ParsedCreateActivatedDeviceNonSignerInstruction<TProgram, TAccountMetas> {
   if (instruction.accounts.length < 11) {
     // TODO: Coded error.
     throw new Error('Not enough accounts');
@@ -372,7 +358,7 @@ export function parseCreateActivatedDeviceInstruction<
       deviceAssociatedToken: getNextAccount(),
       owner: getNextAccount(),
     },
-    data: getCreateActivatedDeviceInstructionDataDecoder().decode(
+    data: getCreateActivatedDeviceNonSignerInstructionDataDecoder().decode(
       instruction.data
     ),
   };
