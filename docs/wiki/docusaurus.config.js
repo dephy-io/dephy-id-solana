@@ -81,8 +81,8 @@ const config = {
         title: 'DePHY',
         logo: {
           alt: 'DePHY Logo',
-          srcDark: "img/logo.svg",
-          src: "img/logo_dark.svg",
+          srcDark: "img/logo.png",
+          src: "img/logo.png",
         },
         items: [
           {
