@@ -29,7 +29,11 @@ import {
   type WritableSignerAccount,
 } from '@solana/web3.js';
 import { DEPHY_ID_PROGRAM_ADDRESS } from '../programs';
-import { getAccountMetaFactory, type ResolvedAccount } from '../shared';
+import {
+  expectSome,
+  getAccountMetaFactory,
+  type ResolvedAccount,
+} from '../shared';
 import {
   getCreateActivatedDeviceArgsDecoder,
   getCreateActivatedDeviceArgsEncoder,
@@ -42,7 +46,9 @@ export type CreateActivatedDeviceNonSignerInstruction<
   TAccountSystemProgram extends
     | string
     | IAccountMeta<string> = '11111111111111111111111111111111',
-  TAccountToken2022Program extends string | IAccountMeta<string> = string,
+  TAccountToken2022Program extends
+    | string
+    | IAccountMeta<string> = 'TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb',
   TAccountAtaProgram extends
     | string
     | IAccountMeta<string> = 'ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL',
@@ -150,11 +156,11 @@ export type CreateActivatedDeviceNonSignerInput<
   /** The system program */
   systemProgram?: Address<TAccountSystemProgram>;
   /** The SPL Token 2022 program */
-  token2022Program: Address<TAccountToken2022Program>;
+  token2022Program?: Address<TAccountToken2022Program>;
   /** The associated token program */
   ataProgram?: Address<TAccountAtaProgram>;
   /** The account paying for the storage fees */
-  payer: TransactionSigner<TAccountPayer>;
+  payer?: TransactionSigner<TAccountPayer>;
   /** The vendor */
   vendor: TransactionSigner<TAccountVendor>;
   /** The mint account for the product */
@@ -251,9 +257,16 @@ export function getCreateActivatedDeviceNonSignerInstruction<
     accounts.systemProgram.value =
       '11111111111111111111111111111111' as Address<'11111111111111111111111111111111'>;
   }
+  if (!accounts.token2022Program.value) {
+    accounts.token2022Program.value =
+      'TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb' as Address<'TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb'>;
+  }
   if (!accounts.ataProgram.value) {
     accounts.ataProgram.value =
       'ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL' as Address<'ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL'>;
+  }
+  if (!accounts.payer.value) {
+    accounts.payer.value = expectSome(accounts.vendor.value);
   }
 
   const getAccountMeta = getAccountMetaFactory(programAddress, 'programId');

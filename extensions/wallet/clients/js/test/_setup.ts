@@ -31,7 +31,7 @@ import {
     findProductATokenPda,
     findProductMintPda,
     findProgramDataAccountPda,
-    getCreateActivatedDeviceInstruction,
+    getCreateActivatedDeviceNonSignerInstruction,
     getCreateProductInstruction,
     getInitializeInstruction
 } from '@dephy-io/dephy-id-program-client';
@@ -176,17 +176,19 @@ export const createProductAndDevice = async (
             uri: '',
             additionalMetadata: []
         }),
-        getCreateActivatedDeviceInstruction({
-            vendor: vendor.address,
+        getCreateActivatedDeviceNonSignerInstruction({
+            vendor,
             productMint,
             productAssociatedToken,
-            device,
+            device: device.address,
             deviceMint,
             deviceAssociatedToken,
             owner: owner.address,
-            name: 'Test Device',
-            uri: '',
-            additionalMetadata: []
+            createActivatedDeviceArgs: {
+                name: 'Test Device',
+                uri: '',
+                additionalMetadata: []
+            },
         })
     ]
 

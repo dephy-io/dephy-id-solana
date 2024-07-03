@@ -108,6 +108,12 @@ kinobi.update(
                 token2022Program: { defaultValue: k.publicKeyValueNode('TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb') },
                 payer: { defaultValue: k.accountValueNode("vendor") },
             },
+        },
+        createActivatedDeviceNonSigner: {
+            accounts: {
+                token2022Program: { defaultValue: k.publicKeyValueNode('TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb') },
+                payer: { defaultValue: k.accountValueNode("vendor") },
+            },
         }
     })
 );

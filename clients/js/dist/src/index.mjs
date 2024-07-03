@@ -694,8 +694,14 @@ function getCreateActivatedDeviceNonSignerInstruction(input) {
   if (!accounts.systemProgram.value) {
     accounts.systemProgram.value = "11111111111111111111111111111111";
   }
+  if (!accounts.token2022Program.value) {
+    accounts.token2022Program.value = "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb";
+  }
   if (!accounts.ataProgram.value) {
     accounts.ataProgram.value = "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL";
+  }
+  if (!accounts.payer.value) {
+    accounts.payer.value = expectSome(accounts.vendor.value);
   }
   const getAccountMeta = getAccountMetaFactory(programAddress);
   const instruction = {
