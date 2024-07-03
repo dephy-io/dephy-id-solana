@@ -1,5 +1,6 @@
+/* eslint-disable @typescript-eslint/no-floating-promises */
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Head from "next/head";
 import Link from "next/link";
 import { useRouter } from "next/router";
@@ -11,6 +12,7 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
+  CardFooter,
 } from "@/components/ui/card";
 
 import {
@@ -21,6 +23,15 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  // PaginationEllipsis,
+  // PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 
 import { getProduct } from "@/queries";
 import { type Product } from "@/gql/graphql";
@@ -32,16 +43,16 @@ export default function Product() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const [product, setProduct] = useState<Product | null>(null);
   const [page, setPage] = useState(Number(searchParams.get("page") ?? 0));
+  const [product, setProduct] = useState<Product | null>(null);
 
   const { data } = useQuery({
-    queryKey: ["product", router?.query?.id],
+    queryKey: ["product", router?.query?.id, page],
     queryFn: async ({ queryKey }) => {
       const [_key, id] = queryKey;
 
       if (typeof id === "string") {
-        return getProduct(id, page, limit);
+        return getProduct(id, page * limit, limit);
       } else {
         console.error("Invalid id type. Expected string, got", typeof id);
       }
@@ -52,9 +63,25 @@ export default function Product() {
   useEffect(() => {
     if (data?.Product) {
       const productData = data.Product[0] as Product;
+
       setProduct(productData);
     }
   }, [data]);
+
+  const handleSwitchPage = (page: number) => {
+    let _page = page;
+
+    if (page < 0) {
+      _page = 0;
+    }
+
+    if (page > product?.devices_count / limit) {
+      _page = Math.floor(product?.devices_count / limit);
+    }
+
+    setPage(_page);
+  };
+
   return (
     <>
       <Head>
@@ -65,13 +92,6 @@ export default function Product() {
       <main className="">
         <div className="px-4 py-16">
           {product ? <ProductItem product={product} /> : null}
-
-          {/* <div className="mb-2 mt-10 flex items-baseline gap-2">
-            <h3 className="text-xl font-bold tracking-tight">Devices</h3>
-            <div className="text-xs text-muted-foreground">
-              {product?.devices_count} devices
-            </div>
-          </div> */}
 
           {product ? (
             <Card className="mt-10">
@@ -107,31 +127,37 @@ export default function Product() {
                   </TableBody>
                 </Table>
               </CardContent>
-              {/* <CardFooter className="justify-between">
-              <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                Showing
-                <strong>
-                  {page * limit + 1}-{(page + 1) * limit}
-                </strong>
-                of <strong>{product.devices_count}</strong> devices
-              </div>
-              <Pagination className="mx-0 w-auto">
-                <PaginationContent>
-                  <PaginationItem>
-                    <PaginationPrevious href="#" />
-                  </PaginationItem>
-                  <PaginationItem>
-                    <PaginationLink href="#">1</PaginationLink>
-                  </PaginationItem>
-                  <PaginationItem>
-                    <PaginationEllipsis />
-                  </PaginationItem>
-                  <PaginationItem>
-                    <PaginationNext href="#" />
-                  </PaginationItem>
-                </PaginationContent>
-              </Pagination>
-            </CardFooter> */}
+              <CardFooter className="justify-between">
+                <div className="flex items-center gap-1 text-xs text-[#9DC8B9]">
+                  Showing
+                  <strong>
+                    {page * limit + 1}-{(page + 1) * limit}
+                  </strong>
+                  of <strong>{product.devices_count}</strong> devices
+                </div>
+                <Pagination className="mx-0 w-auto text-white">
+                  <PaginationContent>
+                    <PaginationItem>
+                      <PaginationPrevious
+                        onClick={() => handleSwitchPage(page - 1)}
+                        href="#"
+                      />
+                    </PaginationItem>
+                    {/* <PaginationItem>
+                      <PaginationLink href="#">1</PaginationLink>
+                    </PaginationItem>
+                    <PaginationItem>
+                      <PaginationEllipsis />
+                    </PaginationItem> */}
+                    <PaginationItem>
+                      <PaginationNext
+                        onClick={() => handleSwitchPage(page + 1)}
+                        href="#"
+                      />
+                    </PaginationItem>
+                  </PaginationContent>
+                </Pagination>
+              </CardFooter>
             </Card>
           ) : null}
         </div>
@@ -139,4 +165,3 @@ export default function Product() {
     </>
   );
 }
-

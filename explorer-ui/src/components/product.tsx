@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import Link from "next/link";
-import { Link2 } from "lucide-react";
+import { Link2, ChevronsRight } from "lucide-react";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
@@ -31,6 +31,7 @@ export function Product({ product }: { product: ProductType }) {
             href={product.metadata?.uri}
             target="_blank"
             rel="noopener noreferrer"
+            className="hover:opacity-60 active:opacity-70"
           >
             <Link2 className="h-4 w-4 text-amber-100" />
           </a>
@@ -38,8 +39,12 @@ export function Product({ product }: { product: ProductType }) {
       </CardHeader>
       <CardContent>
         <div className="text-2xl font-bold text-orange-400">
-          <Link href={`/product/${product.mint_account}`}>
+          <Link
+            className="flex items-center justify-between py-2 hover:opacity-60 active:opacity-70"
+            href={`/product/${product.mint_account}`}
+          >
             {product.metadata?.name}
+            <ChevronsRight size={16} />
           </Link>
         </div>
         <p className="mt-2 text-xs text-[#9DC8B9]">
@@ -47,6 +52,7 @@ export function Product({ product }: { product: ProductType }) {
             target="_blank"
             rel="noopener noreferrer"
             href={`https://solana.fm/address/${product.mint_account}`}
+            className="hover:opacity-60 active:opacity-70"
           >
             {product.mint_account}
           </a>
