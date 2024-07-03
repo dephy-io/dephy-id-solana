@@ -99,6 +99,11 @@ const config = {
           },
           // {to: '/blog', label: 'Blog', position: 'left'},
           {
+            label: 'Website',
+            position: 'right',
+            href: 'https://dephy.io',
+          },
+          {
             label: 'Twitter',
             position: 'right',
             href: 'https://twitter.com/dephynetwork',

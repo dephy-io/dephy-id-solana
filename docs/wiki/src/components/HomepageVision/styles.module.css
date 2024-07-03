@@ -1,0 +1,14 @@
+.vision {
+  align-items: center;
+  padding: 2rem 0;
+  width: 100%;
+  background-color: var(--ifm-background-color);
+}
+
+.visionText {
+  font-size: 1.5rem;
+}
+
+.visionButton {
+  width: 100%;
+}
