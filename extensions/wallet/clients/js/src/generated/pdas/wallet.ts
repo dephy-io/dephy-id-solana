@@ -26,7 +26,7 @@ export async function findWalletPda(
   config: { programAddress?: Address | undefined } = {}
 ): Promise<ProgramDerivedAddress> {
   const {
-    programAddress = '5ZYZAwmhpkVUbXQWmzEnBCBRxiWdEcYYykwyApWJdEUv' as Address<'5ZYZAwmhpkVUbXQWmzEnBCBRxiWdEcYYykwyApWJdEUv'>,
+    programAddress = 'ByEcTPnXHBCCWX73noBvYRrdTPBjXzm9DRE4nB8aQYgm' as Address<'ByEcTPnXHBCCWX73noBvYRrdTPBjXzm9DRE4nB8aQYgm'>,
   } = config;
   return await getProgramDerivedAddress({
     programAddress,

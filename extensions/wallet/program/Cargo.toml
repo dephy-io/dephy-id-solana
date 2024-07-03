@@ -10,11 +10,11 @@ edition = "2021"
 publish = false
 
 [package.metadata.solana]
-program-id = "5ZYZAwmhpkVUbXQWmzEnBCBRxiWdEcYYykwyApWJdEUv"
+program-id = "ByEcTPnXHBCCWX73noBvYRrdTPBjXzm9DRE4nB8aQYgm"
 account-dependencies = []
 
 [package.metadata.solana.program-dependencies]
-dephy_id_program = "hdMghjD73uASxgJXi6e1mGPsXqnADMsrqB1bveqABP1"
+dephy_id_program = "DiSU1nme5VJvMdry5FYhfw6LLFb3HUFLkCLZDe53x3PV"
 
 [lib]
 crate-type = ["cdylib", "lib"]

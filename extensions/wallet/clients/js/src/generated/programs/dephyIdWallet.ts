@@ -14,7 +14,7 @@ import {
 import { Key, getKeyEncoder } from '../types';
 
 export const DEPHY_ID_WALLET_PROGRAM_ADDRESS =
-  '5ZYZAwmhpkVUbXQWmzEnBCBRxiWdEcYYykwyApWJdEUv' as Address<'5ZYZAwmhpkVUbXQWmzEnBCBRxiWdEcYYykwyApWJdEUv'>;
+  'ByEcTPnXHBCCWX73noBvYRrdTPBjXzm9DRE4nB8aQYgm' as Address<'ByEcTPnXHBCCWX73noBvYRrdTPBjXzm9DRE4nB8aQYgm'>;
 
 export enum DephyIdWalletAccount {
   Wallet,
@@ -54,7 +54,7 @@ export function identifyDephyIdWalletInstruction(
 }
 
 export type ParsedDephyIdWalletInstruction<
-  TProgram extends string = '5ZYZAwmhpkVUbXQWmzEnBCBRxiWdEcYYykwyApWJdEUv',
+  TProgram extends string = 'ByEcTPnXHBCCWX73noBvYRrdTPBjXzm9DRE4nB8aQYgm',
 > =
   | ({
       instructionType: DephyIdWalletInstruction.Create;
