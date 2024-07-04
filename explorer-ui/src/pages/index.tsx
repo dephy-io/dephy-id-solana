@@ -1,4 +1,5 @@
 import Head from "next/head";
+import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -47,9 +48,12 @@ export default function Home() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-orange-400">
+                  <Link
+                    href="/products"
+                    className="text-2xl font-bold text-orange-400 hover:opacity-60 active:opacity-70"
+                  >
                     {programData.Program[0]?.products_count}
-                  </div>
+                  </Link>
                 </CardContent>
               </Card>
               <Card className="border-none">
