@@ -1,7 +1,17 @@
 import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
 import { parse } from 'graphql'
 import { gql, GraphQLClient } from 'graphql-request'
-import type { GetProductQuery, GetProductQueryVariables, GetProductsQuery, GetVendorQuery, GetVendorQueryVariables, GetDeviceQuery, GetDeviceQueryVariables, GetProgramsQuery } from './gql/graphql'
+import type {
+  GetProductQuery,
+  GetProductQueryVariables,
+  GetProductsQuery,
+  GetVendorQuery,
+  GetVendorQueryVariables,
+  GetDeviceQuery,
+  GetDeviceQueryVariables,
+  GetProgramsQuery,
+  GetProductsQueryVariables
+} from './gql/graphql'
 
 import { env } from '@/env';
 
@@ -10,10 +20,10 @@ import { env } from '@/env';
 
 export const gqlClient = new GraphQLClient(env.NEXT_PUBLIC_GRAPHQL_URI)
 
-export async function getProducts() {
+export async function getProducts(offset = 0, limit = 50) {
   const query: TypedDocumentNode<GetProductsQuery> = parse(gql`
-    query getProducts {
-      Product {
+    query getProducts ($limit: Int, $offset: String) {
+      Product(first: $limit, after: $offset) {
         mint_account
         mint_authority
         devices_count
@@ -30,7 +40,10 @@ export async function getProducts() {
     }
   `)
 
-  const variables = {}
+  const variables: GetProductsQueryVariables = {
+    offset: `${offset - 1}`,
+    limit,
+  }
 
   return await gqlClient.request(query, variables)
 }

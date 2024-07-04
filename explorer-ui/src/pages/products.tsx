@@ -11,6 +11,7 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
+  CardFooter,
 } from "@/components/ui/card";
 import {
   Table,
@@ -57,11 +58,9 @@ export default function Products() {
                   <TableHeader>
                     <TableRow>
                       <TableHead>#</TableHead>
-                      <TableHead>Symbol</TableHead>
                       <TableHead>Name</TableHead>
                       <TableHead>Mint Account</TableHead>
                       <TableHead>Url</TableHead>
-                      <TableHead>SolanaFM</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -72,36 +71,45 @@ export default function Products() {
                             {page * limit + i + 1}
                           </Link>
                         </TableCell>
-                        <TableCell>{product.metadata?.symbol}</TableCell>
                         <TableCell>{product.metadata?.name}</TableCell>
-                        <TableCell>{product.mint_account}</TableCell>
+                        <TableCell>
+                          <a
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            href={`https://solana.fm/address/${product.mint_account}`}
+                            className="flex items-center gap-x-1 hover:opacity-60 active:opacity-70"
+                          >
+                            {product.mint_account}
+                            <Link2 className="h-4 w-4 text-amber-100" />
+                          </a>
+                        </TableCell>
                         <TableCell>
                           {product.metadata?.uri ? (
                             <a
                               href={product.metadata?.uri}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="hover:opacity-60 active:opacity-70"
+                              className="flex items-center gap-x-1 hover:opacity-60 active:opacity-70"
                             >
+                              {product.metadata?.uri}
                               <Link2 className="h-4 w-4 text-amber-100" />
                             </a>
                           ) : null}
-                        </TableCell>
-                        <TableCell>
-                          <a
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            href={`https://solana.fm/address/${product.mint_account}`}
-                            className="hover:opacity-60 active:opacity-70"
-                          >
-                            <Link2 className="h-4 w-4 text-amber-100" />
-                          </a>
                         </TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
                 </Table>
               </CardContent>
+              {/* <CardFooter className="justify-between">
+                <div className="flex items-center gap-1 text-xs text-[#9DC8B9]">
+                  Showing
+                  <strong>
+                    {page * limit + 1}-{(page + 1) * limit}
+                  </strong>
+                  of <strong>{data.Product?.length}</strong> devices
+                </div>
+              </CardFooter> */}
             </Card>
           ) : null}
         </div>

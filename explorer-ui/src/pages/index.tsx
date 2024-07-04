@@ -1,6 +1,7 @@
 import Head from "next/head";
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
+import { ChevronsRight } from "lucide-react";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
@@ -50,9 +51,10 @@ export default function Home() {
                 <CardContent>
                   <Link
                     href="/products"
-                    className="text-2xl font-bold text-orange-400 hover:opacity-60 active:opacity-70"
+                    className="flex items-center justify-between text-2xl font-bold text-orange-400 hover:opacity-60 active:opacity-70"
                   >
                     {programData.Program[0]?.products_count}
+                    <ChevronsRight size={16} />
                   </Link>
                 </CardContent>
               </Card>
