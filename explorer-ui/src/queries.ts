@@ -10,7 +10,9 @@ import type {
   GetDeviceQuery,
   GetDeviceQueryVariables,
   GetProgramsQuery,
-  GetProductsQueryVariables
+  GetProductsQueryVariables,
+  GetVendorsQuery,
+  GetVendorsQueryVariables
 } from './gql/graphql'
 
 import { env } from '@/env';
@@ -93,6 +95,39 @@ export async function getProduct(mint_account: string, offset: number, limit: nu
     mint_account,
     offset: (offset - 1).toString(),
     limit,
+  }
+
+  return await gqlClient.request(query, variables)
+}
+
+export async function getVendors(offset = 0, limit = 50) {
+  const query: TypedDocumentNode<GetVendorsQuery> = parse(gql`
+  query getVendors ($limit: Int, $offset: String) {
+    Vendor(first: $limit, after: $offset) {
+      pubkey
+      products_count
+      devices_count
+      products {
+        mint_account
+        mint_authority
+        metadata {
+          name
+          symbol
+          uri
+          additional
+        }
+        devices_count
+        tx {
+          block_ts
+        }
+      }
+    }
+  }
+  `)
+
+  const variables: GetVendorsQueryVariables = {
+    offset: `${offset - 1}`,
+    limit
   }
 
   return await gqlClient.request(query, variables)

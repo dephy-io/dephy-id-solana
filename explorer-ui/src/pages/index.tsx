@@ -37,11 +37,16 @@ export default function Home() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-orange-400">
+                  <Link
+                    href="/vendors"
+                    className="flex items-center justify-between text-2xl font-bold text-orange-400 hover:opacity-60 active:opacity-70"
+                  >
                     {programData.Program[0]?.vendors_count}
-                  </div>
+                    <ChevronsRight size={16} />
+                  </Link>
                 </CardContent>
               </Card>
+
               <Card className="border-none">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium text-amber-100">
@@ -58,6 +63,7 @@ export default function Home() {
                   </Link>
                 </CardContent>
               </Card>
+
               <Card className="border-none">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium text-amber-100">

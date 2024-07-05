@@ -129,7 +129,7 @@ export default function Product() {
               <CardHeader>
                 <CardTitle className="flex items-center justify-between text-amber-100">
                   Devices
-                  <div className="relative ml-auto flex-1 md:grow-0">
+                  <div className="relative ml-auto flex md:flex-1 md:grow-0">
                     <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                     <Input
                       type="search"
@@ -171,7 +171,9 @@ export default function Product() {
                             </Link> */}
                           </TableCell>
                           <TableCell>{pubkey}</TableCell>
-                          <TableCell>{did?.metadata?.name}</TableCell>
+                          <TableCell className="text-center">
+                            {did?.metadata?.name}
+                          </TableCell>
                           {/* <TableCell>{did?.metadata?.owner?.pubkey}</TableCell> */}
                         </TableRow>
                       ))}
