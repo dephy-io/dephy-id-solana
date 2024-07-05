@@ -8,7 +8,7 @@ export type GetDeviceArgs = {
 
 export type GetDeviceReturns = {
   "pubkey": string;
-  "signing_alg": ("Ed25519" | "Secp256k1");
+  "signing_alg": ("Ed25519" | "Secp256k1") | null;
   "token_account": string;
   "block_ts": Date | null;
   "did": {
