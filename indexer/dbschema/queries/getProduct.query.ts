@@ -15,7 +15,7 @@ export type GetProductReturns = {
   "devices": Array<{
     "id": string;
     "pubkey": string;
-    "signing_alg": ("Ed25519" | "Secp256k1");
+    "signing_alg": ("Ed25519" | "Secp256k1") | null;
     "token_account": string;
     "block_ts": Date | null;
     "did": {

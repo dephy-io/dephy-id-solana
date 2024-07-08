@@ -1,6 +1,7 @@
 {
   "scripts": {
     "generate:edgeql": "generate edgeql-js --target ts",
+    "generate:queries": "generate queries",
     "dephy-indexer": "bun run ./main.ts",
     "dephy-ui": "imba -w --esm ui/app.imba"
   },
