@@ -1,4 +1,4 @@
-DePHY ID
+DePHY ID on Solana
 ====
 
 The DePHY ID Solana program mono repo
