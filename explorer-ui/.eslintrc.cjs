@@ -36,7 +36,7 @@ const config = {
       },
     ],
   },
-  ignorePatterns: ["src/gql/*"],
+  ignorePatterns: ["src/gql/*", "a.js"],
 };
 
 module.exports = config;

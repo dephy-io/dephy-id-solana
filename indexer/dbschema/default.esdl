@@ -1,9 +1,9 @@
 using extension graphql;
 
 module default {
-    global currentAuthUserId: uuid;
-    global currentAuthUser := (
-        select AuthUser filter .id = global currentAuthUserId
+    global current_auth_user_id: uuid;
+    alias current_auth_user := (
+        select AuthUser filter .id = global current_auth_user_id
     );
 
     type Transaction {
@@ -19,12 +19,12 @@ module default {
 
         access policy auth_user_has_full_access
             allow all
-            using (global currentAuthUser.is_admin ?? false) {
+            using (current_auth_user.is_admin ?? false) {
                 errmessage := 'Admin Only'
             };
         access policy non_admins_can_only_select
             allow select
-            using (not (global currentAuthUser.is_admin ?? false));
+            using (not (current_auth_user.is_admin ?? false));
     }
 
     type TokenMetadata {

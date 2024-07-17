@@ -110,7 +110,7 @@ export class Indexer {
     public async ensureConnected() {
         this.db = await createClient(this.databaseUrl)
             .withGlobals({
-                currentAuthUserId: process.env.CURRENT_AUTH_USER_ID
+                current_auth_user_id: process.env.CURRENT_AUTH_USER_ID
             })
             .withRetryOptions({
                 attempts: 3,
