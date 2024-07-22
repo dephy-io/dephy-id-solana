@@ -38,6 +38,18 @@ configure instance insert cfg::Auth {
 };
 ```
 
+### Create admin user for indexer
+
+```sh
+edgedb -I dephy-indexer
+```
+
+```
+insert AuthUser { is_admin := true };
+```
+
+Set the env `CURRENT_AUTH_USER_ID` to be the uuid from above.
+
 ### (optional) Upgrade
 
 ```sh
