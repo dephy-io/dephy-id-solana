@@ -1,6 +1,11 @@
 using extension graphql;
 
 module default {
+    global current_auth_user_id: uuid;
+    alias current_auth_user := (
+        select AuthUser filter .id = global current_auth_user_id
+    );
+
     type Transaction {
         required signature: str {
             constraint exclusive;
@@ -11,6 +16,15 @@ module default {
         required processed: bool {
             default := false;
         };
+
+        access policy auth_user_has_full_access
+            allow all
+            using (current_auth_user.is_admin ?? false) {
+                errmessage := 'Admin Only'
+            };
+        access policy non_admins_can_only_select
+            allow select
+            using (not (current_auth_user.is_admin ?? false));
     }
 
     type TokenMetadata {
@@ -102,6 +116,10 @@ module default {
         };
 
         owner: User;
+    }
+
+    type AuthUser {
+        required is_admin: bool { default := false };
     }
 }
 

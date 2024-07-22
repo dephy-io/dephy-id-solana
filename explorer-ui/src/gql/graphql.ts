@@ -30,6 +30,17 @@ export type Admin_Type = Admin & BaseObject & Object & SolanaAccount & {
   pubkey: Scalars['String']['output'];
 };
 
+export type AuthUser = {
+  id: Scalars['ID']['output'];
+  is_admin: Scalars['Boolean']['output'];
+};
+
+export type AuthUser_Type = AuthUser & BaseObject & Object & {
+  __typename?: 'AuthUser_Type';
+  id: Scalars['ID']['output'];
+  is_admin: Scalars['Boolean']['output'];
+};
+
 /** Root object type. */
 export type BaseObject = {
   id: Scalars['ID']['output'];
@@ -235,6 +246,14 @@ export type FilterAdmin = {
   not?: InputMaybe<FilterAdmin>;
   or?: InputMaybe<Array<FilterAdmin>>;
   pubkey?: InputMaybe<FilterString>;
+};
+
+export type FilterAuthUser = {
+  and?: InputMaybe<Array<FilterAuthUser>>;
+  id?: InputMaybe<FilterId>;
+  is_admin?: InputMaybe<FilterBoolean>;
+  not?: InputMaybe<FilterAuthUser>;
+  or?: InputMaybe<Array<FilterAuthUser>>;
 };
 
 export type FilterBaseObject = {
@@ -510,8 +529,20 @@ export type FilterWithIx = {
   tx?: InputMaybe<NestedFilterTransaction>;
 };
 
+export type Filtercurrent_Auth_User = {
+  and?: InputMaybe<Array<Filtercurrent_Auth_User>>;
+  id?: InputMaybe<FilterId>;
+  is_admin?: InputMaybe<FilterBoolean>;
+  not?: InputMaybe<Filtercurrent_Auth_User>;
+  or?: InputMaybe<Array<Filtercurrent_Auth_User>>;
+};
+
 export type InsertAdmin = {
   pubkey: Scalars['String']['input'];
+};
+
+export type InsertAuthUser = {
+  is_admin?: InputMaybe<Scalars['Boolean']['input']>;
 };
 
 export type InsertDid = {
@@ -580,6 +611,7 @@ export enum JsonEmpty {
 export type Mutation = {
   __typename?: 'Mutation';
   delete_Admin?: Maybe<Array<Admin_Type>>;
+  delete_AuthUser?: Maybe<Array<AuthUser_Type>>;
   delete_DID?: Maybe<Array<Did_Type>>;
   delete_Device?: Maybe<Array<Device_Type>>;
   delete_Product?: Maybe<Array<Product_Type>>;
@@ -588,7 +620,9 @@ export type Mutation = {
   delete_Transaction?: Maybe<Array<Transaction_Type>>;
   delete_User?: Maybe<Array<User_Type>>;
   delete_Vendor?: Maybe<Array<Vendor_Type>>;
+  delete_current_auth_user?: Maybe<Array<Current_Auth_User>>;
   insert_Admin?: Maybe<Array<Admin_Type>>;
+  insert_AuthUser?: Maybe<Array<AuthUser_Type>>;
   insert_DID?: Maybe<Array<Did_Type>>;
   insert_Device?: Maybe<Array<Device_Type>>;
   insert_Product?: Maybe<Array<Product_Type>>;
@@ -598,6 +632,7 @@ export type Mutation = {
   insert_User?: Maybe<Array<User_Type>>;
   insert_Vendor?: Maybe<Array<Vendor_Type>>;
   update_Admin?: Maybe<Array<Admin>>;
+  update_AuthUser?: Maybe<Array<AuthUser>>;
   update_DID?: Maybe<Array<Did>>;
   update_Device?: Maybe<Array<Device>>;
   update_Product?: Maybe<Array<Product>>;
@@ -620,6 +655,16 @@ export type MutationDelete_AdminArgs = {
   first?: InputMaybe<Scalars['Int']['input']>;
   last?: InputMaybe<Scalars['Int']['input']>;
   order?: InputMaybe<OrderAdmin>;
+};
+
+
+export type MutationDelete_AuthUserArgs = {
+  after?: InputMaybe<Scalars['String']['input']>;
+  before?: InputMaybe<Scalars['String']['input']>;
+  filter?: InputMaybe<FilterAuthUser>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  last?: InputMaybe<Scalars['Int']['input']>;
+  order?: InputMaybe<OrderAuthUser>;
 };
 
 
@@ -703,8 +748,23 @@ export type MutationDelete_VendorArgs = {
 };
 
 
+export type MutationDelete_Current_Auth_UserArgs = {
+  after?: InputMaybe<Scalars['String']['input']>;
+  before?: InputMaybe<Scalars['String']['input']>;
+  filter?: InputMaybe<Filtercurrent_Auth_User>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  last?: InputMaybe<Scalars['Int']['input']>;
+  order?: InputMaybe<Ordercurrent_Auth_User>;
+};
+
+
 export type MutationInsert_AdminArgs = {
   data: Array<InsertAdmin>;
+};
+
+
+export type MutationInsert_AuthUserArgs = {
+  data: Array<InsertAuthUser>;
 };
 
 
@@ -756,6 +816,17 @@ export type MutationUpdate_AdminArgs = {
   first?: InputMaybe<Scalars['Int']['input']>;
   last?: InputMaybe<Scalars['Int']['input']>;
   order?: InputMaybe<OrderAdmin>;
+};
+
+
+export type MutationUpdate_AuthUserArgs = {
+  after?: InputMaybe<Scalars['String']['input']>;
+  before?: InputMaybe<Scalars['String']['input']>;
+  data: UpdateAuthUser;
+  filter?: InputMaybe<FilterAuthUser>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  last?: InputMaybe<Scalars['Int']['input']>;
+  order?: InputMaybe<OrderAuthUser>;
 };
 
 
@@ -1141,6 +1212,11 @@ export type OrderAdmin = {
   pubkey?: InputMaybe<Ordering>;
 };
 
+export type OrderAuthUser = {
+  id?: InputMaybe<Ordering>;
+  is_admin?: InputMaybe<Ordering>;
+};
+
 export type OrderBaseObject = {
   id?: InputMaybe<Ordering>;
 };
@@ -1240,6 +1316,11 @@ export type OrderVendor = {
 export type OrderWithIx = {
   id?: InputMaybe<Ordering>;
   tx?: InputMaybe<OrderTransaction>;
+};
+
+export type Ordercurrent_Auth_User = {
+  id?: InputMaybe<Ordering>;
+  is_admin?: InputMaybe<Ordering>;
 };
 
 export type Ordering = {
@@ -1436,6 +1517,7 @@ export type Program_TypeVendorsArgs = {
 export type Query = {
   __typename?: 'Query';
   Admin?: Maybe<Array<Admin>>;
+  AuthUser?: Maybe<Array<AuthUser>>;
   BaseObject?: Maybe<Array<BaseObject>>;
   DID?: Maybe<Array<Did>>;
   Device?: Maybe<Array<Device>>;
@@ -1450,6 +1532,7 @@ export type Query = {
   User?: Maybe<Array<User>>;
   Vendor?: Maybe<Array<Vendor>>;
   WithIx?: Maybe<Array<WithIx>>;
+  current_auth_user?: Maybe<Array<Current_Auth_User>>;
 };
 
 
@@ -1460,6 +1543,16 @@ export type QueryAdminArgs = {
   first?: InputMaybe<Scalars['Int']['input']>;
   last?: InputMaybe<Scalars['Int']['input']>;
   order?: InputMaybe<OrderAdmin>;
+};
+
+
+export type QueryAuthUserArgs = {
+  after?: InputMaybe<Scalars['String']['input']>;
+  before?: InputMaybe<Scalars['String']['input']>;
+  filter?: InputMaybe<FilterAuthUser>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  last?: InputMaybe<Scalars['Int']['input']>;
+  order?: InputMaybe<OrderAuthUser>;
 };
 
 
@@ -1602,6 +1695,16 @@ export type QueryWithIxArgs = {
   order?: InputMaybe<OrderWithIx>;
 };
 
+
+export type QueryCurrent_Auth_UserArgs = {
+  after?: InputMaybe<Scalars['String']['input']>;
+  before?: InputMaybe<Scalars['String']['input']>;
+  filter?: InputMaybe<Filtercurrent_Auth_User>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  last?: InputMaybe<Scalars['Int']['input']>;
+  order?: InputMaybe<Ordercurrent_Auth_User>;
+};
+
 export type SolanaAccount = {
   id: Scalars['ID']['output'];
   pubkey: Scalars['String']['output'];
@@ -1669,6 +1772,10 @@ export type UpdateAdmin = {
   pubkey?: InputMaybe<UpdateOp_Pubkey_Admin>;
 };
 
+export type UpdateAuthUser = {
+  is_admin?: InputMaybe<UpdateOp_Is_Admin_AuthUser>;
+};
+
 export type UpdateDid = {
   device?: InputMaybe<UpdateOp_Device_Did>;
   metadata?: InputMaybe<UpdateOp_Metadata_Did>;
@@ -1706,6 +1813,10 @@ export type UpdateOp_Err_Transaction = {
   prepend?: InputMaybe<Scalars['String']['input']>;
   set?: InputMaybe<Scalars['String']['input']>;
   slice?: InputMaybe<Array<Scalars['Int']['input']>>;
+};
+
+export type UpdateOp_Is_Admin_AuthUser = {
+  set?: InputMaybe<Scalars['Boolean']['input']>;
 };
 
 export type UpdateOp_Metadata_Did = {
@@ -2078,6 +2189,12 @@ export type WithIxTxArgs = {
   first?: InputMaybe<Scalars['Int']['input']>;
   last?: InputMaybe<Scalars['Int']['input']>;
   order?: InputMaybe<OrderTransaction>;
+};
+
+export type Current_Auth_User = {
+  __typename?: 'current_auth_user';
+  id: Scalars['ID']['output'];
+  is_admin: Scalars['Boolean']['output'];
 };
 
 /** Enum value used to specify ordering direction. */

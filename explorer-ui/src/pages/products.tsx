@@ -42,7 +42,7 @@ export default function Products() {
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <main className="">
-        <div className="px-4 py-16">
+        <div className="py-16">
           {data ? (
             <Card className="mt-10">
               <CardHeader>
@@ -61,16 +61,13 @@ export default function Products() {
                       <TableHead>Name</TableHead>
                       <TableHead>Mint Account</TableHead>
                       <TableHead>Url</TableHead>
+                      <TableHead>Detail</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {data.Product?.map((product, i) => (
                       <TableRow key={i}>
-                        <TableCell>
-                          <Link href={`/product/${product.mint_account}`}>
-                            {page * limit + i + 1}
-                          </Link>
-                        </TableCell>
+                        <TableCell>{page * limit + i + 1}</TableCell>
                         <TableCell>{product.metadata?.name}</TableCell>
                         <TableCell>
                           <a
@@ -95,6 +92,11 @@ export default function Products() {
                               <Link2 className="h-4 w-4 text-amber-100" />
                             </a>
                           ) : null}
+                        </TableCell>
+                        <TableCell align="right">
+                          <Link href={`/product/${product.mint_account}`}>
+                            <Link2 className="h-4 w-4 text-amber-100" />
+                          </Link>
                         </TableCell>
                       </TableRow>
                     ))}
