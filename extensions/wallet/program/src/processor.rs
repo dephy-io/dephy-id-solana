@@ -99,7 +99,6 @@ fn create<'a>(program_id: &Pubkey, accounts: &'a [AccountInfo<'a>], _bump: u8) -
         return Ok(());
     }
 
-    // Create Counter PDA.
     let wallet = Wallet {
         key: Key::Wallet,
         authority: *authority_pubkey,

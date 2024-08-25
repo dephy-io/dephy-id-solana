@@ -1,0 +1,944 @@
+{
+  "version": "0.0.0",
+  "name": "dephy_io_conduits",
+  "instructions": [
+    {
+      "name": "InitApp",
+      "accounts": [
+        {
+          "name": "appAccount",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "The account for the app"
+          ]
+        },
+        {
+          "name": "appMint",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "The template mint account for the app"
+          ]
+        },
+        {
+          "name": "authority",
+          "isMut": false,
+          "isSigner": true,
+          "docs": [
+            "The authority of the new app"
+          ]
+        },
+        {
+          "name": "payer",
+          "isMut": true,
+          "isSigner": true,
+          "docs": [
+            "The account paying for the storage fees"
+          ]
+        },
+        {
+          "name": "token2022Program",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The SPL Token program"
+          ]
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The system program"
+          ]
+        }
+      ],
+      "args": [
+        {
+          "name": "name",
+          "type": "string"
+        },
+        {
+          "name": "symbol",
+          "type": "string"
+        },
+        {
+          "name": "uri",
+          "type": "string"
+        },
+        {
+          "name": "additionalMetadata",
+          "type": {
+            "vec": {
+              "tuple": [
+                "string",
+                "string"
+              ]
+            }
+          }
+        }
+      ],
+      "discriminant": {
+        "type": "u8",
+        "value": 0
+      }
+    },
+    {
+      "name": "CreateAccessIdentity",
+      "accounts": [
+        {
+          "name": "appAccount",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The app account"
+          ]
+        },
+        {
+          "name": "appMint",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The app mint account"
+          ]
+        },
+        {
+          "name": "device",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The device account"
+          ]
+        },
+        {
+          "name": "deviceOwner",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The device owner"
+          ]
+        },
+        {
+          "name": "accessIdentityMint",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "The mint account for the access identity"
+          ]
+        },
+        {
+          "name": "accessIdentityAtoken",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "The associated token account for the access identity"
+          ]
+        },
+        {
+          "name": "payer",
+          "isMut": true,
+          "isSigner": true,
+          "docs": [
+            "The account paying for the storage fees"
+          ]
+        },
+        {
+          "name": "token2022Program",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The SPL Token 2022 program"
+          ]
+        },
+        {
+          "name": "ataProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The SPL Associated Token Account program"
+          ]
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The system program"
+          ]
+        }
+      ],
+      "args": [],
+      "discriminant": {
+        "type": "u8",
+        "value": 1
+      }
+    },
+    {
+      "name": "ListDevice",
+      "accounts": [
+        {
+          "name": "listingInfo",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "The PDA of the listing info account to create"
+          ]
+        },
+        {
+          "name": "appAccount",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The app account"
+          ]
+        },
+        {
+          "name": "device",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The device account"
+          ]
+        },
+        {
+          "name": "deviceOwner",
+          "isMut": false,
+          "isSigner": true,
+          "docs": [
+            "The device owner"
+          ]
+        },
+        {
+          "name": "deviceMint",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The mint account for the device"
+          ]
+        },
+        {
+          "name": "deviceAssociatedToken",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "DID associated token owned by authority"
+          ]
+        },
+        {
+          "name": "rentTokenMint",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The token mint used for rent payments"
+          ]
+        },
+        {
+          "name": "rentTokenProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The token program for rent token"
+          ]
+        },
+        {
+          "name": "rentTokenEscrow",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The destination account for rent token"
+          ]
+        },
+        {
+          "name": "payer",
+          "isMut": true,
+          "isSigner": true,
+          "docs": [
+            "The account paying for the storage fees"
+          ]
+        },
+        {
+          "name": "token2022Program",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The SPL Token 2022 program"
+          ]
+        },
+        {
+          "name": "ataProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The associated token program"
+          ]
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The system program"
+          ]
+        }
+      ],
+      "args": [
+        {
+          "name": "minRentalDays",
+          "type": "u64"
+        },
+        {
+          "name": "maxRentalDays",
+          "type": "u64"
+        },
+        {
+          "name": "rentPerDay",
+          "type": "u64"
+        }
+      ],
+      "discriminant": {
+        "type": "u8",
+        "value": 2
+      }
+    },
+    {
+      "name": "DelistDevice",
+      "accounts": [
+        {
+          "name": "listingInfo",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "The listing info account"
+          ]
+        },
+        {
+          "name": "appAccount",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The app account"
+          ]
+        },
+        {
+          "name": "device",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The device account"
+          ]
+        },
+        {
+          "name": "rentTokenMint",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The rent token mint"
+          ]
+        },
+        {
+          "name": "rentTokenProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The token program for rent token"
+          ]
+        },
+        {
+          "name": "rentTokenEscrow",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "The destination account for rent token"
+          ]
+        },
+        {
+          "name": "rentTokenDst",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "The destination account for rent token"
+          ]
+        },
+        {
+          "name": "deviceOwner",
+          "isMut": true,
+          "isSigner": true,
+          "docs": [
+            "The device owner"
+          ]
+        },
+        {
+          "name": "payer",
+          "isMut": true,
+          "isSigner": true,
+          "docs": [
+            "The account paying for the storage fees"
+          ]
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The system program"
+          ]
+        },
+        {
+          "name": "token2022Program",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The SPL Token 2022 program"
+          ]
+        },
+        {
+          "name": "ataProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The associated token program"
+          ]
+        }
+      ],
+      "args": [],
+      "discriminant": {
+        "type": "u8",
+        "value": 3
+      }
+    },
+    {
+      "name": "RentDevice",
+      "accounts": [
+        {
+          "name": "listingInfo",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "The listing info account"
+          ]
+        },
+        {
+          "name": "rentalInfo",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "The PDA of the rental agreement account to create"
+          ]
+        },
+        {
+          "name": "appAccount",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The app account"
+          ]
+        },
+        {
+          "name": "appMint",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The template mint account for the app"
+          ]
+        },
+        {
+          "name": "device",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The device account"
+          ]
+        },
+        {
+          "name": "tenant",
+          "isMut": false,
+          "isSigner": true,
+          "docs": [
+            "The tenant account"
+          ]
+        },
+        {
+          "name": "accessIdentityMint",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "The mint account for the access identity"
+          ]
+        },
+        {
+          "name": "accessIdentityAtoken",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "The associated token account for the access identity"
+          ]
+        },
+        {
+          "name": "rentTokenMint",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The rent token"
+          ]
+        },
+        {
+          "name": "rentTokenProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The token program for rent token"
+          ]
+        },
+        {
+          "name": "rentTokenSrc",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "The source account for rent payment"
+          ]
+        },
+        {
+          "name": "rentTokenEscrow",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "The destination account for rent payment"
+          ]
+        },
+        {
+          "name": "payer",
+          "isMut": true,
+          "isSigner": true,
+          "docs": [
+            "The account paying for the storage fees"
+          ]
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The system program"
+          ]
+        },
+        {
+          "name": "token2022Program",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The SPL Token 2022 program"
+          ]
+        },
+        {
+          "name": "ataProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The associated token program"
+          ]
+        }
+      ],
+      "args": [
+        {
+          "name": "rentalDays",
+          "type": "u64"
+        },
+        {
+          "name": "prepaidRent",
+          "type": "u64"
+        }
+      ],
+      "discriminant": {
+        "type": "u8",
+        "value": 4
+      }
+    },
+    {
+      "name": "PayRent",
+      "accounts": [
+        {
+          "name": "rentalInfo",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "The rental info account"
+          ]
+        },
+        {
+          "name": "listingInfo",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The listing info account"
+          ]
+        },
+        {
+          "name": "tenant",
+          "isMut": false,
+          "isSigner": true,
+          "docs": [
+            "The tenant account"
+          ]
+        },
+        {
+          "name": "rentTokenMint",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The rent token"
+          ]
+        },
+        {
+          "name": "rentTokenProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The token program for rent token"
+          ]
+        },
+        {
+          "name": "rentTokenSrc",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "The source account for rent payment"
+          ]
+        },
+        {
+          "name": "rentTokenEscrow",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "The destination account for rent payment"
+          ]
+        },
+        {
+          "name": "payer",
+          "isMut": true,
+          "isSigner": true,
+          "docs": [
+            "The account paying for the storage fees"
+          ]
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The system program"
+          ]
+        },
+        {
+          "name": "token2022Program",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The SPL Token 2022 program"
+          ]
+        },
+        {
+          "name": "ataProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The associated token program"
+          ]
+        }
+      ],
+      "args": [
+        {
+          "name": "rentAmount",
+          "type": "u64"
+        }
+      ],
+      "discriminant": {
+        "type": "u8",
+        "value": 5
+      }
+    },
+    {
+      "name": "EndLease",
+      "accounts": [
+        {
+          "name": "rentalInfo",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "The rental info account"
+          ]
+        },
+        {
+          "name": "listingInfo",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "The listing info account"
+          ]
+        },
+        {
+          "name": "tenant",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "The tenant account"
+          ]
+        },
+        {
+          "name": "accessIdentityMint",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "The mint account for the access identity"
+          ]
+        },
+        {
+          "name": "accessIdentityAtoken",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "The associated token account for the access identity"
+          ]
+        },
+        {
+          "name": "payer",
+          "isMut": true,
+          "isSigner": true,
+          "docs": [
+            "The account paying for the storage fees"
+          ]
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The system program"
+          ]
+        },
+        {
+          "name": "token2022Program",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The SPL Token 2022 program"
+          ]
+        }
+      ],
+      "args": [],
+      "discriminant": {
+        "type": "u8",
+        "value": 6
+      }
+    }
+  ],
+  "accounts": [
+    {
+      "name": "App",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "key",
+            "type": {
+              "defined": "Key"
+            }
+          },
+          {
+            "name": "authority",
+            "type": "publicKey"
+          },
+          {
+            "name": "mint",
+            "type": "publicKey"
+          }
+        ]
+      }
+    },
+    {
+      "name": "ListingInfo",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "key",
+            "type": {
+              "defined": "Key"
+            }
+          },
+          {
+            "name": "appAccount",
+            "type": "publicKey"
+          },
+          {
+            "name": "device",
+            "type": "publicKey"
+          },
+          {
+            "name": "rentTokenMint",
+            "type": "publicKey"
+          },
+          {
+            "name": "minRentalDays",
+            "type": "u64"
+          },
+          {
+            "name": "maxRentalDays",
+            "type": "u64"
+          },
+          {
+            "name": "rentPerDay",
+            "type": "u64"
+          },
+          {
+            "name": "renting",
+            "type": "bool"
+          }
+        ]
+      }
+    },
+    {
+      "name": "RentalInfo",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "key",
+            "type": {
+              "defined": "Key"
+            }
+          },
+          {
+            "name": "listingInfo",
+            "type": "publicKey"
+          },
+          {
+            "name": "tenant",
+            "type": "publicKey"
+          },
+          {
+            "name": "startTime",
+            "type": "u64"
+          },
+          {
+            "name": "endTime",
+            "type": "u64"
+          },
+          {
+            "name": "rentalDays",
+            "type": "u64"
+          },
+          {
+            "name": "totalPaidRent",
+            "type": "u64"
+          }
+        ]
+      }
+    }
+  ],
+  "types": [
+    {
+      "name": "Key",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Uninitialized"
+          },
+          {
+            "name": "App"
+          },
+          {
+            "name": "ListingInfo"
+          },
+          {
+            "name": "RentalInfo"
+          }
+        ]
+      }
+    }
+  ],
+  "errors": [
+    {
+      "code": 0,
+      "name": "DeserializationError",
+      "msg": "Error deserializing an account"
+    },
+    {
+      "code": 1,
+      "name": "SerializationError",
+      "msg": "Error serializing an account"
+    },
+    {
+      "code": 2,
+      "name": "InvalidProgramOwner",
+      "msg": "Invalid program owner. This likely mean the provided account does not exist"
+    },
+    {
+      "code": 3,
+      "name": "InvalidPda",
+      "msg": "Invalid PDA derivation"
+    },
+    {
+      "code": 4,
+      "name": "ExpectedEmptyAccount",
+      "msg": "Expected empty account"
+    },
+    {
+      "code": 5,
+      "name": "ExpectedNonEmptyAccount",
+      "msg": "Expected non empty account"
+    },
+    {
+      "code": 6,
+      "name": "ExpectedSignerAccount",
+      "msg": "Expected signer account"
+    },
+    {
+      "code": 7,
+      "name": "ExpectedWritableAccount",
+      "msg": "Expected writable account"
+    },
+    {
+      "code": 8,
+      "name": "AccountMismatch",
+      "msg": "Account mismatch"
+    },
+    {
+      "code": 9,
+      "name": "InvalidAccountKey",
+      "msg": "Invalid account key"
+    },
+    {
+      "code": 10,
+      "name": "NumericalOverflow",
+      "msg": "Numerical overflow"
+    },
+    {
+      "code": 11,
+      "name": "InsufficientRent",
+      "msg": "Insufficient rent"
+    },
+    {
+      "code": 12,
+      "name": "InvalidRentAmount",
+      "msg": "Invalid rent amount"
+    },
+    {
+      "code": 13,
+      "name": "LeaseNotExpired",
+      "msg": "Lease not expired"
+    },
+    {
+      "code": 14,
+      "name": "InvalidTokenProgram",
+      "msg": "Invalid token program"
+    }
+  ],
+  "metadata": {
+    "origin": "shank",
+    "address": "29V5YJFAMQuN8npySW2Kds8zwf6zPTpJ49LyYv1jSGQQ",
+    "binaryVersion": "0.4.2",
+    "libVersion": "^0.4.2"
+  }
+}
