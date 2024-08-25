@@ -1,0 +1,12 @@
+[workspace]
+resolver = "2"
+members = ["program"]
+
+[workspace.metadata.cli]
+solana = "2.0.7"
+
+# Specify Rust toolchains for rustfmt, clippy, and build.
+# Any unprovided toolchains default to stable.
+[workspace.metadata.toolchains]
+format = "1.77.2"
+lint = "1.77.2"
