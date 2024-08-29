@@ -16,8 +16,8 @@ cargo run create-product --vendor ./tmp/keys/vendor1.json 'Product 1' 'SYMBOL' '
 
 ```sh
 # the PRODUCT_PUBKEY is from "Create Product" step's command output
-# the DEVICE_PUBKEY can get by `solana address -k ./tmp/keys/device1.json`
-cargo run create-device --vendor ./tmp/keys/vendor1.json --product <PRODUCT_PUBKEY> --device <DEVICE_PUBKEY> 'Device#1' 'METADATA_URI'
+# the DEVICE can be keypair file or calc with `cargo run calc-device-pubkey --device <KEYPAIR_FILE>`
+cargo run create-device --vendor ./tmp/keys/vendor1.json --product <PRODUCT_PUBKEY> --device <DEVICE> 'Device#1' 'METADATA_URI'
 ```
 
 ## Activate Device

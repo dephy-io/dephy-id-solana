@@ -1,3 +1,4 @@
+use std::path::Path;
 use std::time::{SystemTime, UNIX_EPOCH};
 use std::{error::Error, str::FromStr, time::Duration};
 
@@ -32,6 +33,7 @@ struct Cli {
 enum Commands {
     Initialize(InitializeCliArgs),
     CreateProduct(CreateProductCliArgs),
+    CalcDevicePubkey(CalcDevicePubkeyCliArgs),
     CreateDevice(CreateDeviceCliArgs),
     GenerateMessage(GenerateMessageCliArgs),
     SignMessage(SignMessageCliArgs),
@@ -70,7 +72,7 @@ struct CreateProductCliArgs {
     common: CommonArgs,
 }
 
-#[derive(Debug, Clone, ValueEnum)]
+#[derive(Debug, Clone, Copy, ValueEnum)]
 enum DeviceSigningAlgorithm {
     Ed25519,
     Secp256k1,
@@ -86,13 +88,21 @@ impl Into<types::DeviceSigningAlgorithm> for DeviceSigningAlgorithm {
 }
 
 #[derive(Debug, Args)]
+struct CalcDevicePubkeyCliArgs {
+    #[arg(value_enum, long, default_value_t = DeviceSigningAlgorithm::Secp256k1)]
+    signing_alg: DeviceSigningAlgorithm,
+    #[arg(long = "device")]
+    device_keypair: String,
+}
+
+#[derive(Debug, Args)]
 struct CreateDeviceCliArgs {
     #[arg(long = "vendor")]
     vendor_keypair: String,
     #[arg(long = "product", value_parser = parse_pubkey)]
     product_pubkey: Pubkey,
-    #[arg(long = "device", value_parser = parse_pubkey)]
-    device_pubkey: Pubkey,
+    #[arg(long = "device")]
+    device: String,
     #[arg(value_enum, long, default_value_t = DeviceSigningAlgorithm::Secp256k1)]
     signing_alg: DeviceSigningAlgorithm,
     name: String,
@@ -104,11 +114,21 @@ struct CreateDeviceCliArgs {
     common: CommonArgs,
 }
 
-#[derive(Debug, Clone, ValueEnum)]
+#[derive(Debug, Clone, Copy, ValueEnum)]
 enum SignatureType {
     Ed25519,
     Secp256k1,
     EthSecp256k1,
+}
+
+impl Into<DeviceSigningAlgorithm> for SignatureType {
+    fn into(self) -> DeviceSigningAlgorithm {
+        match self {
+            SignatureType::Ed25519 => DeviceSigningAlgorithm::Ed25519,
+            SignatureType::Secp256k1 => DeviceSigningAlgorithm::Secp256k1,
+            SignatureType::EthSecp256k1 => DeviceSigningAlgorithm::Secp256k1,
+        }
+    }
 }
 
 #[derive(Debug, Args)]
@@ -133,10 +153,14 @@ struct GenerateMessageCliArgs {
     user_pubkey: Pubkey,
     #[arg(long = "product", value_parser = parse_pubkey)]
     product_pubkey: Pubkey,
-    #[arg(long = "device", value_parser = parse_pubkey)]
-    device_pubkey: Pubkey,
+    #[arg(long = "device")]
+    device_keypair: String,
     #[arg(long)]
     no_prefix: bool,
+    #[arg(value_enum, long, default_value_t = SignatureType::Secp256k1)]
+    signature_type: SignatureType,
+    #[arg(long, default_value = None)]
+    timestamp: Option<u64>,
     #[command(flatten)]
     common: CommonArgs,
 }
@@ -194,6 +218,7 @@ fn main() {
     match args.command {
         Commands::Initialize(args) => initialize_program(args),
         Commands::CreateProduct(args) => create_product(args),
+        Commands::CalcDevicePubkey(args) => calc_device_pubkey(args),
         Commands::CreateDevice(args) => create_device(args),
         Commands::GenerateMessage(args) => generate_message(args),
         Commands::SignMessage(args) => sign_message(args),
@@ -298,16 +323,23 @@ fn create_product(args: CreateProductCliArgs) {
     };
 }
 
-fn get_device_pubkey(device: &Keypair, signature_type: &SignatureType) -> Pubkey {
-    match signature_type {
-        SignatureType::Ed25519 => device.pubkey(),
-        SignatureType::Secp256k1 | SignatureType::EthSecp256k1 => {
+fn get_device_pubkey(device: &Keypair, signing_alg: &DeviceSigningAlgorithm) -> Pubkey {
+    match signing_alg {
+        DeviceSigningAlgorithm::Ed25519 => device.pubkey(),
+        DeviceSigningAlgorithm::Secp256k1 => {
             let privkey = libsecp256k1::SecretKey::parse(device.secret().as_bytes()).unwrap();
             let pubkey = libsecp256k1::PublicKey::from_secret_key(&privkey);
             let hash = keccak::hash(&pubkey.serialize()[1..]);
-            Pubkey::new_from_array(keccak::hash(&hash.as_ref()[12..]).to_bytes())
+            Pubkey::new_from_array(hash.to_bytes())
         }
     }
+}
+
+fn calc_device_pubkey(args: CalcDevicePubkeyCliArgs) {
+    let device = read_key(&args.device_keypair);
+    let pubkey = get_device_pubkey(&device, &args.signing_alg);
+
+    println!("Device Pubkey: {:?} {}", args.signing_alg, pubkey);
 }
 
 fn create_device(args: CreateDeviceCliArgs) {
@@ -317,10 +349,16 @@ fn create_device(args: CreateDeviceCliArgs) {
 
     let vendor = read_key(&args.vendor_keypair);
     let payer = read_key(&args.common.payer.unwrap_or(args.vendor_keypair));
+    let device_pubkey = if Path::new(&args.device).exists() {
+        let device = read_key(&args.device);
+        get_device_pubkey(&device, &args.signing_alg)
+    } else {
+        Pubkey::from_str(&args.device).unwrap()
+    };
 
     let product_atoken_pubkey =
         spl_associated_token_account::get_associated_token_address_with_program_id(
-            &args.device_pubkey,
+            &device_pubkey,
             &args.product_pubkey,
             &token_program_id,
         );
@@ -329,7 +367,7 @@ fn create_device(args: CreateDeviceCliArgs) {
         &[
             DEVICE_MINT_SEED_PREFIX,
             args.product_pubkey.as_ref(),
-            args.device_pubkey.as_ref(),
+            device_pubkey.as_ref(),
         ],
         &program_id,
     );
@@ -341,7 +379,7 @@ fn create_device(args: CreateDeviceCliArgs) {
             .payer(payer.pubkey())
             .vendor(vendor.pubkey())
             .product_mint(args.product_pubkey)
-            .device(args.device_pubkey)
+            .device(device_pubkey)
             .product_associated_token(product_atoken_pubkey)
             .name(args.name)
             .signing_alg(args.signing_alg.into())
@@ -375,7 +413,7 @@ fn dev_activate_device(args: DevActivateDeviceCliArgs) {
     let user = read_key(&args.user_keypair);
     let payer = read_key(&args.common.payer.unwrap_or(args.user_keypair));
 
-    let device_pubkey = get_device_pubkey(&device, &args.signature_type);
+    let device_pubkey = get_device_pubkey(&device, &args.signature_type.into());
     let product_atoken_pubkey =
         spl_associated_token_account::get_associated_token_address_with_program_id(
             &device_pubkey,
@@ -413,7 +451,7 @@ fn dev_activate_device(args: DevActivateDeviceCliArgs) {
     .concat();
 
     let latest_block = client.get_latest_blockhash().unwrap();
-    let signature = sign(args.signature_type, &device, &message);
+    let signature = sign(&args.signature_type, &device, &message);
 
     let transaction = Transaction::new_signed_with_payer(
         &[ActivateDeviceBuilder::new()
@@ -449,7 +487,7 @@ fn dev_activate_device(args: DevActivateDeviceCliArgs) {
 }
 
 fn sign(
-    signature_type: SignatureType,
+    signature_type: &SignatureType,
     keypair: &Keypair,
     message: &[u8],
 ) -> DeviceActivationSignature {
@@ -490,7 +528,8 @@ fn sign(
 fn generate_message(args: GenerateMessageCliArgs) {
     let program_id = args.common.program_id.unwrap_or(PROGRAM_ID);
     let product_mint_pubkey = args.product_pubkey;
-    let device_pubkey = args.device_pubkey;
+    let device_keypair = read_key(&args.device_keypair);
+    let device_pubkey = get_device_pubkey(&device_keypair, &args.signature_type.into());
 
     let (did_mint_pubkey, _did_mint_bump) = Pubkey::find_program_address(
         &[
@@ -501,11 +540,13 @@ fn generate_message(args: GenerateMessageCliArgs) {
         &program_id,
     );
 
-    let timestamp = SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .ok()
-        .unwrap()
-        .as_secs();
+    let timestamp = args.timestamp.unwrap_or_else(|| {
+        SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .ok()
+            .unwrap()
+            .as_secs()
+    });
     let message = [
         DEVICE_MESSAGE_PREFIX,
         did_mint_pubkey.as_ref(),
@@ -544,10 +585,11 @@ fn decode_hex(hex_string: String) -> Vec<u8> {
 fn sign_message(args: SignMessageCliArgs) {
     let keypair = read_key(&args.keypair);
     let message = decode_hex(args.message);
+    let device_pubkey = get_device_pubkey(&keypair, &args.signature_type.into());
 
-    match sign(args.signature_type, &keypair, &message) {
+    eprintln!("Pubkey: {:?} {}", args.signature_type, device_pubkey);
+    match sign(&args.signature_type, &keypair, &message) {
         DeviceActivationSignature::Ed25519(signature_bytes) => {
-            eprintln!("Pubkey: {}", keypair.pubkey());
             println!("Signature: 0x{}", hex::encode(signature_bytes));
         }
         DeviceActivationSignature::Secp256k1(signature_bytes, recovery_id)
