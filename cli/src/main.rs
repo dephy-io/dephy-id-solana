@@ -177,8 +177,8 @@ struct SignMessageCliArgs {
 
 #[derive(Debug, Args)]
 struct ActivateDeviceOffchainCliArgs {
-    #[arg(long = "device", value_parser = parse_pubkey)]
-    device_pubkey: Pubkey,
+    #[arg(long = "device")]
+    device: String,
     #[arg(long = "user")]
     user_keypair: String,
     #[arg(long = "vendor", value_parser = parse_pubkey)]
@@ -608,7 +608,8 @@ fn activate_device_offchain(args: ActivateDeviceOffchainCliArgs) {
     let program_id = args.common.program_id.unwrap_or(PROGRAM_ID);
     let token_program_id = spl_token_2022::ID;
 
-    let device_pubkey = args.device_pubkey;
+    let device_keypair = read_key(&args.device);
+    let device_pubkey = get_device_pubkey(&device_keypair, &args.signature_type.into());
     let user = read_key(&args.user_keypair);
     let payer = read_key(&args.common.payer.unwrap_or(args.user_keypair));
 
