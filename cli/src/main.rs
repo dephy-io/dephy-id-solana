@@ -314,8 +314,9 @@ fn create_product(args: CreateProductCliArgs) {
 
     match client.send_and_confirm_transaction(&transaction) {
         Ok(sig) => {
-            println!("Success: {:?}", sig);
-            println!("Product Token Created: {}", product_mint_pubkey);
+            eprintln!("Success: {:?}", sig);
+            eprint!("Product Token Created: ");
+            println!("{}", product_mint_pubkey);
         }
         Err(err) => {
             eprintln!("Error: {:?}", err);
@@ -394,9 +395,10 @@ fn create_device(args: CreateDeviceCliArgs) {
 
     match client.send_and_confirm_transaction(&transaction) {
         Ok(sig) => {
-            println!("Success: {:?}", sig);
-            println!("Device Token: {}", product_atoken_pubkey);
-            println!("DID Mint: {}", did_mint_pubkey);
+            eprintln!("Success: {:?}", sig);
+            eprintln!("Device Token: {}", product_atoken_pubkey);
+            eprint!("DID Mint: ",);
+            println!("{}", did_mint_pubkey)
         }
         Err(err) => {
             eprintln!("Error: {:?}", err);
@@ -474,11 +476,11 @@ fn dev_activate_device(args: DevActivateDeviceCliArgs) {
 
     match client.send_and_confirm_transaction(&transaction) {
         Ok(sig) => {
-            println!("Success: {:?}", sig);
-            println!("User:    {}", user.pubkey());
-            println!("Device:  {}", device_pubkey);
-            println!("Mint:    {}", did_mint_pubkey);
-            println!("AToken:  {}", did_atoken_pubkey);
+            eprintln!("Success: {:?}", sig);
+            eprintln!("User:    {}", user.pubkey());
+            eprintln!("Device:  {}", device_pubkey);
+            eprintln!("Mint:    {}", did_mint_pubkey);
+            eprintln!("AToken:  {}", did_atoken_pubkey);
         }
         Err(err) => {
             eprintln!("Error: {:?}", err);
@@ -590,12 +592,12 @@ fn sign_message(args: SignMessageCliArgs) {
     eprintln!("Pubkey: {:?} {}", args.signature_type, device_pubkey);
     match sign(&args.signature_type, &keypair, &message) {
         DeviceActivationSignature::Ed25519(signature_bytes) => {
-            println!("Signature: 0x{}", hex::encode(signature_bytes));
+            println!("0x{}", hex::encode(signature_bytes));
         }
         DeviceActivationSignature::Secp256k1(signature_bytes, recovery_id)
         | DeviceActivationSignature::EthSecp256k1(signature_bytes, recovery_id) => {
             println!(
-                "Signature: {}{}",
+                "{}{}",
                 hex::encode(&signature_bytes),
                 hex::encode(&[recovery_id])
             );
