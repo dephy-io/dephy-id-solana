@@ -12,6 +12,9 @@ members = [
     "cli",
     "examples/kwil"
 ]
+exclude = [
+    "extensions",
+]
 
 [workspace.dependencies]
 borsh = "1.5.1"
