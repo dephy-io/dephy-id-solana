@@ -30,19 +30,6 @@ describe("puppet program", () => {
       )
     );
 
-    const [deviceBindingPubkey] = PublicKey.findProgramAddressSync(
-      [Buffer.from("device_binding"), payer.publicKey.toBuffer()],
-      program.programId
-    );
-
-    const [nftBindingPubkey] = PublicKey.findProgramAddressSync(
-      [Buffer.from("nft_binding"), payer.publicKey.toBuffer()],
-      program.programId
-    );
-
-    deviceBindingPDA = deviceBindingPubkey;
-    nftBindingPDA = nftBindingPubkey;
-
     deviceMint = await createMint(
       provider.connection,
       payer,
@@ -76,6 +63,19 @@ describe("puppet program", () => {
         payer.publicKey // owner
       )
     ).address;
+
+    const [deviceBindingPubkey] = PublicKey.findProgramAddressSync(
+      [Buffer.from("device_binding"), deviceAccount.toBuffer()],
+      program.programId
+    );
+
+    const [nftBindingPubkey] = PublicKey.findProgramAddressSync(
+      [Buffer.from("nft_binding"), nftAccount.toBuffer()],
+      program.programId
+    );
+
+    deviceBindingPDA = deviceBindingPubkey;
+    nftBindingPDA = nftBindingPubkey;
   });
 
   it("binds NFT to device", async () => {
@@ -103,29 +103,89 @@ describe("puppet program", () => {
     assert.equal(nftBinding.device.toString(), deviceAccount.toString());
   });
 
-  it("fails to bind if payer does not own NFT", async () => {
-    let wrongOwner = Keypair.generate();
-    await provider.connection.confirmTransaction(
-      await provider.connection.requestAirdrop(
-        wrongOwner.publicKey,
-        anchor.web3.LAMPORTS_PER_SOL
+  it("fails to bind if payer does not own nft", async () => {
+    const unboundDeviceAccount = (
+      await getOrCreateAssociatedTokenAccount(
+        provider.connection,
+        payer,
+        await createMint(
+          provider.connection,
+          payer,
+          payer.publicKey,
+          null,
+          0
+        ), 
+        payer.publicKey 
       )
-    );
+    ).address
+    const nftAccountNotOwned = (
+      await getOrCreateAssociatedTokenAccount(
+        provider.connection,
+        payer,
+        nftMint, 
+        Keypair.generate().publicKey 
+      )
+    ).address;
+    
     try {
       await program.methods
         .bind({
-          device: deviceAccount,
-          nft: nftAccount,
+          device: unboundDeviceAccount,
+          nft: nftAccountNotOwned,
         })
         .accounts({
-          payer: wrongOwner.publicKey,
-          deviceAccount: deviceAccount,
-          nftAccount: nftAccount,
+          payer: payer.publicKey,
+          deviceAccount: unboundDeviceAccount,
+          nftAccount: nftAccountNotOwned,
         })
-        .signers([wrongOwner])
+        .signers([payer])
         .rpc();
+        assert.fail("Expected error but none was thrown");
     } catch (err) {
-      assert.equal(err.error.errorCode.code, "ConstraintRaw");
+      assert.equal(err.error.errorCode.code, "PayerDoesNotOwnNFT");
+    }
+  });
+
+  it("fails to bind if payer does not own device", async () => {
+    const unboundNftAccount = (
+      await getOrCreateAssociatedTokenAccount(
+        provider.connection,
+        payer,
+        await createMint(
+          provider.connection,
+          payer,
+          payer.publicKey,
+          null,
+          0
+        ), 
+        payer.publicKey 
+      )
+    ).address
+    const deviceAccountNotOwned = (
+      await getOrCreateAssociatedTokenAccount(
+        provider.connection,
+        payer,
+        deviceMint, 
+        Keypair.generate().publicKey 
+      )
+    ).address;
+
+    try {
+      await program.methods
+        .bind({
+          device: deviceAccountNotOwned,
+          nft: unboundNftAccount,
+        })
+        .accounts({
+          payer: payer.publicKey,
+          deviceAccount: deviceAccountNotOwned,
+          nftAccount: unboundNftAccount,
+        })
+        .signers([payer])
+        .rpc();
+        assert.fail("Expected error but none was thrown");
+    } catch (err) {
+      assert.equal(err.error.errorCode.code, "PayerDoesNotOwnDevice");
     }
   });
 

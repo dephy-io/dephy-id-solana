@@ -22,13 +22,16 @@ pub struct Bind<'info> {
         init,
         payer = payer,
         space = 8 + 32 + 1, 
-        seeds = [b"device_binding", payer.key().as_ref()], bump
+        seeds = [b"device_binding", device_account.key().as_ref()], 
+        bump
     )]
     pub device_binding: Account<'info, DeviceBinding>,
     #[account(
         init,
         payer = payer,
-        space = 8 + 32 + 1, seeds = [b"nft_binding", payer.key().as_ref()], bump
+        space = 8 + 32 + 1, 
+        seeds = [b"nft_binding", nft_account.key().as_ref()], 
+        bump
     )]
     pub nft_binding: Account<'info, NFTBinding>,
     #[account(mut)]

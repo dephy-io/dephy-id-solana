@@ -8,12 +8,6 @@ pub enum ErrorCode {
     #[msg("The payer does not own the specified device.")]
     PayerDoesNotOwnDevice,
 
-    #[msg("The provided device has already bound.")]
-    DeviceAlreadyBound,
-
-    #[msg("The provided nft has already bound.")]
-    NFTAlreadyBound,
-
     #[msg("The provided device does not match the binding.")]
     DeviceDoesNotMatch,
 
