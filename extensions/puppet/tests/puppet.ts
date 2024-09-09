@@ -92,8 +92,6 @@ describe("puppet program", () => {
       .signers([payer])
       .rpc();
 
-    console.log("Your transaction signature", tx);
-
     const deviceBinding = await program.account.deviceBinding.fetch(
       deviceBindingPDA
     );
