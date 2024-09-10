@@ -78,7 +78,7 @@ describe("puppet program", () => {
     nftBindingPDA = nftBindingPubkey;
   });
 
-  it("binds NFT to device", async () => {
+  it("binds device and nft", async () => {
     const tx = await program.methods
       .bind({
         device: deviceAccount,
@@ -101,21 +101,27 @@ describe("puppet program", () => {
     assert.equal(nftBinding.device.toString(), deviceAccount.toString());
   });
 
+  it("unbinds device and nft", async () => {
+    await program.methods
+      .unbind()
+      .accounts({
+        payer: payer.publicKey,
+        deviceAccount: deviceAccount,
+        nftAccount: nftAccount,
+        deviceBinding: deviceBindingPDA,
+        nftBinding: nftBindingPDA,
+      })
+      .signers([payer])
+      .rpc();
+  
+    const deviceBinding = await program.account.deviceBinding.fetch(deviceBindingPDA);
+    const nftBinding = await program.account.nftBinding.fetch(nftBindingPDA);
+  
+    assert.equal(deviceBinding.nft.toString(), PublicKey.default.toString());
+    assert.equal(nftBinding.device.toString(), PublicKey.default.toString());
+  });
+
   it("fails to bind if payer does not own nft", async () => {
-    const unboundDeviceAccount = (
-      await getOrCreateAssociatedTokenAccount(
-        provider.connection,
-        payer,
-        await createMint(
-          provider.connection,
-          payer,
-          payer.publicKey,
-          null,
-          0
-        ), 
-        payer.publicKey 
-      )
-    ).address
     const nftAccountNotOwned = (
       await getOrCreateAssociatedTokenAccount(
         provider.connection,
@@ -128,12 +134,12 @@ describe("puppet program", () => {
     try {
       await program.methods
         .bind({
-          device: unboundDeviceAccount,
+          device: deviceAccount,
           nft: nftAccountNotOwned,
         })
         .accounts({
           payer: payer.publicKey,
-          deviceAccount: unboundDeviceAccount,
+          deviceAccount: deviceAccount,
           nftAccount: nftAccountNotOwned,
         })
         .signers([payer])
@@ -145,20 +151,6 @@ describe("puppet program", () => {
   });
 
   it("fails to bind if payer does not own device", async () => {
-    const unboundNftAccount = (
-      await getOrCreateAssociatedTokenAccount(
-        provider.connection,
-        payer,
-        await createMint(
-          provider.connection,
-          payer,
-          payer.publicKey,
-          null,
-          0
-        ), 
-        payer.publicKey 
-      )
-    ).address
     const deviceAccountNotOwned = (
       await getOrCreateAssociatedTokenAccount(
         provider.connection,
@@ -172,12 +164,12 @@ describe("puppet program", () => {
       await program.methods
         .bind({
           device: deviceAccountNotOwned,
-          nft: unboundNftAccount,
+          nft: nftAccount,
         })
         .accounts({
           payer: payer.publicKey,
           deviceAccount: deviceAccountNotOwned,
-          nftAccount: unboundNftAccount,
+          nftAccount: nftAccount,
         })
         .signers([payer])
         .rpc();
@@ -188,14 +180,34 @@ describe("puppet program", () => {
   });
 
   it("fails to bind if device already bound", async () => {
+    await program.methods
+      .bind({
+        device: deviceAccount,
+        nft: nftAccount,
+      })
+      .accounts({
+        payer: payer.publicKey,
+        deviceAccount: deviceAccount,
+        nftAccount: nftAccount,
+      })
+      .signers([payer])
+      .rpc();
+
     const nftAccountUnbound = (
       await getOrCreateAssociatedTokenAccount(
         provider.connection,
         payer,
-        deviceMint,
+        await createMint(
+          provider.connection,
+          payer,
+          payer.publicKey,
+          null,
+          0
+        ),
         payer.publicKey
       )
     ).address;
+
     try {
       await program.methods
         .bind({
@@ -211,8 +223,7 @@ describe("puppet program", () => {
         .rpc();
       assert.fail("Expected error but none was thrown");
     } catch (err) {
-      const logs = err.logs || [];
-      assert.isTrue(logs.some((log) => log.includes("already in use")));
+      assert.equal(err.error.errorCode.code, "DeviceAlreadyBound");
     }
   });
 
@@ -221,10 +232,17 @@ describe("puppet program", () => {
       await getOrCreateAssociatedTokenAccount(
         provider.connection,
         payer,
-        deviceMint,
+        await createMint(
+          provider.connection,
+          payer,
+          payer.publicKey,
+          null,
+          0
+        ),
         payer.publicKey
       )
     ).address;
+
     try {
       await program.methods
         .bind({
@@ -240,8 +258,7 @@ describe("puppet program", () => {
         .rpc();
       assert.fail("Expected error but none was thrown");
     } catch (err) {
-      const logs = err.logs || [];
-      assert.isTrue(logs.some((log) => log.includes("already in use")));
+      assert.equal(err.error.errorCode.code, "NFTAlreadyBound");
     }
   });
 });

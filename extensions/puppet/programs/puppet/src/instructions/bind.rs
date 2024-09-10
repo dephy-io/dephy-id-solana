@@ -19,7 +19,7 @@ pub struct Bind<'info> {
     )]
     pub device_account: Account<'info, TokenAccount>,
     #[account(
-        init,
+        init_if_needed,
         payer = payer,
         space = 8 + 32 + 1, 
         seeds = [b"device_binding", device_account.key().as_ref()], 
@@ -27,7 +27,7 @@ pub struct Bind<'info> {
     )]
     pub device_binding: Account<'info, DeviceBinding>,
     #[account(
-        init,
+        init_if_needed,
         payer = payer,
         space = 8 + 32 + 1, 
         seeds = [b"nft_binding", nft_account.key().as_ref()], 
@@ -47,8 +47,23 @@ pub struct BindParams {
 }
 
 pub fn bind(ctx: Context<Bind>, params: BindParams) -> Result<()> {
-    ctx.accounts.device_binding.nft = params.nft;
-    ctx.accounts.nft_binding.device = params.device;
+    let device_binding = &mut ctx.accounts.device_binding;
+    let nft_binding = &mut ctx.accounts.nft_binding;
+
+    require_keys_eq!(
+        device_binding.nft,
+        Pubkey::default(),
+        ErrorCode::DeviceAlreadyBound
+    );
+
+    require_keys_eq!(
+        nft_binding.device,
+        Pubkey::default(),
+        ErrorCode::NFTAlreadyBound
+    );
+
+    device_binding.nft = params.nft;
+    nft_binding.device = params.device;
 
     Ok(())
 }

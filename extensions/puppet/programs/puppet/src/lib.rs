@@ -15,6 +15,10 @@ pub mod puppet {
         instructions::bind(ctx, params)
     }
 
+    pub fn unbind(ctx: Context<Unbind>) -> Result<()> {
+        instructions::unbind(ctx)
+    }
+
     pub fn check_bound_by_device(ctx: Context<Bound>, device: Pubkey) -> Result<bool> {
         instructions::check_bound_by_device(ctx, device)
     }
