@@ -1,3 +1,4 @@
+use crate::constants::PRODUCT_MINT_SEED_PREFIX;
 use crate::errors::ErrorCode;
 use crate::state::{DeviceCollectionBinding, MplCollectionBinding};
 use anchor_lang::prelude::*;
@@ -11,13 +12,13 @@ pub struct BindCollection<'info> {
     /// CHECK:
     #[account(
         constraint = product_mint.key() == params.device_collection,
-        seeds = [b"DePHY_ID-PRODUCT", payer.key().as_ref(), params.product_metadata_name.as_ref()], 
+        seeds = [PRODUCT_MINT_SEED_PREFIX, payer.key().as_ref(), params.product_metadata_name.as_ref()], 
         bump = params.product_mint_bump,
         seeds::program = params.dephy_id_program.key()
     )]
     pub product_mint: AccountInfo<'info>,
     #[account(
-        constraint = mpl_mint.key() == params.nft_collection,
+        constraint = mpl_mint.key() == params.mpl_collection,
     )]
     pub mpl_mint: Account<'info, Mint>,
     #[account(
@@ -48,7 +49,7 @@ pub struct BindCollectionParams {
     pub product_mint_bump: u8,
     pub product_metadata_name: String,
     pub device_collection: Pubkey,
-    pub nft_collection: Pubkey
+    pub mpl_collection: Pubkey
 }
 
 pub fn bind_collection(ctx: Context<BindCollection>, params: BindCollectionParams) -> Result<()> {
@@ -56,7 +57,7 @@ pub fn bind_collection(ctx: Context<BindCollection>, params: BindCollectionParam
     let mpl_collection_binding = &mut ctx.accounts.mpl_collection_binding;
 
     require_keys_eq!(
-        device_collection_binding.nft_collection,
+        device_collection_binding.mpl_collection,
         Pubkey::default(),
         ErrorCode::DeviceCollectionAlreadyBound
     );
@@ -64,10 +65,10 @@ pub fn bind_collection(ctx: Context<BindCollection>, params: BindCollectionParam
     require_keys_eq!(
         mpl_collection_binding.device_collection,
         Pubkey::default(),
-        ErrorCode::NFTCollectionAlreadyBound
+        ErrorCode::MplCollectionAlreadyBound
     );
 
-    device_collection_binding.nft_collection = params.nft_collection;
+    device_collection_binding.mpl_collection = params.mpl_collection;
     mpl_collection_binding.device_collection = params.device_collection;
 
     Ok(())

@@ -5,16 +5,16 @@ pub enum ErrorCode {
     #[msg("The given device collection does not match the collection binding.")]
     DeviceCollectionDoesNotMatch,
 
-    #[msg("The given nft collection does not match the collection binding.")]
-    NFTCollectionDoesNotMatch,
+    #[msg("The given metaplex collection does not match the collection binding.")]
+    MplCollectionDoesNotMatch,
 
     #[msg("The given device collection has already bound.")]
     DeviceCollectionAlreadyBound,
 
-    #[msg("The given nft collection has already bound.")]
-    NFTCollectionAlreadyBound,
+    #[msg("The given metaplex collection has already bound.")]
+    MplCollectionAlreadyBound,
 
-    #[msg("The payer does not own the specified NFT.")]
+    #[msg("The payer does not own the specified nft.")]
     PayerDoesNotOwnNFT,
 
     #[msg("The payer does not own the specified device.")]
@@ -32,7 +32,6 @@ pub enum ErrorCode {
     #[msg("The provided nft does not match the binding.")]
     NFTDoesNotMatch,
 
+    #[msg("The calculated device associated token address does not match.")]
     DeviceAssociatedTokenDoesNotMatch,
-
-    InvalidDeviceMintPDA,
 }

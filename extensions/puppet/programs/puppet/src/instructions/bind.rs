@@ -1,3 +1,4 @@
+use crate::constants::{DEVICE_MINT_SEED_PREFIX, DEPHY_ID_PROGRAM};
 use crate::errors::ErrorCode;
 use crate::state::{DeviceBinding, DeviceCollectionBinding, MplBinding, MplCollectionBinding};
 use anchor_lang::prelude::*;
@@ -44,9 +45,7 @@ pub struct Bind<'info> {
 
 #[derive(AnchorSerialize, AnchorDeserialize, Debug, Clone)]
 pub struct BindParams {
-    pub dephy_id_program: Pubkey,
     pub device: Pubkey,
-    pub device_mint_bump: u8,
     pub mpl_ata: Pubkey,
 }
 
@@ -54,20 +53,19 @@ pub fn bind(ctx: Context<Bind>, params: BindParams) -> Result<()> {
     let device_binding = &mut ctx.accounts.device_binding;
     let mpl_binding = &mut ctx.accounts.mpl_binding;
 
-    let device_mint_pubkey = Pubkey::create_program_address(
+    let (device_mint_pubkey, _) = Pubkey::find_program_address(
         &[
-            b"DePHY_ID-DEVICE",
+            DEVICE_MINT_SEED_PREFIX,
             ctx.accounts.mpl_collection_binding.device_collection.as_ref(),
             params.device.as_ref(),
-            &[params.device_mint_bump], 
         ],
-        &params.dephy_id_program,
-    ).map_err(|_| ErrorCode::InvalidDeviceMintPDA)?;
+        &DEPHY_ID_PROGRAM,
+    );
 
     let device_ata = get_associated_token_address_with_program_id(
         &ctx.accounts.payer.key(),
         &device_mint_pubkey,
-        &params.dephy_id_program,
+        &DEPHY_ID_PROGRAM,
     );
 
     require_keys_eq!(
@@ -84,8 +82,8 @@ pub fn bind(ctx: Context<Bind>, params: BindParams) -> Result<()> {
 
     require_keys_eq!(
         ctx.accounts.mpl_associated_token.mint,
-        ctx.accounts.device_collection_binding.nft_collection,
-        ErrorCode::NFTCollectionDoesNotMatch
+        ctx.accounts.device_collection_binding.mpl_collection,
+        ErrorCode::MplCollectionDoesNotMatch
     );
 
     require_keys_eq!(

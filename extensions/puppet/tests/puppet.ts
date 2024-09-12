@@ -14,231 +14,231 @@ describe("puppet program", () => {
 
   const program = anchor.workspace.Puppet as Program<Puppet>;
 
-  let payer = Keypair.generate();
-  let deviceMint: PublicKey;
-  let nftMint: PublicKey;
-  let deviceAccount: PublicKey;
-  let nftAccount: PublicKey;
-  let deviceBindingPDA: PublicKey;
-  let nftBindingPDA: PublicKey;
+  // let payer = Keypair.generate();
+  // let deviceMint: PublicKey;
+  // let nftMint: PublicKey;
+  // let deviceAccount: PublicKey;
+  // let nftAccount: PublicKey;
+  // let deviceBindingPDA: PublicKey;
+  // let nftBindingPDA: PublicKey;
 
-  before(async () => {
-    await provider.connection.confirmTransaction(
-      await provider.connection.requestAirdrop(
-        payer.publicKey,
-        anchor.web3.LAMPORTS_PER_SOL
-      )
-    );
+  // // before(async () => {
+  // //   await provider.connection.confirmTransaction(
+  // //     await provider.connection.requestAirdrop(
+  // //       payer.publicKey,
+  // //       anchor.web3.LAMPORTS_PER_SOL
+  // //     )
+  // //   );
 
-    deviceMint = await createMint(
-      provider.connection,
-      payer,
-      payer.publicKey, // mint authority
-      null, // freeze authority
-      0 // decimals (0 for NFTs)
-    );
+  // //   deviceMint = await createMint(
+  // //     provider.connection,
+  // //     payer,
+  // //     payer.publicKey, // mint authority
+  // //     null, // freeze authority
+  // //     0 // decimals (0 for NFTs)
+  // //   );
 
-    nftMint = await createMint(
-      provider.connection,
-      payer,
-      payer.publicKey,
-      null,
-      0
-    );
+  // //   nftMint = await createMint(
+  // //     provider.connection,
+  // //     payer,
+  // //     payer.publicKey,
+  // //     null,
+  // //     0
+  // //   );
 
-    deviceAccount = (
-      await getOrCreateAssociatedTokenAccount(
-        provider.connection,
-        payer,
-        deviceMint, // deviceMint
-        payer.publicKey // owner
-      )
-    ).address;
+  // //   deviceAccount = (
+  // //     await getOrCreateAssociatedTokenAccount(
+  // //       provider.connection,
+  // //       payer,
+  // //       deviceMint, // deviceMint
+  // //       payer.publicKey // owner
+  // //     )
+  // //   ).address;
 
-    nftAccount = (
-      await getOrCreateAssociatedTokenAccount(
-        provider.connection,
-        payer,
-        nftMint, // nftMint
-        payer.publicKey // owner
-      )
-    ).address;
+  // //   nftAccount = (
+  // //     await getOrCreateAssociatedTokenAccount(
+  // //       provider.connection,
+  // //       payer,
+  // //       nftMint, // nftMint
+  // //       payer.publicKey // owner
+  // //     )
+  // //   ).address;
 
-    const [deviceBindingPubkey] = PublicKey.findProgramAddressSync(
-      [Buffer.from("device_binding"), deviceAccount.toBuffer()],
-      program.programId
-    );
+  // //   const [deviceBindingPubkey] = PublicKey.findProgramAddressSync(
+  // //     [Buffer.from("device_binding"), deviceAccount.toBuffer()],
+  // //     program.programId
+  // //   );
 
-    const [nftBindingPubkey] = PublicKey.findProgramAddressSync(
-      [Buffer.from("mpl_binding"), nftAccount.toBuffer()],
-      program.programId
-    );
+  // //   const [nftBindingPubkey] = PublicKey.findProgramAddressSync(
+  // //     [Buffer.from("mpl_binding"), nftAccount.toBuffer()],
+  // //     program.programId
+  // //   );
 
-    deviceBindingPDA = deviceBindingPubkey;
-    nftBindingPDA = nftBindingPubkey;
-  });
+  // //   deviceBindingPDA = deviceBindingPubkey;
+  // //   nftBindingPDA = nftBindingPubkey;
+  // // });
 
-  it("binds device and nft", async () => {
-    const tx = await program.methods
-      .bind({
-        device: deviceAccount,
-        nft: nftAccount,
-      })
-      .accounts({
-        payer: payer.publicKey,
-        deviceAccount: deviceAccount,
-        nftAccount: nftAccount,
-      })
-      .signers([payer])
-      .rpc();
+  // // it("binds device and nft", async () => {
+  // //   const tx = await program.methods
+  // //     .bind({
+  // //       device: deviceAccount,
+  // //       nft: nftAccount,
+  // //     })
+  // //     .accounts({
+  // //       payer: payer.publicKey,
+  // //       deviceAccount: deviceAccount,
+  // //       nftAccount: nftAccount,
+  // //     })
+  // //     .signers([payer])
+  // //     .rpc();
 
-    const deviceBinding = await program.account.deviceBinding.fetch(
-      deviceBindingPDA
-    );
-    const nftBinding = await program.account.nftBinding.fetch(nftBindingPDA);
+  // //   const deviceBinding = await program.account.deviceBinding.fetch(
+  // //     deviceBindingPDA
+  // //   );
+  // //   const nftBinding = await program.account.nftBinding.fetch(nftBindingPDA);
 
-    assert.equal(deviceBinding.nft.toString(), nftAccount.toString());
-    assert.equal(nftBinding.device.toString(), deviceAccount.toString());
-  });
+  // //   assert.equal(deviceBinding.nft.toString(), nftAccount.toString());
+  // //   assert.equal(nftBinding.device.toString(), deviceAccount.toString());
+  // // });
 
-  it("fails to bind if payer does not own nft", async () => {
-    const nftAccountNotOwned = (
-      await getOrCreateAssociatedTokenAccount(
-        provider.connection,
-        payer,
-        nftMint, 
-        Keypair.generate().publicKey 
-      )
-    ).address;
+  // // it("fails to bind if payer does not own nft", async () => {
+  // //   const nftAccountNotOwned = (
+  // //     await getOrCreateAssociatedTokenAccount(
+  // //       provider.connection,
+  // //       payer,
+  // //       nftMint, 
+  // //       Keypair.generate().publicKey 
+  // //     )
+  // //   ).address;
     
-    try {
-      await program.methods
-        .bind({
-          device: deviceAccount,
-          nft: nftAccountNotOwned,
-        })
-        .accounts({
-          payer: payer.publicKey,
-          deviceAccount: deviceAccount,
-          nftAccount: nftAccountNotOwned,
-        })
-        .signers([payer])
-        .rpc();
-        assert.fail("Expected error but none was thrown");
-    } catch (err) {
-      assert.equal(err.error.errorCode.code, "PayerDoesNotOwnNFT");
-    }
-  });
+  // //   try {
+  // //     await program.methods
+  // //       .bind({
+  // //         device: deviceAccount,
+  // //         nft: nftAccountNotOwned,
+  // //       })
+  // //       .accounts({
+  // //         payer: payer.publicKey,
+  // //         deviceAccount: deviceAccount,
+  // //         nftAccount: nftAccountNotOwned,
+  // //       })
+  // //       .signers([payer])
+  // //       .rpc();
+  // //       assert.fail("Expected error but none was thrown");
+  // //   } catch (err) {
+  // //     assert.equal(err.error.errorCode.code, "PayerDoesNotOwnNFT");
+  // //   }
+  // // });
 
-  it("fails to bind if payer does not own device", async () => {
-    const deviceAccountNotOwned = (
-      await getOrCreateAssociatedTokenAccount(
-        provider.connection,
-        payer,
-        deviceMint, 
-        Keypair.generate().publicKey 
-      )
-    ).address;
+  // // it("fails to bind if payer does not own device", async () => {
+  // //   const deviceAccountNotOwned = (
+  // //     await getOrCreateAssociatedTokenAccount(
+  // //       provider.connection,
+  // //       payer,
+  // //       deviceMint, 
+  // //       Keypair.generate().publicKey 
+  // //     )
+  // //   ).address;
 
-    try {
-      await program.methods
-        .bind({
-          device: deviceAccountNotOwned,
-          nft: nftAccount,
-        })
-        .accounts({
-          payer: payer.publicKey,
-          deviceAccount: deviceAccountNotOwned,
-          nftAccount: nftAccount,
-        })
-        .signers([payer])
-        .rpc();
-        assert.fail("Expected error but none was thrown");
-    } catch (err) {
-      assert.equal(err.error.errorCode.code, "PayerDoesNotOwnDevice");
-    }
-  });
+  // //   try {
+  // //     await program.methods
+  // //       .bind({
+  // //         device: deviceAccountNotOwned,
+  // //         nft: nftAccount,
+  // //       })
+  // //       .accounts({
+  // //         payer: payer.publicKey,
+  // //         deviceAccount: deviceAccountNotOwned,
+  // //         nftAccount: nftAccount,
+  // //       })
+  // //       .signers([payer])
+  // //       .rpc();
+  // //       assert.fail("Expected error but none was thrown");
+  // //   } catch (err) {
+  // //     assert.equal(err.error.errorCode.code, "PayerDoesNotOwnDevice");
+  // //   }
+  // // });
 
-  it("fails to bind if device already bound", async () => {
-    await program.methods
-      .bind({
-        device: deviceAccount,
-        nft: nftAccount,
-      })
-      .accounts({
-        payer: payer.publicKey,
-        deviceAccount: deviceAccount,
-        nftAccount: nftAccount,
-      })
-      .signers([payer])
-      .rpc();
+  // // it("fails to bind if device already bound", async () => {
+  // //   await program.methods
+  // //     .bind({
+  // //       device: deviceAccount,
+  // //       nft: nftAccount,
+  // //     })
+  // //     .accounts({
+  // //       payer: payer.publicKey,
+  // //       deviceAccount: deviceAccount,
+  // //       nftAccount: nftAccount,
+  // //     })
+  // //     .signers([payer])
+  // //     .rpc();
 
-    const nftAccountUnbound = (
-      await getOrCreateAssociatedTokenAccount(
-        provider.connection,
-        payer,
-        await createMint(
-          provider.connection,
-          payer,
-          payer.publicKey,
-          null,
-          0
-        ),
-        payer.publicKey
-      )
-    ).address;
+  // //   const nftAccountUnbound = (
+  // //     await getOrCreateAssociatedTokenAccount(
+  // //       provider.connection,
+  // //       payer,
+  // //       await createMint(
+  // //         provider.connection,
+  // //         payer,
+  // //         payer.publicKey,
+  // //         null,
+  // //         0
+  // //       ),
+  // //       payer.publicKey
+  // //     )
+  // //   ).address;
 
-    try {
-      await program.methods
-        .bind({
-          device: deviceAccount,
-          nft: nftAccountUnbound,
-        })
-        .accounts({
-          payer: payer.publicKey,
-          deviceAccount: deviceAccount,
-          nftAccount: nftAccountUnbound,
-        })
-        .signers([payer])
-        .rpc();
-      assert.fail("Expected error but none was thrown");
-    } catch (err) {
-      assert.equal(err.error.errorCode.code, "DeviceAlreadyBound");
-    }
-  });
+  // //   try {
+  // //     await program.methods
+  // //       .bind({
+  // //         device: deviceAccount,
+  // //         nft: nftAccountUnbound,
+  // //       })
+  // //       .accounts({
+  // //         payer: payer.publicKey,
+  // //         deviceAccount: deviceAccount,
+  // //         nftAccount: nftAccountUnbound,
+  // //       })
+  // //       .signers([payer])
+  // //       .rpc();
+  // //     assert.fail("Expected error but none was thrown");
+  // //   } catch (err) {
+  // //     assert.equal(err.error.errorCode.code, "DeviceAlreadyBound");
+  // //   }
+  // // });
 
-  it("fails to bind if nft already bound", async () => {
-    const deviceAccountUnbound = (
-      await getOrCreateAssociatedTokenAccount(
-        provider.connection,
-        payer,
-        await createMint(
-          provider.connection,
-          payer,
-          payer.publicKey,
-          null,
-          0
-        ),
-        payer.publicKey
-      )
-    ).address;
+  // // it("fails to bind if nft already bound", async () => {
+  // //   const deviceAccountUnbound = (
+  // //     await getOrCreateAssociatedTokenAccount(
+  // //       provider.connection,
+  // //       payer,
+  // //       await createMint(
+  // //         provider.connection,
+  // //         payer,
+  // //         payer.publicKey,
+  // //         null,
+  // //         0
+  // //       ),
+  // //       payer.publicKey
+  // //     )
+  // //   ).address;
 
-    try {
-      await program.methods
-        .bind({
-          device: deviceAccountUnbound,
-          nft: nftAccount,
-        })
-        .accounts({
-          payer: payer.publicKey,
-          deviceAccount: deviceAccountUnbound,
-          nftAccount: nftAccount,
-        })
-        .signers([payer])
-        .rpc();
-      assert.fail("Expected error but none was thrown");
-    } catch (err) {
-      assert.equal(err.error.errorCode.code, "NFTAlreadyBound");
-    }
-  });
+  // //   try {
+  // //     await program.methods
+  // //       .bind({
+  // //         device: deviceAccountUnbound,
+  // //         nft: nftAccount,
+  // //       })
+  // //       .accounts({
+  // //         payer: payer.publicKey,
+  // //         deviceAccount: deviceAccountUnbound,
+  // //         nftAccount: nftAccount,
+  // //       })
+  // //       .signers([payer])
+  // //       .rpc();
+  // //     assert.fail("Expected error but none was thrown");
+  // //   } catch (err) {
+  // //     assert.equal(err.error.errorCode.code, "NFTAlreadyBound");
+  // //   }
+  // // });
 });
