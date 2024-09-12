@@ -2,6 +2,6 @@ use anchor_lang::prelude::*;
 
 #[account]
 pub struct DeviceBinding {
-    pub nft: Pubkey,
+    pub mpl_ata: Pubkey,
     pub bump: u8,
 }

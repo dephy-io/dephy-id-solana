@@ -1,7 +1,7 @@
 use anchor_lang::prelude::*;
 
 #[account]
-pub struct NFTBinding {
-    pub device: Pubkey,
+pub struct MplBinding {
+    pub device_ata: Pubkey,
     pub bump: u8,
 }

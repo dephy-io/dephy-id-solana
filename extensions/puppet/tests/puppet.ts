@@ -70,7 +70,7 @@ describe("puppet program", () => {
     );
 
     const [nftBindingPubkey] = PublicKey.findProgramAddressSync(
-      [Buffer.from("nft_binding"), nftAccount.toBuffer()],
+      [Buffer.from("mpl_binding"), nftAccount.toBuffer()],
       program.programId
     );
 

@@ -31,4 +31,8 @@ pub enum ErrorCode {
 
     #[msg("The provided nft does not match the binding.")]
     NFTDoesNotMatch,
+
+    DeviceAssociatedTokenDoesNotMatch,
+
+    InvalidDeviceMintPDA,
 }
