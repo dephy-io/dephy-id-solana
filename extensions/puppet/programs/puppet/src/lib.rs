@@ -11,12 +11,12 @@ declare_id!("6nxvjh3D3kLkkb25sgRUdyomfYqeoUv7gfRFgcScy6jN");
 pub mod puppet {
     use super::*;
 
-    pub fn bind(ctx: Context<Bind>, params: BindParams) -> Result<()> {
-        instructions::bind(ctx, params)
+    pub fn bind_collection(ctx: Context<BindCollection>, params: BindCollectionParams) -> Result<()> {
+        instructions::bind_collection(ctx, params)
     }
 
-    pub fn unbind(ctx: Context<Unbind>) -> Result<()> {
-        instructions::unbind(ctx)
+    pub fn bind(ctx: Context<Bind>, params: BindParams) -> Result<()> {
+        instructions::bind(ctx, params)
     }
 
     pub fn check_bound_by_device(ctx: Context<Bound>, device: Pubkey) -> Result<bool> {

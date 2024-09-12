@@ -2,6 +2,18 @@ use anchor_lang::error_code;
 
 #[error_code]
 pub enum ErrorCode {
+    #[msg("The given device collection does not match the collection binding.")]
+    DeviceCollectionDoesNotMatch,
+
+    #[msg("The given nft collection does not match the collection binding.")]
+    NFTCollectionDoesNotMatch,
+
+    #[msg("The given device collection has already bound.")]
+    DeviceCollectionAlreadyBound,
+
+    #[msg("The given nft collection has already bound.")]
+    NFTCollectionAlreadyBound,
+
     #[msg("The payer does not own the specified NFT.")]
     PayerDoesNotOwnNFT,
 

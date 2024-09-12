@@ -101,26 +101,6 @@ describe("puppet program", () => {
     assert.equal(nftBinding.device.toString(), deviceAccount.toString());
   });
 
-  it("unbinds device and nft", async () => {
-    await program.methods
-      .unbind()
-      .accounts({
-        payer: payer.publicKey,
-        deviceAccount: deviceAccount,
-        nftAccount: nftAccount,
-        deviceBinding: deviceBindingPDA,
-        nftBinding: nftBindingPDA,
-      })
-      .signers([payer])
-      .rpc();
-  
-    const deviceBinding = await program.account.deviceBinding.fetch(deviceBindingPDA);
-    const nftBinding = await program.account.nftBinding.fetch(nftBindingPDA);
-  
-    assert.equal(deviceBinding.nft.toString(), PublicKey.default.toString());
-    assert.equal(nftBinding.device.toString(), PublicKey.default.toString());
-  });
-
   it("fails to bind if payer does not own nft", async () => {
     const nftAccountNotOwned = (
       await getOrCreateAssociatedTokenAccount(
