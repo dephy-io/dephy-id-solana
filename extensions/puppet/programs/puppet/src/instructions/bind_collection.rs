@@ -2,7 +2,6 @@ use crate::constants::{DEPHY_ID_PROGRAM, PRODUCT_MINT_SEED_PREFIX};
 use crate::errors::ErrorCode;
 use crate::state::{DeviceCollectionBinding, MplCollectionBinding};
 use anchor_lang::prelude::*;
-use anchor_spl::token::Mint;
 
 #[derive(Accounts)]
 #[instruction(
@@ -17,10 +16,11 @@ pub struct BindCollection<'info> {
         seeds::program = dephy_id_program.key()
     )]
     pub product_mint: AccountInfo<'info>,
+    /// CHECK: We will manually verify the metadata structure
     #[account(
-        constraint = mpl_mint.key() == params.mpl_collection,
+        constraint = mpl_collection.key() == params.mpl_collection,
     )]
-    pub mpl_mint: Account<'info, Mint>,
+    pub mpl_collection: AccountInfo<'info>,
     #[account(
         init_if_needed,
         payer = payer,
@@ -33,7 +33,7 @@ pub struct BindCollection<'info> {
         init_if_needed,
         payer = payer,
         space = 8 + 32 + 1, 
-        seeds = [b"mpl_collection_binding", mpl_mint.key().as_ref()], 
+        seeds = [b"mpl_collection_binding", mpl_collection.key().as_ref()], 
         bump
     )]
     pub mpl_collection_binding: Account<'info, MplCollectionBinding>,

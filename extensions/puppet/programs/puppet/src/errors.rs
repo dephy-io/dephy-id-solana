@@ -8,6 +8,8 @@ pub enum ErrorCode {
     #[msg("The given metaplex collection does not match the collection binding.")]
     MplCollectionDoesNotMatch,
 
+    MplCollectionNotFound,
+
     #[msg("The given device collection has already bound.")]
     DeviceCollectionAlreadyBound,
 

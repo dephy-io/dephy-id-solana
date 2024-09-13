@@ -3,13 +3,19 @@ use crate::errors::ErrorCode;
 use crate::state::{DeviceBinding, DeviceCollectionBinding, MplBinding, MplCollectionBinding};
 use anchor_lang::prelude::*;
 use anchor_spl::associated_token::get_associated_token_address_with_program_id;
+use anchor_spl::metadata::MetadataAccount;
 use anchor_spl::token::TokenAccount;
+use mpl_token_metadata::accounts::Metadata;
 
 #[derive(Accounts)]
 #[instruction(
     params: BindParams
 )]
 pub struct Bind<'info> {
+    #[account(
+        address = Metadata::find_pda(&mpl_associated_token.mint).0
+    )]
+    pub mpl_metadata: Account<'info, MetadataAccount>,
     #[account(
         constraint = mpl_associated_token.key() == params.mpl_ata,
         constraint = mpl_associated_token.owner == owner.key() @ ErrorCode::NotNFTOwner
@@ -82,11 +88,15 @@ pub fn bind(ctx: Context<Bind>, params: BindParams) -> Result<()> {
         ErrorCode::DeviceCollectionDoesNotMatch
     );
 
-    require_keys_eq!(
-        ctx.accounts.mpl_associated_token.mint,
-        ctx.accounts.device_collection_binding.mpl_collection,
-        ErrorCode::MplCollectionDoesNotMatch
-    );
+    if let Some(collection) = &ctx.accounts.mpl_metadata.collection {
+        require_keys_eq!(
+            collection.key,
+            ctx.accounts.device_collection_binding.mpl_collection,
+            ErrorCode::MplCollectionDoesNotMatch
+        );
+    } else {
+        return Err(ErrorCode::MplCollectionNotFound.into());
+    }
 
     require_keys_eq!(
         device_binding.mpl_ata,
