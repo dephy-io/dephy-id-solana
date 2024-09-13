@@ -14,11 +14,11 @@ pub enum ErrorCode {
     #[msg("The given metaplex collection has already bound.")]
     MplCollectionAlreadyBound,
 
-    #[msg("The payer does not own the specified nft.")]
-    PayerDoesNotOwnNFT,
+    #[msg("The given owner does not own the specified nft.")]
+    NotNFTOwner,
 
-    #[msg("The payer does not own the specified device.")]
-    PayerDoesNotOwnDevice,
+    #[msg("The given owner does not own the specified device.")]
+    NotDeviceOwner,
 
     #[msg("The given device has already bound a nft.")]
     DeviceAlreadyBound,

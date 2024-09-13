@@ -12,7 +12,7 @@ pub struct BindCollection<'info> {
     /// CHECK:
     #[account(
         constraint = product_mint.key() == params.device_collection,
-        seeds = [PRODUCT_MINT_SEED_PREFIX, payer.key().as_ref(), params.product_metadata_name.as_ref()], 
+        seeds = [PRODUCT_MINT_SEED_PREFIX, vendor.key().as_ref(), params.product_metadata_name.as_ref()], 
         bump,
         seeds::program = dephy_id_program.key()
     )]
@@ -40,6 +40,8 @@ pub struct BindCollection<'info> {
     /// CHECK: This is the hardcoded DePhy ID Program address passed in as an AccountInfo
     #[account(address = DEPHY_ID_PROGRAM)]
     pub dephy_id_program: AccountInfo<'info>,
+    #[account(mut)]
+    pub vendor: Signer<'info>,
     #[account(mut)]
     pub payer: Signer<'info>,
     pub rent: Sysvar<'info, Rent>,

@@ -12,11 +12,11 @@ use anchor_spl::token::TokenAccount;
 pub struct Bind<'info> {
     #[account(
         constraint = mpl_associated_token.key() == params.mpl_ata,
-        constraint = mpl_associated_token.owner == payer.key() @ ErrorCode::PayerDoesNotOwnNFT
+        constraint = mpl_associated_token.owner == owner.key() @ ErrorCode::NotNFTOwner
     )]
     pub mpl_associated_token: Account<'info, TokenAccount>,
     #[account(
-        constraint = device_associated_token.owner == payer.key() @ ErrorCode::PayerDoesNotOwnDevice
+        constraint = device_associated_token.owner == owner.key() @ ErrorCode::NotDeviceOwner
     )]
     pub device_associated_token: Account<'info, TokenAccount>,
     #[account(
@@ -37,6 +37,8 @@ pub struct Bind<'info> {
     pub mpl_binding: Account<'info, MplBinding>,
     pub device_collection_binding: Account<'info, DeviceCollectionBinding>,
     pub mpl_collection_binding: Account<'info, MplCollectionBinding>,
+    #[account(mut)]
+    pub owner: Signer<'info>,
     #[account(mut)]
     pub payer: Signer<'info>,
     pub rent: Sysvar<'info, Rent>,
