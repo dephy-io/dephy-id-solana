@@ -1,4 +1,4 @@
-use crate::constants::PRODUCT_MINT_SEED_PREFIX;
+use crate::constants::{DEPHY_ID_PROGRAM, PRODUCT_MINT_SEED_PREFIX};
 use crate::errors::ErrorCode;
 use crate::state::{DeviceCollectionBinding, MplCollectionBinding};
 use anchor_lang::prelude::*;
@@ -13,8 +13,8 @@ pub struct BindCollection<'info> {
     #[account(
         constraint = product_mint.key() == params.device_collection,
         seeds = [PRODUCT_MINT_SEED_PREFIX, payer.key().as_ref(), params.product_metadata_name.as_ref()], 
-        bump = params.product_mint_bump,
-        seeds::program = params.dephy_id_program.key()
+        bump,
+        seeds::program = dephy_id_program.key()
     )]
     pub product_mint: AccountInfo<'info>,
     #[account(
@@ -37,6 +37,9 @@ pub struct BindCollection<'info> {
         bump
     )]
     pub mpl_collection_binding: Account<'info, MplCollectionBinding>,
+    /// CHECK: This is the hardcoded DePhy ID Program address passed in as an AccountInfo
+    #[account(address = DEPHY_ID_PROGRAM)]
+    pub dephy_id_program: AccountInfo<'info>,
     #[account(mut)]
     pub payer: Signer<'info>,
     pub rent: Sysvar<'info, Rent>,
@@ -45,8 +48,6 @@ pub struct BindCollection<'info> {
 
 #[derive(AnchorSerialize, AnchorDeserialize, Debug, Clone)]
 pub struct BindCollectionParams {
-    pub dephy_id_program: Pubkey,
-    pub product_mint_bump: u8,
     pub product_metadata_name: String,
     pub device_collection: Pubkey,
     pub mpl_collection: Pubkey
