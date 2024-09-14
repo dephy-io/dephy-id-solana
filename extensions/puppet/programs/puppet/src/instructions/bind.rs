@@ -71,7 +71,7 @@ pub fn bind(ctx: Context<Bind>, params: BindParams) -> Result<()> {
     );
 
     let device_ata = get_associated_token_address_with_program_id(
-        &ctx.accounts.payer.key(),
+        &ctx.accounts.owner.key(),
         &device_mint_pubkey,
         &DEPHY_ID_PROGRAM,
     );

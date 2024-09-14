@@ -1,6 +1,6 @@
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
-// import { CreateProductInput } from "../../../clients/js/src";
+import * as anchor from "@coral-xyz/anchor";
 import { Keypair, PublicKey } from "@solana/web3.js";
 import { Puppet } from "../target/types/puppet";
 import { Program } from "@coral-xyz/anchor";
@@ -17,6 +17,7 @@ import {
   ASSOCIATED_TOKEN_PROGRAM_ID,
 } from "@solana/spl-token";
 
+const DEPHY_ID_PROGRAM = new PublicKey("hdMghjD73uASxgJXi6e1mGPsXqnADMsrqB1bveqABP1")
 const DEV_RPC = "https://api.apr.dev";
 
 yargs(hideBin(process.argv))
@@ -27,7 +28,7 @@ yargs(hideBin(process.argv))
       privatekey: { type: "string", demandOption: true },
     },
     async (args) => {
-      
+
     }
   )
   .command(
@@ -48,17 +49,11 @@ yargs(hideBin(process.argv))
     },
     async (args) => {
       const payer = Keypair.fromSecretKey(new Uint8Array(JSON.parse(args.privatekey)));
-
+      console.log("pubkey:", payer.publicKey)
       const connection = new Connection(clusterApiUrl("devnet"));
       const metaplex = Metaplex.make(connection)
         .use(keypairIdentity(payer))
-        .use(
-          irysStorage({
-            address: "https://devnet.bundlr.network",
-            providerUrl: "https://api.devnet.solana.com",
-            timeout: 60000,
-          })
-        );
+        .use(irysStorage());
 
       const { nft: collectionNft } = await metaplex.nfts().create({
         uri: args.url,
@@ -81,17 +76,10 @@ yargs(hideBin(process.argv))
     },
     async (args) => {
       const payer = Keypair.fromSecretKey(new Uint8Array(JSON.parse(args.privatekey)));
-
       const connection = new Connection(clusterApiUrl("devnet"));
       const metaplex = Metaplex.make(connection)
       .use(keypairIdentity(payer))
-      .use(
-        irysStorage({
-          address: "https://devnet.bundlr.network",
-          providerUrl: "https://api.devnet.solana.com",
-          timeout: 60000,
-        })
-      );
+      .use(irysStorage());
 
       // Create an NFT under the specified collection.
       const { nft } = await metaplex.nfts().create({
@@ -188,20 +176,31 @@ yargs(hideBin(process.argv))
         program.programId
       );
 
+      const mplCollectionBinding = await program.account.mplCollectionBinding.fetch(mplCollectionBindingPda[0]);
+      const deviceMintPda = PublicKey.findProgramAddressSync(
+        [
+          Buffer.from("device_mint"),
+          mplCollectionBinding.deviceCollection.toBuffer(), 
+          new PublicKey(args.device).toBuffer(),
+        ],
+        DEPHY_ID_PROGRAM
+      );
+      const [deviceAssociatedToken] = anchor.web3.PublicKey.findProgramAddressSync(
+        [
+          owner.toBuffer(),
+          deviceMintPda[0].toBuffer(), 
+        ],
+        DEPHY_ID_PROGRAM
+      );
+
       await program.methods
         .bind({
           device: new PublicKey(args.device),
           mplAta: new PublicKey(args.mplAta),
         })
         .accounts({
-          mplAssociatedToken: mplAssociatedToken, // The ATA for the Metaplex NFT
-          deviceAssociatedToken: await anchor.web3.PublicKey.findProgramAddress(
-            [
-              Buffer.from("associated_token"),
-              new PublicKey(args.device).toBuffer(),
-            ],
-            anchor.web3.TOKEN_PROGRAM_ID
-          ),
+          mplAssociatedToken, // The ATA for the Metaplex NFT
+          deviceAssociatedToken,
           deviceCollectionBinding: deviceCollectionBindingPda[0], // Device collection binding PDA
           mplCollectionBinding: mplCollectionBindingPda[0], // Metaplex collection binding PDA
           owner: owner, // Owner of the device and NFT
