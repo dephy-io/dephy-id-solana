@@ -12,33 +12,16 @@ import {
 import { Connection, clusterApiUrl } from "@solana/web3.js";
 import {
   getAssociatedTokenAddress,
-  createMint,
   TOKEN_PROGRAM_ID,
   ASSOCIATED_TOKEN_PROGRAM_ID,
 } from "@solana/spl-token";
 
-const DEPHY_ID_PROGRAM = new PublicKey("hdMghjD73uASxgJXi6e1mGPsXqnADMsrqB1bveqABP1")
+const DEPHY_ID_PROGRAM = new PublicKey(
+  "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+);
 const DEV_RPC = "https://api.apr.dev";
 
 yargs(hideBin(process.argv))
-  .command(
-    "create-product",
-    "Create product",
-    {
-      privatekey: { type: "string", demandOption: true },
-    },
-    async (args) => {
-
-    }
-  )
-  .command(
-    "create-device",
-    "Create device",
-    {
-      privatekey: { type: "string", demandOption: true },
-    },
-    async (args) => {}
-  )
   .command(
     "create-mpl-collection",
     "Create metaplex collection",
@@ -48,8 +31,10 @@ yargs(hideBin(process.argv))
       privatekey: { type: "string", demandOption: true },
     },
     async (args) => {
-      const payer = Keypair.fromSecretKey(new Uint8Array(JSON.parse(args.privatekey)));
-      console.log("pubkey:", payer.publicKey)
+      const payer = Keypair.fromSecretKey(
+        new Uint8Array(JSON.parse(args.privatekey))
+      );
+      console.log("pubkey:", payer.publicKey);
       const connection = new Connection(clusterApiUrl("devnet"));
       const metaplex = Metaplex.make(connection)
         .use(keypairIdentity(payer))
@@ -59,7 +44,7 @@ yargs(hideBin(process.argv))
         uri: args.url,
         name: args.name,
         sellerFeeBasisPoints: 500, // Represents 5.00%.
-        isCollection: true
+        isCollection: true,
       });
 
       console.log("mplCollection:", collectionNft.address.toBase58());
@@ -75,11 +60,13 @@ yargs(hideBin(process.argv))
       privatekey: { type: "string", demandOption: true },
     },
     async (args) => {
-      const payer = Keypair.fromSecretKey(new Uint8Array(JSON.parse(args.privatekey)));
+      const payer = Keypair.fromSecretKey(
+        new Uint8Array(JSON.parse(args.privatekey))
+      );
       const connection = new Connection(clusterApiUrl("devnet"));
       const metaplex = Metaplex.make(connection)
-      .use(keypairIdentity(payer))
-      .use(irysStorage());
+        .use(keypairIdentity(payer))
+        .use(irysStorage());
 
       // Create an NFT under the specified collection.
       const { nft } = await metaplex.nfts().create({
@@ -176,22 +163,23 @@ yargs(hideBin(process.argv))
         program.programId
       );
 
-      const mplCollectionBinding = await program.account.mplCollectionBinding.fetch(mplCollectionBindingPda[0]);
+      const mplCollectionBinding =
+        await program.account.mplCollectionBinding.fetch(
+          mplCollectionBindingPda[0]
+        );
       const deviceMintPda = PublicKey.findProgramAddressSync(
         [
           Buffer.from("device_mint"),
-          mplCollectionBinding.deviceCollection.toBuffer(), 
+          mplCollectionBinding.deviceCollection.toBuffer(),
           new PublicKey(args.device).toBuffer(),
         ],
         DEPHY_ID_PROGRAM
       );
-      const [deviceAssociatedToken] = anchor.web3.PublicKey.findProgramAddressSync(
-        [
-          owner.toBuffer(),
-          deviceMintPda[0].toBuffer(), 
-        ],
-        DEPHY_ID_PROGRAM
-      );
+      const [deviceAssociatedToken] =
+        anchor.web3.PublicKey.findProgramAddressSync(
+          [owner.toBuffer(), deviceMintPda[0].toBuffer()],
+          DEPHY_ID_PROGRAM
+        );
 
       await program.methods
         .bind({
