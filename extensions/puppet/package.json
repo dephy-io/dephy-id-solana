@@ -6,11 +6,11 @@
     "test": "ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.ts",
     "cli": "ts-node ./client/index.ts"
   },
-  "dependencies": {
-    "@coral-xyz/anchor": "^0.30.1"
-  },
   "devDependencies": {
-    "@metaplex-foundation/js": "^0.20.1",
+    "@coral-xyz/anchor": "^0.30.1",
+    "@metaplex-foundation/umi": "^0.9.2",
+    "@metaplex-foundation/umi-bundle-defaults": "^0.9.2",
+    "@metaplex-foundation/mpl-token-metadata": "^3.2.1",
     "@solana/spl-token": "^0.4.8",
     "@solana/web3.js": "^1.95.3",
     "@types/bn.js": "^5.1.0",

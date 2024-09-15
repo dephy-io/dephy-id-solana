@@ -1,25 +1,37 @@
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 import * as anchor from "@coral-xyz/anchor";
-import { Keypair, PublicKey } from "@solana/web3.js";
+import { PublicKey } from "@solana/web3.js";
 import { Puppet } from "../target/types/puppet";
 import { Program } from "@coral-xyz/anchor";
 import {
-  Metaplex,
-  irysStorage,
-  keypairIdentity,
-} from "@metaplex-foundation/js";
-import { Connection, clusterApiUrl } from "@solana/web3.js";
+  generateSigner,
+  percentAmount,
+  createSignerFromKeypair,
+  signerIdentity,
+} from "@metaplex-foundation/umi";
+import { createUmi } from '@metaplex-foundation/umi-bundle-defaults'
+import {
+  mplTokenMetadata,
+  createNft,
+  fetchDigitalAsset,
+} from "@metaplex-foundation/mpl-token-metadata";
 import {
   getAssociatedTokenAddress,
   TOKEN_PROGRAM_ID,
   ASSOCIATED_TOKEN_PROGRAM_ID,
 } from "@solana/spl-token";
+import fs from "fs";
+import path from "path";
 
 const DEPHY_ID_PROGRAM = new PublicKey(
   "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
 );
-const DEV_RPC = "https://api.apr.dev";
+const DEV_RPC = "https://api.devnet.solana.com";
+const SECRET_KEY = fs.readFileSync(
+  path.join(__dirname, '../keypair.json'),
+  "utf-8"
+)
 
 yargs(hideBin(process.argv))
   .command(
@@ -28,26 +40,29 @@ yargs(hideBin(process.argv))
     {
       url: { type: "string", demandOption: true },
       name: { type: "string", demandOption: true },
-      privatekey: { type: "string", demandOption: true },
     },
     async (args) => {
-      const payer = Keypair.fromSecretKey(
-        new Uint8Array(JSON.parse(args.privatekey))
-      );
-      console.log("pubkey:", payer.publicKey);
-      const connection = new Connection(clusterApiUrl("devnet"));
-      const metaplex = Metaplex.make(connection)
-        .use(keypairIdentity(payer))
-        .use(irysStorage());
+      const umi = createUmi(DEV_RPC);
+      
+      const keypair = umi.eddsa.createKeypairFromSecretKey(new Uint8Array(JSON.parse(SECRET_KEY)));
 
-      const { nft: collectionNft } = await metaplex.nfts().create({
-        uri: args.url,
+      console.log(keypair.publicKey)
+
+      const signer = createSignerFromKeypair(umi, keypair);
+
+      umi.use(signerIdentity(signer))
+      umi.use(mplTokenMetadata())
+      const mint = generateSigner(umi)
+      await createNft(umi, {
+        mint,
         name: args.name,
-        sellerFeeBasisPoints: 500, // Represents 5.00%.
-        isCollection: true,
-      });
-
-      console.log("mplCollection:", collectionNft.address.toBase58());
+        uri: args.url,
+        sellerFeeBasisPoints: percentAmount(5.5),
+        isCollection: true
+      }).sendAndConfirm(umi)
+      
+      const asset = await fetchDigitalAsset(umi, mint.publicKey)
+      console.log("mplCollection:", asset.mint.publicKey);
     }
   )
   .command(
@@ -60,27 +75,30 @@ yargs(hideBin(process.argv))
       privatekey: { type: "string", demandOption: true },
     },
     async (args) => {
-      const payer = Keypair.fromSecretKey(
-        new Uint8Array(JSON.parse(args.privatekey))
-      );
-      const connection = new Connection(clusterApiUrl("devnet"));
-      const metaplex = Metaplex.make(connection)
-        .use(keypairIdentity(payer))
-        .use(irysStorage());
+      const umi = createUmi(DEV_RPC);
+      
+      const keypair = umi.eddsa.createKeypairFromSecretKey(new Uint8Array(JSON.parse(SECRET_KEY)));
 
-      // Create an NFT under the specified collection.
-      const { nft } = await metaplex.nfts().create({
-        uri: args.url,
+      const signer = createSignerFromKeypair(umi, keypair);
+
+      umi.use(signerIdentity(signer))
+      umi.use(mplTokenMetadata())
+      const mint = generateSigner(umi)
+      await createNft(umi, {
+        mint,
         name: args.name,
-        sellerFeeBasisPoints: 500, // Represents 5.00%.
-        collection: new PublicKey(args.collection),
-      });
-
-      console.log("mpl_mint:", nft.address.toBase58());
+        uri: args.url,
+        sellerFeeBasisPoints: percentAmount(5.5),
+        isCollection: true
+      }).sendAndConfirm(umi)
+      
+      const asset = await fetchDigitalAsset(umi, mint.publicKey)
+      console.log("asset:", asset.publicKey)
+      console.log("mpl_mint:", asset.mint.publicKey);
 
       const mplAta = await getAssociatedTokenAddress(
-        nft.address, // The mint address of the created NFT
-        payer.publicKey, // The wallet address of the NFT owner
+        new anchor.web3.PublicKey(asset.mint.publicKey), // The mint address of the created NFT
+        new anchor.web3.PublicKey(keypair.publicKey), // The wallet address of the NFT owner
         false,
         TOKEN_PROGRAM_ID,
         ASSOCIATED_TOKEN_PROGRAM_ID
