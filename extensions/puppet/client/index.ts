@@ -9,12 +9,17 @@ import {
   percentAmount,
   createSignerFromKeypair,
   signerIdentity,
+  some,
+  publicKey,
 } from "@metaplex-foundation/umi";
-import { createUmi } from '@metaplex-foundation/umi-bundle-defaults'
+import { createUmi } from "@metaplex-foundation/umi-bundle-defaults";
 import {
   mplTokenMetadata,
   createNft,
   fetchDigitalAsset,
+  setAndVerifyCollection,
+  findMetadataPda,
+  findMasterEditionPda,
 } from "@metaplex-foundation/mpl-token-metadata";
 import {
   getAssociatedTokenAddress,
@@ -29,9 +34,9 @@ const DEPHY_ID_PROGRAM = new PublicKey(
 );
 const DEV_RPC = "https://api.devnet.solana.com";
 const SECRET_KEY = fs.readFileSync(
-  path.join(__dirname, '../keypair.json'),
+  path.join(__dirname, "../keypair.json"),
   "utf-8"
-)
+);
 
 yargs(hideBin(process.argv))
   .command(
@@ -43,25 +48,26 @@ yargs(hideBin(process.argv))
     },
     async (args) => {
       const umi = createUmi(DEV_RPC);
-      
-      const keypair = umi.eddsa.createKeypairFromSecretKey(new Uint8Array(JSON.parse(SECRET_KEY)));
 
-      console.log(keypair.publicKey)
+      const keypair = umi.eddsa.createKeypairFromSecretKey(
+        new Uint8Array(JSON.parse(SECRET_KEY))
+      );
+      console.log(keypair.publicKey);
 
       const signer = createSignerFromKeypair(umi, keypair);
 
-      umi.use(signerIdentity(signer))
-      umi.use(mplTokenMetadata())
-      const mint = generateSigner(umi)
+      umi.use(signerIdentity(signer)).use(mplTokenMetadata());
+
+      const mint = generateSigner(umi);
       await createNft(umi, {
         mint,
         name: args.name,
         uri: args.url,
         sellerFeeBasisPoints: percentAmount(5.5),
-        isCollection: true
-      }).sendAndConfirm(umi)
-      
-      const asset = await fetchDigitalAsset(umi, mint.publicKey)
+        isCollection: true,
+      }).sendAndConfirm(umi);
+
+      const asset = await fetchDigitalAsset(umi, mint.publicKey);
       console.log("mplCollection:", asset.mint.publicKey);
     }
   )
@@ -76,25 +82,43 @@ yargs(hideBin(process.argv))
     },
     async (args) => {
       const umi = createUmi(DEV_RPC);
-      
-      const keypair = umi.eddsa.createKeypairFromSecretKey(new Uint8Array(JSON.parse(SECRET_KEY)));
+
+      const keypair = umi.eddsa.createKeypairFromSecretKey(
+        new Uint8Array(JSON.parse(SECRET_KEY))
+      );
 
       const signer = createSignerFromKeypair(umi, keypair);
 
-      umi.use(signerIdentity(signer))
-      umi.use(mplTokenMetadata())
-      const mint = generateSigner(umi)
+      umi.use(signerIdentity(signer));
+      umi.use(mplTokenMetadata());
+      const mint = generateSigner(umi);
+      const collectionAuthority = generateSigner(umi);
       await createNft(umi, {
         mint,
         name: args.name,
         uri: args.url,
         sellerFeeBasisPoints: percentAmount(5.5),
-        isCollection: true
-      }).sendAndConfirm(umi)
-      
-      const asset = await fetchDigitalAsset(umi, mint.publicKey)
-      console.log("asset:", asset.publicKey)
+      }).sendAndConfirm(umi);
+
+      const asset = await fetchDigitalAsset(umi, mint.publicKey);
+      console.log("asset:", asset.publicKey);
       console.log("mpl_mint:", asset.mint.publicKey);
+
+      const collectionMint = publicKey(args.collection);
+      const collectionMetadata = findMetadataPda(umi, { mint: collectionMint });
+
+      await setAndVerifyCollection(umi, {
+        metadata: findMetadataPda(umi, { mint: asset.mint.publicKey }),
+        collectionAuthority: collectionAuthority,
+        updateAuthority: collectionAuthority.publicKey,
+        collectionMint: collectionMint,
+        collection: collectionMetadata,
+        collectionMasterEditionAccount: findMasterEditionPda(umi, {
+          mint: collectionMint,
+        }),
+      }).sendAndConfirm(umi);
+
+      console.log("collection verified");
 
       const mplAta = await getAssociatedTokenAddress(
         new anchor.web3.PublicKey(asset.mint.publicKey), // The mint address of the created NFT
