@@ -5,14 +5,29 @@ import {
   getOrCreateAssociatedTokenAccount,
   createMint,
 } from "@solana/spl-token";
+import { exec } from 'child_process';
+import { promisify } from 'util';
 import { assert } from "chai";
 import { Puppet } from "../target/types/puppet";
+
+const execPromise = promisify(exec);
 
 describe("puppet program", () => {
   const provider = anchor.AnchorProvider.env();
   anchor.setProvider(provider);
 
   const program = anchor.workspace.Puppet as Program<Puppet>;
+
+  console.log("loaded")
+
+  before(() => {
+    console.log("before")
+    executeCommandInDirectory(CLI, CREATE_PRODUCT);
+  })
+
+  it("success", async() => {
+
+  })
 
   // let payer = Keypair.generate();
   // let deviceMint: PublicKey;
@@ -242,3 +257,18 @@ describe("puppet program", () => {
   // //   }
   // // });
 });
+
+const CLI = "../../cli"
+const CREATE_PRODUCT = `cargo run create-product --vendor ../extensions/puppet/keypair.json 'Product 1' 'SYMBOL' 'METADATA_URI' -m desc="First Product by Example Vendor" -u http://127.0.0.1:8899 -p hdMghjD73uASxgJXi6e1mGPsXqnADMsrqB1bveqABP1`
+
+async function executeCommandInDirectory(directory: string, command: string) {
+    try {
+        const { stdout, stderr } = await execPromise(command, { cwd: directory });
+        console.log('Output:', stdout);
+        if (stderr) {
+            console.error('Error:', stderr);
+        }
+    } catch (error) {
+        console.error('Execution failed:', error);
+    }
+}

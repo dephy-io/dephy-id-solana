@@ -14,8 +14,14 @@ url = "https://api.apr.dev"
 cluster = "Localnet"
 wallet = "~/.config/solana/id.json"
 
-# [[test.validator.clone]]
-# address = "metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s"
+[[test.validator.clone]]
+address = "metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s"
+[[test.validator.clone]]
+address = "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb"
+
+[[test.genesis]]
+address = "hdMghjD73uASxgJXi6e1mGPsXqnADMsrqB1bveqABP1"
+program = "../../target/deploy/dephy_id_program.so"
 
 [scripts]
-test = "pnpm run test"
+test = "bun run test"
