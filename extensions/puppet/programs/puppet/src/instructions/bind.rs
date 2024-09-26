@@ -1,4 +1,4 @@
-use crate::constants::{DEVICE_MINT_SEED_PREFIX, DEPHY_ID_PROGRAM};
+use crate::constants::{DEVICE_MINT_SEED_PREFIX, DEPHY_ID_PROGRAM, SPL_2022_PROGRAM};
 use crate::errors::ErrorCode;
 use crate::state::{DeviceBinding, DeviceCollectionBinding, MplBinding, MplCollectionBinding};
 use anchor_lang::prelude::*;
@@ -26,7 +26,7 @@ pub struct Bind<'info> {
     )]
     pub device_associated_token: Account<'info, TokenAccount>,
     #[account(
-        init_if_needed,
+        init,
         payer = payer,
         space = 8 + 32 + 1, 
         seeds = [b"device_binding", device_associated_token.key().as_ref()], 
@@ -34,7 +34,7 @@ pub struct Bind<'info> {
     )]
     pub device_binding: Account<'info, DeviceBinding>,
     #[account(
-        init_if_needed,
+        init,
         payer = payer,
         space = 8 + 32 + 1, 
         seeds = [b"mpl_binding", mpl_associated_token.key().as_ref()], 
@@ -73,7 +73,7 @@ pub fn bind(ctx: Context<Bind>, params: BindParams) -> Result<()> {
     let device_ata = get_associated_token_address_with_program_id(
         &ctx.accounts.owner.key(),
         &device_mint_pubkey,
-        &DEPHY_ID_PROGRAM,
+        &SPL_2022_PROGRAM,
     );
 
     require_keys_eq!(
@@ -97,18 +97,6 @@ pub fn bind(ctx: Context<Bind>, params: BindParams) -> Result<()> {
     } else {
         return Err(ErrorCode::MplCollectionNotFound.into());
     }
-
-    require_keys_eq!(
-        device_binding.mpl_ata,
-        Pubkey::default(),
-        ErrorCode::DeviceAlreadyBound
-    );
-
-    require_keys_eq!(
-        mpl_binding.device_ata,
-        Pubkey::default(),
-        ErrorCode::NFTAlreadyBound
-    );
 
     device_binding.mpl_ata = params.mpl_ata;
     mpl_binding.device_ata = params.device;

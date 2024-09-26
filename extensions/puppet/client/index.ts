@@ -9,8 +9,8 @@ import {
   percentAmount,
   createSignerFromKeypair,
   signerIdentity,
-  some,
   publicKey,
+  none,
 } from "@metaplex-foundation/umi";
 import { createUmi } from "@metaplex-foundation/umi-bundle-defaults";
 import {
@@ -61,10 +61,12 @@ yargs(hideBin(process.argv))
       const mint = generateSigner(umi);
       await createNft(umi, {
         mint,
+        authority: signer,
         name: args.name,
         uri: args.url,
         sellerFeeBasisPoints: percentAmount(5.5),
         isCollection: true,
+        collectionDetails: none(),
       }).sendAndConfirm(umi);
 
       const asset = await fetchDigitalAsset(umi, mint.publicKey);
@@ -78,7 +80,6 @@ yargs(hideBin(process.argv))
       collection: { type: "string", demandOption: true },
       url: { type: "string", demandOption: true },
       name: { type: "string", demandOption: true },
-      privatekey: { type: "string", demandOption: true },
     },
     async (args) => {
       const umi = createUmi(DEV_RPC);
@@ -92,7 +93,6 @@ yargs(hideBin(process.argv))
       umi.use(signerIdentity(signer));
       umi.use(mplTokenMetadata());
       const mint = generateSigner(umi);
-      const collectionAuthority = generateSigner(umi);
       await createNft(umi, {
         mint,
         name: args.name,
@@ -109,8 +109,7 @@ yargs(hideBin(process.argv))
 
       await setAndVerifyCollection(umi, {
         metadata: findMetadataPda(umi, { mint: asset.mint.publicKey }),
-        collectionAuthority: collectionAuthority,
-        updateAuthority: collectionAuthority.publicKey,
+        collectionAuthority: signer,
         collectionMint: collectionMint,
         collection: collectionMetadata,
         collectionMasterEditionAccount: findMasterEditionPda(umi, {

@@ -1,5 +1,4 @@
 use crate::constants::{DEPHY_ID_PROGRAM, PRODUCT_MINT_SEED_PREFIX};
-use crate::errors::ErrorCode;
 use crate::state::{DeviceCollectionBinding, MplCollectionBinding};
 use anchor_lang::prelude::*;
 
@@ -22,7 +21,7 @@ pub struct BindCollection<'info> {
     )]
     pub mpl_collection: AccountInfo<'info>,
     #[account(
-        init_if_needed,
+        init,
         payer = payer,
         space = 8 + 32 + 1, 
         seeds = [b"device_collection_binding", product_mint.key().as_ref()], 
@@ -30,7 +29,7 @@ pub struct BindCollection<'info> {
     )]
     pub device_collection_binding: Account<'info, DeviceCollectionBinding>,
     #[account(
-        init_if_needed,
+        init,
         payer = payer,
         space = 8 + 32 + 1, 
         seeds = [b"mpl_collection_binding", mpl_collection.key().as_ref()], 
@@ -58,18 +57,6 @@ pub struct BindCollectionParams {
 pub fn bind_collection(ctx: Context<BindCollection>, params: BindCollectionParams) -> Result<()> {
     let device_collection_binding = &mut ctx.accounts.device_collection_binding;
     let mpl_collection_binding = &mut ctx.accounts.mpl_collection_binding;
-
-    require_keys_eq!(
-        device_collection_binding.mpl_collection,
-        Pubkey::default(),
-        ErrorCode::DeviceCollectionAlreadyBound
-    );
-
-    require_keys_eq!(
-        mpl_collection_binding.device_collection,
-        Pubkey::default(),
-        ErrorCode::MplCollectionAlreadyBound
-    );
 
     device_collection_binding.mpl_collection = params.mpl_collection;
     mpl_collection_binding.device_collection = params.device_collection;
