@@ -7,7 +7,7 @@ use anchor_lang::prelude::*;
     params: BindCollectionParams
 )]
 pub struct BindCollection<'info> {
-    /// CHECK:
+    /// CHECK: generate by seeds and params
     #[account(
         constraint = product_mint.key() == params.device_collection,
         seeds = [PRODUCT_MINT_SEED_PREFIX, vendor.key().as_ref(), params.product_metadata_name.as_ref()], 
