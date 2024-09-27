@@ -50,8 +50,11 @@ describe("puppet program", () => {
 
   // device & nft
   let device: PublicKey;
+  let deviceMint: PublicKey;
   let deviceAta: PublicKey;
+  let mplMint: PublicKey;
   let mplAta: PublicKey;
+  let mplMetadata: PublicKey;
 
   // binding PDA
   let deviceCollectionBindingPDA: PublicKey;
@@ -80,14 +83,13 @@ describe("puppet program", () => {
     console.log("productMint:", productPubkeyStr);
     product = new PublicKey(productPubkeyStr);
 
-    console.log("===")
     // create activated device
-    const { deviceAta: deviceAtaStr } = await createDevice(
-      payer.publicKey.toString(),
+    const { deviceMint: deviceMintStr, deviceAta: deviceAtaStr } = await createDevice(
       product.toString(),
-      device.toString()
     );
+    console.log("deviceMint:", deviceMintStr);
     console.log("deviceAta:", deviceAtaStr);
+    deviceMint = new PublicKey(deviceMintStr);
     deviceAta = new PublicKey(deviceAtaStr);
 
     // create mpl collection nft
@@ -101,15 +103,19 @@ describe("puppet program", () => {
     console.log("mplCollection:", mplCollection.toString());
 
     // create mpl nft
-    const _mplAta = await createMplNft(
+    const {mplMint: mplMintStr, mplMetadata: mplMetadataStr, mplAta: mplAtaStr} = await createMplNft(
       provider.connection,
       payer,
       "test nft",
       "http://",
       _mplCollection
     );
-    mplAta = new PublicKey(_mplAta);
-    console.log("mplAta:", mplCollection.toString());
+    console.log("mplMint:", mplMintStr);
+    console.log("mplAta:", mplAtaStr);
+    console.log("mplMetadata:", mplMetadataStr);
+    mplMint = new PublicKey(mplMintStr);
+    mplAta = new PublicKey(mplAtaStr);
+    mplMetadata = new PublicKey(mplMetadataStr);
 
     const [deviceCollectionBindingPubkey] = PublicKey.findProgramAddressSync(
       [Buffer.from("device_collection_binding"), product.toBuffer()],
@@ -145,6 +151,7 @@ describe("puppet program", () => {
         mplCollection,
       })
       .accounts({
+        vendor: payer.publicKey,
         payer: payer.publicKey,
         mplCollection,
       })
@@ -175,6 +182,12 @@ describe("puppet program", () => {
         mplAta,
       })
       .accounts({
+        mplMetadata,
+        mplAssociatedToken: mplAta,
+        deviceAssociatedToken: deviceAta,
+        deviceCollectionBinding: deviceCollectionBindingPDA,
+        mplCollectionBinding: mplCollectionBindingPDA, 
+        owner: payer.publicKey,
         payer: payer.publicKey,
       })
       .signers([payer])
@@ -218,30 +231,20 @@ const createProduct = async (name: string) => {
 };
 
 const createDevice = async (
-  vendorPubkey: string,
   productMint: string,
-  device: string
 ) => {
   const command = `cargo run dev-create-activated-device --vendor ../extensions/puppet/${KEY_PATH} --product ${productMint} --device ../extensions/puppet/${DEVICE_PATH} --user ../extensions/puppet/${KEY_PATH} 'DEVICE#1' -u http://127.0.0.1:8899 -p hdMghjD73uASxgJXi6e1mGPsXqnADMsrqB1bveqABP1`
-  console.log(command)
 
-  const deviceMint = await executeCommandInDirectory(
+  const str = await executeCommandInDirectory(
     CLI_DIR,
     command,
-    true
   );
 
-  console.log("deviceMint:", deviceMint)
-
-  // const deviceAta = await executeCommandInDirectory(
-  //   CLI_DIR,
-  //   `cargo run dev-activate-device --user ../extensions/puppet/${KEY_PATH} --device ../extensions/puppet/${DEVICE_PATH} --vendor ${vendorPubkey} --product ${productMint} -u http://127.0.0.1:8899 -p hdMghjD73uASxgJXi6e1mGPsXqnADMsrqB1bveqABP1`,
-  //   true
-  // );
+  const [deviceMint, deviceAta] = str.trimEnd().split(',')
 
   return {
-    deviceMint: deviceMint.trimEnd(),
-    deviceAta: deviceMint.trimEnd(),
+    deviceMint,
+    deviceAta,
   };
 };
 
@@ -289,22 +292,21 @@ const createMplNft = async (
 
   umi.use(signerIdentity(signer));
   umi.use(mplTokenMetadata());
-  const mint = generateSigner(umi);
+  const mplMint = generateSigner(umi);
   await createNft(umi, {
-    mint,
+    mint: mplMint,
     name,
     uri,
     sellerFeeBasisPoints: percentAmount(5.5),
   }).sendAndConfirm(umi);
 
-  const asset = await fetchDigitalAsset(umi, mint.publicKey);
-  console.log("mpl_mint:", asset.mint.publicKey);
+  // const asset = await fetchDigitalAsset(umi, mplMint.publicKey);
 
   const collectionMint = publicKey(collection);
   const collectionMetadata = findMetadataPda(umi, { mint: collectionMint });
 
   await setAndVerifyCollection(umi, {
-    metadata: findMetadataPda(umi, { mint: asset.mint.publicKey }),
+    metadata: findMetadataPda(umi, { mint: mplMint.publicKey }),
     collectionAuthority: signer,
     collectionMint: collectionMint,
     collection: collectionMetadata,
@@ -313,15 +315,15 @@ const createMplNft = async (
     }),
   }).sendAndConfirm(umi);
 
-  console.log("collection verified");
-
   const mplAta = await getAssociatedTokenAddress(
-    new anchor.web3.PublicKey(asset.mint.publicKey), // The mint address of the created NFT
+    new anchor.web3.PublicKey(mplMint.publicKey), // The mint address of the created NFT
     new anchor.web3.PublicKey(keypairSigner.publicKey), // The wallet address of the NFT owner
     false,
     TOKEN_PROGRAM_ID,
     ASSOCIATED_TOKEN_PROGRAM_ID
   );
 
-  return mplAta;
+  const mplMetadata = findMetadataPda(umi, { mint: mplMint.publicKey });
+
+  return {mplMint: mplMint.publicKey.toString(), mplAta: mplAta.toString(), mplMetadata: mplMetadata.toString().split(',')[0]};
 };

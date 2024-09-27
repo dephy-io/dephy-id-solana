@@ -491,11 +491,12 @@ fn dev_create_activated_device(args: DevCreateActivatedDeviceCliArgs) {
 
     match client.send_and_confirm_transaction(&transaction) {
         Ok(sig) => {
-            println!("Success: {:?}", sig);
-            println!("User:    {}", user.pubkey());
-            println!("Device:  {}", device_pubkey);
-            println!("Mint:    {}", did_mint_pubkey);
-            println!("AToken:  {}", did_atoken_pubkey);
+            eprintln!("Success: {:?}", sig);
+            eprintln!("User:    {}", user.pubkey());
+            eprintln!("Device:  {}", device_pubkey);
+            eprintln!("Mint:    {}", did_mint_pubkey);
+            eprintln!("AToken:  {}", did_atoken_pubkey);
+            println!("{},{}", did_mint_pubkey, did_atoken_pubkey);
         }
         Err(err) => {
             eprintln!("Error: {:?}", err);
