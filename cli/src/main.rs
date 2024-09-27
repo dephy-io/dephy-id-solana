@@ -6,9 +6,10 @@ use arrayref::array_ref;
 use clap::{Args, Parser, Subcommand, ValueEnum};
 use dephy_id_program_client::{
     instructions::{
-        ActivateDeviceBuilder, CreateDeviceBuilder,CreateActivatedDeviceBuilder, CreateProductBuilder, InitializeBuilder,
+        ActivateDeviceBuilder, CreateDeviceBuilder, CreateProductBuilder, InitializeBuilder,
+        CreateActivatedDeviceNonSignerBuilder,
     },
-    types::{self, DeviceActivationSignature},
+    types::{self, DeviceActivationSignature, CreateActivatedDeviceArgs},
     DEVICE_MESSAGE_PREFIX, DEVICE_MINT_SEED_PREFIX, EIP191_MESSAGE_PREFIX, ID as PROGRAM_ID,
     PRODUCT_MINT_SEED_PREFIX, PROGRAM_PDA_SEED_PREFIX,
 };
@@ -127,6 +128,13 @@ struct DevCreateActivatedDeviceCliArgs {
     signature_type: SignatureType,
     #[arg(long = "user")]
     user_keypair: String,
+    #[arg(value_enum, long, default_value_t = DeviceSigningAlgorithm::Secp256k1)]
+    signing_alg: DeviceSigningAlgorithm,
+    name: String,
+    #[arg(default_value = "")]
+    metadata_uri: String,
+    #[arg(short = 'm', value_parser = parse_key_val::<String, String>)]
+    additional_metadata: Vec<(String, String)>,
     #[command(flatten)]
     common: CommonArgs,
 }
@@ -237,11 +245,11 @@ fn main() {
         Commands::CreateProduct(args) => create_product(args),
         Commands::CalcDevicePubkey(args) => calc_device_pubkey(args),
         Commands::CreateDevice(args) => create_device(args),
-        Commands::DevCreateActivatedDevice(args) => dev_create_activated_device(args),
         Commands::GenerateMessage(args) => generate_message(args),
         Commands::SignMessage(args) => sign_message(args),
         Commands::ActivateDeviceOffchain(args) => activate_device_offchain(args),
         Commands::DevActivateDevice(args) => dev_activate_device(args),
+        Commands::DevCreateActivatedDevice(args) => dev_create_activated_device(args),
     }
 }
 
@@ -461,7 +469,7 @@ fn dev_create_activated_device(args: DevCreateActivatedDeviceCliArgs) {
         );
 
     let transaction = Transaction::new_signed_with_payer(
-        &[CreateActivatedDeviceBuilder::new()
+        &[CreateActivatedDeviceNonSignerBuilder::new()
             .payer(payer.pubkey())
             .vendor(vendor.pubkey())
             .product_mint(args.product_pubkey)
@@ -469,10 +477,15 @@ fn dev_create_activated_device(args: DevCreateActivatedDeviceCliArgs) {
             .device(device_pubkey)
             .device_mint(did_mint_pubkey)
             .device_associated_token(did_atoken_pubkey)
+            .create_activated_device_args(CreateActivatedDeviceArgs {
+                name: args.name,
+                uri: args.metadata_uri,
+                additional_metadata: args.additional_metadata,
+            })
             .owner(user.pubkey())
             .instruction()],
         Some(&payer.pubkey()),
-        &[&payer],
+        &[&payer, &vendor],
         latest_block
     );
 

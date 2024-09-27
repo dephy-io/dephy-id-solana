@@ -207,9 +207,12 @@ async function executeCommandInDirectory(
 }
 
 const createProduct = async (name: string) => {
+  const command = `cargo run create-product --vendor ../extensions/puppet/${KEY_PATH} '${name}' 'SYMBOL' 'METADATA_URI' -m desc="First Product by Example Vendor" -u http://127.0.0.1:8899 -p hdMghjD73uASxgJXi6e1mGPsXqnADMsrqB1bveqABP1`
+  console.log(command)
+
   const productMint = await executeCommandInDirectory(
     CLI_DIR,
-    `cargo run create-product --vendor ../extensions/puppet/${KEY_PATH} '${name}' 'SYMBOL' 'METADATA_URI' -m desc="First Product by Example Vendor" -u http://127.0.0.1:8899 -p hdMghjD73uASxgJXi6e1mGPsXqnADMsrqB1bveqABP1`
+    command
   );
   return productMint.trimEnd();
 };
@@ -219,10 +222,13 @@ const createDevice = async (
   productMint: string,
   device: string
 ) => {
+  const command = `cargo run dev-create-activated-device --vendor ../extensions/puppet/${KEY_PATH} --product ${productMint} --device ../extensions/puppet/${DEVICE_PATH} --user ../extensions/puppet/${KEY_PATH} 'DEVICE#1' -u http://127.0.0.1:8899 -p hdMghjD73uASxgJXi6e1mGPsXqnADMsrqB1bveqABP1`
+  console.log(command)
+
   const deviceMint = await executeCommandInDirectory(
     CLI_DIR,
-    `cargo run dev-create-activated-device --vendor ../extensions/puppet/${KEY_PATH} --product ${productMint} --device ../extensions/puppet/${DEVICE_PATH} --user ../extensions/puppet/${KEY_PATH} -u http://127.0.0.1:8899 -p hdMghjD73uASxgJXi6e1mGPsXqnADMsrqB1bveqABP1`
-    ,true
+    command,
+    true
   );
 
   console.log("deviceMint:", deviceMint)

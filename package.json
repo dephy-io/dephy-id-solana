@@ -25,7 +25,9 @@
     "@kinobi-so/renderers-rust": "^0.20.10",
     "kinobi": "^0.20.4",
     "typescript": "^5.5.2",
-    "zx": "^7.2.3"
+    "zx": "^7.2.3",
+    "rimraf": "^6.0.1",
+    "tsup": "^8.3.0"
   },
   "packageManager": "pnpm@9.4.0",
   "pnpm": {
