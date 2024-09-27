@@ -3,7 +3,7 @@ use crate::errors::ErrorCode;
 use crate::state::{DeviceBinding, DeviceCollectionBinding, MplBinding, MplCollectionBinding};
 use anchor_lang::prelude::*;
 use anchor_spl::{
-    associated_token::{AssociatedToken, get_associated_token_address_with_program_id},
+    associated_token::get_associated_token_address_with_program_id,
     metadata::MetadataAccount,
     token_interface::TokenAccount,
 };
@@ -101,7 +101,7 @@ pub fn bind(ctx: Context<Bind>, params: BindParams) -> Result<()> {
     }
 
     device_binding.mpl_ata = params.mpl_ata;
-    mpl_binding.device_ata = params.device;
+    mpl_binding.device_ata = device_ata;
 
     Ok(())
 }
