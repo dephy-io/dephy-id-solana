@@ -75,7 +75,6 @@ describe("puppet program", () => {
 
     // write device secret key json
     const deviceKeypair = Keypair.generate();
-    device = new PublicKey(deviceKeypair.publicKey);
     fs.writeFileSync(DEVICE_PATH, `[${deviceKeypair.secretKey.toString()}]`);
 
     // create product
@@ -84,11 +83,13 @@ describe("puppet program", () => {
     product = new PublicKey(productPubkeyStr);
 
     // create activated device
-    const { deviceMint: deviceMintStr, deviceAta: deviceAtaStr } = await createDevice(
+    const { devicePubKey: devicePubKeyStr, deviceMint: deviceMintStr, deviceAta: deviceAtaStr } = await createDevice(
       product.toString(),
     );
+    console.log("devicePubKey:", devicePubKeyStr);
     console.log("deviceMint:", deviceMintStr);
     console.log("deviceAta:", deviceAtaStr);
+    device = new PublicKey(devicePubKeyStr);
     deviceMint = new PublicKey(deviceMintStr);
     deviceAta = new PublicKey(deviceAtaStr);
 
@@ -240,9 +241,10 @@ const createDevice = async (
     command,
   );
 
-  const [deviceMint, deviceAta] = str.trimEnd().split(',')
+  const [devicePubKey, deviceMint, deviceAta] = str.trimEnd().split(',')
 
   return {
+    devicePubKey,
     deviceMint,
     deviceAta,
   };

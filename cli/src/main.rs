@@ -496,7 +496,7 @@ fn dev_create_activated_device(args: DevCreateActivatedDeviceCliArgs) {
             eprintln!("Device:  {}", device_pubkey);
             eprintln!("Mint:    {}", did_mint_pubkey);
             eprintln!("AToken:  {}", did_atoken_pubkey);
-            println!("{},{}", did_mint_pubkey, did_atoken_pubkey);
+            println!("{},{},{}", device_pubkey, did_mint_pubkey, did_atoken_pubkey);
         }
         Err(err) => {
             eprintln!("Error: {:?}", err);
