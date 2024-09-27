@@ -10,7 +10,11 @@ members = [
     "program",
     "clients/rust",
     "cli",
-    "examples/kwil",
+    "examples/kwil"
+]
+exclude = [
+    "extensions",
+    "templates",
 ]
 
 [workspace.dependencies]
