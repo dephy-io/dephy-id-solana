@@ -1,6 +1,6 @@
-use crate::constants::{DEVICE_MINT_SEED_PREFIX, DEPHY_ID_PROGRAM, SPL_2022_PROGRAM};
+use crate::constants::{DEVICE_MINT_SEED_PREFIX, SPL_2022_PROGRAM};
 use crate::errors::ErrorCode;
-use crate::state::{DeviceBinding, DeviceCollectionBinding, MplBinding, MplCollectionBinding};
+use crate::state::{DeviceBinding, DeviceCollectionBinding, Global, MplBinding, MplCollectionBinding};
 use anchor_lang::prelude::*;
 use anchor_spl::{
     associated_token::get_associated_token_address_with_program_id,
@@ -45,6 +45,7 @@ pub struct Bind<'info> {
     pub mpl_binding: Account<'info, MplBinding>,
     pub device_collection_binding: Account<'info, DeviceCollectionBinding>,
     pub mpl_collection_binding: Account<'info, MplCollectionBinding>,
+    pub global: Account<'info, Global>,
     #[account(mut)]
     pub owner: Signer<'info>,
     #[account(mut)]
@@ -69,7 +70,7 @@ pub fn bind(ctx: Context<Bind>, params: BindParams) -> Result<()> {
             ctx.accounts.mpl_collection_binding.device_collection.as_ref(),
             params.device.as_ref(),
         ],
-        &DEPHY_ID_PROGRAM,
+        &ctx.accounts.global.dephy_id_program,
     );
 
     let device_ata = get_associated_token_address_with_program_id(

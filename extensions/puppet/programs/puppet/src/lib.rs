@@ -12,6 +12,10 @@ declare_id!("6nxvjh3D3kLkkb25sgRUdyomfYqeoUv7gfRFgcScy6jN");
 pub mod puppet {
     use super::*;
 
+    pub fn initialize(ctx: Context<Initialize>, params: InitializeParams) -> Result<()> {
+        instructions::initialize(ctx, params)
+    }
+
     pub fn bind_collection(ctx: Context<BindCollection>, params: BindCollectionParams) -> Result<()> {
         instructions::bind_collection(ctx, params)
     }

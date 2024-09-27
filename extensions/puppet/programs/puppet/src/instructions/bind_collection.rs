@@ -1,5 +1,5 @@
-use crate::constants::{DEPHY_ID_PROGRAM, PRODUCT_MINT_SEED_PREFIX};
-use crate::state::{DeviceCollectionBinding, MplCollectionBinding};
+use crate::constants::PRODUCT_MINT_SEED_PREFIX;
+use crate::state::{DeviceCollectionBinding, Global, MplCollectionBinding};
 use anchor_lang::prelude::*;
 
 #[derive(Accounts)]
@@ -12,7 +12,7 @@ pub struct BindCollection<'info> {
         constraint = product_mint.key() == params.device_collection,
         seeds = [PRODUCT_MINT_SEED_PREFIX, vendor.key().as_ref(), params.product_metadata_name.as_ref()], 
         bump,
-        seeds::program = dephy_id_program.key()
+        seeds::program = global.dephy_id_program.key()
     )]
     pub product_mint: AccountInfo<'info>,
     /// CHECK: We will manually verify the metadata structure
@@ -36,9 +36,7 @@ pub struct BindCollection<'info> {
         bump
     )]
     pub mpl_collection_binding: Account<'info, MplCollectionBinding>,
-    /// CHECK: This is the hardcoded DePhy ID Program address passed in as an AccountInfo
-    #[account(address = DEPHY_ID_PROGRAM)]
-    pub dephy_id_program: AccountInfo<'info>,
+    pub global: Account<'info, Global>,
     #[account(mut)]
     pub vendor: Signer<'info>,
     #[account(mut)]

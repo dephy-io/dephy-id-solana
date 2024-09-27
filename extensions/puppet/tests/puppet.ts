@@ -32,6 +32,7 @@ import { Puppet } from "../target/types/puppet";
 const CLI_DIR = "../../cli";
 const KEY_PATH = "tests/key.json";
 const DEVICE_PATH = "tests/device.json";
+const DEPHY_ID_PROGEAM = "hdMghjD73uASxgJXi6e1mGPsXqnADMsrqB1bveqABP1";
 const execPromise = promisify(exec);
 
 describe("puppet program", () => {
@@ -55,6 +56,9 @@ describe("puppet program", () => {
   let mplMint: PublicKey;
   let mplAta: PublicKey;
   let mplMetadata: PublicKey;
+
+  // global PDA
+  let globalPDA: PublicKey;
 
   // binding PDA
   let deviceCollectionBindingPDA: PublicKey;
@@ -83,9 +87,11 @@ describe("puppet program", () => {
     product = new PublicKey(productPubkeyStr);
 
     // create activated device
-    const { devicePubKey: devicePubKeyStr, deviceMint: deviceMintStr, deviceAta: deviceAtaStr } = await createDevice(
-      product.toString(),
-    );
+    const {
+      devicePubKey: devicePubKeyStr,
+      deviceMint: deviceMintStr,
+      deviceAta: deviceAtaStr,
+    } = await createDevice(product.toString());
     console.log("devicePubKey:", devicePubKeyStr);
     console.log("deviceMint:", deviceMintStr);
     console.log("deviceAta:", deviceAtaStr);
@@ -104,7 +110,11 @@ describe("puppet program", () => {
     console.log("mplCollection:", mplCollection.toString());
 
     // create mpl nft
-    const {mplMint: mplMintStr, mplMetadata: mplMetadataStr, mplAta: mplAtaStr} = await createMplNft(
+    const {
+      mplMint: mplMintStr,
+      mplMetadata: mplMetadataStr,
+      mplAta: mplAtaStr,
+    } = await createMplNft(
       provider.connection,
       payer,
       "test nft",
@@ -117,6 +127,21 @@ describe("puppet program", () => {
     mplMint = new PublicKey(mplMintStr);
     mplAta = new PublicKey(mplAtaStr);
     mplMetadata = new PublicKey(mplMetadataStr);
+
+    await program.methods
+      .initialize({
+        dephyIdProgram: new PublicKey(DEPHY_ID_PROGEAM),
+      })
+      .accounts({
+        payer: payer.publicKey,
+      })
+      .signers([payer])
+      .rpc();
+
+    const [globalPubkey] = PublicKey.findProgramAddressSync(
+      [Buffer.from("global"), payer.publicKey.toBuffer()],
+      program.programId
+    );
 
     const [deviceCollectionBindingPubkey] = PublicKey.findProgramAddressSync(
       [Buffer.from("device_collection_binding"), product.toBuffer()],
@@ -138,10 +163,16 @@ describe("puppet program", () => {
       program.programId
     );
 
+    globalPDA = globalPubkey;
     deviceCollectionBindingPDA = deviceCollectionBindingPubkey;
     mplCollectionBindingPDA = mplCollectionBindingPubkey;
     deviceBindingPDA = deviceBindingPubkey;
     mplBindingPDA = mplBindingPubkey;
+  });
+
+  it("initialized", async () => {
+    const global = await program.account.global.fetch(globalPDA);
+    assert.equal(global.dephyIdProgram.toString(), DEPHY_ID_PROGEAM);
   });
 
   it("binds device collection and mpl collection", async () => {
@@ -152,6 +183,7 @@ describe("puppet program", () => {
         mplCollection,
       })
       .accounts({
+        global: globalPDA,
         vendor: payer.publicKey,
         payer: payer.publicKey,
         mplCollection,
@@ -183,11 +215,12 @@ describe("puppet program", () => {
         mplAta,
       })
       .accounts({
+        global: globalPDA,
         mplMetadata,
         mplAssociatedToken: mplAta,
         deviceAssociatedToken: deviceAta,
         deviceCollectionBinding: deviceCollectionBindingPDA,
-        mplCollectionBinding: mplCollectionBindingPDA, 
+        mplCollectionBinding: mplCollectionBindingPDA,
         owner: payer.publicKey,
         payer: payer.publicKey,
       })
@@ -221,27 +254,18 @@ async function executeCommandInDirectory(
 }
 
 const createProduct = async (name: string) => {
-  const command = `cargo run create-product --vendor ../extensions/puppet/${KEY_PATH} '${name}' 'SYMBOL' 'METADATA_URI' -m desc="First Product by Example Vendor" -u http://127.0.0.1:8899 -p hdMghjD73uASxgJXi6e1mGPsXqnADMsrqB1bveqABP1`
-  console.log(command)
+  const command = `cargo run create-product --vendor ../extensions/puppet/${KEY_PATH} '${name}' 'SYMBOL' 'METADATA_URI' -m desc="First Product by Example Vendor" -u http://127.0.0.1:8899 -p hdMghjD73uASxgJXi6e1mGPsXqnADMsrqB1bveqABP1`;
 
-  const productMint = await executeCommandInDirectory(
-    CLI_DIR,
-    command
-  );
+  const productMint = await executeCommandInDirectory(CLI_DIR, command);
   return productMint.trimEnd();
 };
 
-const createDevice = async (
-  productMint: string,
-) => {
-  const command = `cargo run dev-create-activated-device --vendor ../extensions/puppet/${KEY_PATH} --product ${productMint} --device ../extensions/puppet/${DEVICE_PATH} --user ../extensions/puppet/${KEY_PATH} 'DEVICE#1' -u http://127.0.0.1:8899 -p hdMghjD73uASxgJXi6e1mGPsXqnADMsrqB1bveqABP1`
+const createDevice = async (productMint: string) => {
+  const command = `cargo run dev-create-activated-device --vendor ../extensions/puppet/${KEY_PATH} --product ${productMint} --device ../extensions/puppet/${DEVICE_PATH} --user ../extensions/puppet/${KEY_PATH} 'DEVICE#1' -u http://127.0.0.1:8899 -p hdMghjD73uASxgJXi6e1mGPsXqnADMsrqB1bveqABP1`;
 
-  const str = await executeCommandInDirectory(
-    CLI_DIR,
-    command,
-  );
+  const str = await executeCommandInDirectory(CLI_DIR, command);
 
-  const [devicePubKey, deviceMint, deviceAta] = str.trimEnd().split(',')
+  const [devicePubKey, deviceMint, deviceAta] = str.trimEnd().split(",");
 
   return {
     devicePubKey,
@@ -327,5 +351,9 @@ const createMplNft = async (
 
   const mplMetadata = findMetadataPda(umi, { mint: mplMint.publicKey });
 
-  return {mplMint: mplMint.publicKey.toString(), mplAta: mplAta.toString(), mplMetadata: mplMetadata.toString().split(',')[0]};
+  return {
+    mplMint: mplMint.publicKey.toString(),
+    mplAta: mplAta.toString(),
+    mplMetadata: mplMetadata.toString().split(",")[0],
+  };
 };
