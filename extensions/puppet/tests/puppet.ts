@@ -326,13 +326,13 @@ const createMplNft = async (
     sellerFeeBasisPoints: percentAmount(5.5),
   }).sendAndConfirm(umi);
 
-  // const asset = await fetchDigitalAsset(umi, mplMint.publicKey);
-
   const collectionMint = publicKey(collection);
   const collectionMetadata = findMetadataPda(umi, { mint: collectionMint });
 
+  const mplMetadata = findMetadataPda(umi, { mint: mplMint.publicKey });
+
   await setAndVerifyCollection(umi, {
-    metadata: findMetadataPda(umi, { mint: mplMint.publicKey }),
+    metadata: mplMetadata,
     collectionAuthority: signer,
     collectionMint: collectionMint,
     collection: collectionMetadata,
@@ -348,8 +348,6 @@ const createMplNft = async (
     TOKEN_PROGRAM_ID,
     ASSOCIATED_TOKEN_PROGRAM_ID
   );
-
-  const mplMetadata = findMetadataPda(umi, { mint: mplMint.publicKey });
 
   return {
     mplMint: mplMint.publicKey.toString(),

@@ -32,10 +32,16 @@ import path from "path";
 const DEPHY_ID_PROGRAM = new PublicKey(
   "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
 );
+const PROGRAM_PAYER = new PublicKey("");
 const DEV_RPC = "https://api.devnet.solana.com";
 const SECRET_KEY = fs.readFileSync(
   path.join(__dirname, "../keypair.json"),
   "utf-8"
+);
+const program = anchor.workspace.Puppet as Program<Puppet>;
+const [GLOBAL_PDA] = PublicKey.findProgramAddressSync(
+  [Buffer.from("global"), PROGRAM_PAYER.toBuffer()],
+  program.programId
 );
 
 yargs(hideBin(process.argv))
@@ -92,23 +98,24 @@ yargs(hideBin(process.argv))
 
       umi.use(signerIdentity(signer));
       umi.use(mplTokenMetadata());
-      const mint = generateSigner(umi);
+      const mplMint = generateSigner(umi);
       await createNft(umi, {
-        mint,
+        mint: mplMint,
         name: args.name,
         uri: args.url,
         sellerFeeBasisPoints: percentAmount(5.5),
       }).sendAndConfirm(umi);
 
-      const asset = await fetchDigitalAsset(umi, mint.publicKey);
-      console.log("asset:", asset.publicKey);
-      console.log("mpl_mint:", asset.mint.publicKey);
+      const mplMetadata = findMetadataPda(umi, { mint: mplMint.publicKey });
+ 
+      console.log("mplMint:", mplMint.publicKey);
+      console.log("mplMetadata:", mplMetadata);
 
       const collectionMint = publicKey(args.collection);
       const collectionMetadata = findMetadataPda(umi, { mint: collectionMint });
 
       await setAndVerifyCollection(umi, {
-        metadata: findMetadataPda(umi, { mint: asset.mint.publicKey }),
+        metadata: mplMetadata,
         collectionAuthority: signer,
         collectionMint: collectionMint,
         collection: collectionMetadata,
@@ -120,7 +127,7 @@ yargs(hideBin(process.argv))
       console.log("collection verified");
 
       const mplAta = await getAssociatedTokenAddress(
-        new anchor.web3.PublicKey(asset.mint.publicKey), // The mint address of the created NFT
+        new anchor.web3.PublicKey(mplMint.publicKey), // The mint address of the created NFT
         new anchor.web3.PublicKey(keypair.publicKey), // The wallet address of the NFT owner
         false,
         TOKEN_PROGRAM_ID,
@@ -159,6 +166,7 @@ yargs(hideBin(process.argv))
           mplCollection: new PublicKey(args.mplCollection),
         })
         .accounts({
+          global: GLOBAL_PDA,
           mplCollection: new PublicKey(args.mplCollection),
           vendor,
           payer: payer.publicKey,
@@ -174,6 +182,7 @@ yargs(hideBin(process.argv))
     "Bind device to metaplex nft",
     {
       device: { type: "string", demandOption: true }, // device address
+      mplMetadata: { type: "string", demandOption: true }, 
       mplAta: { type: "string", demandOption: true }, // Metaplex associated token address
     },
     async (args) => {
@@ -228,6 +237,8 @@ yargs(hideBin(process.argv))
           mplAta: new PublicKey(args.mplAta),
         })
         .accounts({
+          global: GLOBAL_PDA,
+          mplMetadata: args.mplMetadata, 
           mplAssociatedToken, // The ATA for the Metaplex NFT
           deviceAssociatedToken,
           deviceCollectionBinding: deviceCollectionBindingPda[0], // Device collection binding PDA
