@@ -2,9 +2,11 @@ use crate::constants::{DEVICE_MINT_SEED_PREFIX, DEPHY_ID_PROGRAM, SPL_2022_PROGR
 use crate::errors::ErrorCode;
 use crate::state::{DeviceBinding, DeviceCollectionBinding, MplBinding, MplCollectionBinding};
 use anchor_lang::prelude::*;
-use anchor_spl::associated_token::get_associated_token_address_with_program_id;
-use anchor_spl::metadata::MetadataAccount;
-use anchor_spl::token::TokenAccount;
+use anchor_spl::{
+    associated_token::{AssociatedToken, get_associated_token_address_with_program_id},
+    metadata::MetadataAccount,
+    token_interface::TokenAccount,
+};
 use mpl_token_metadata::accounts::Metadata;
 
 #[derive(Accounts)]
@@ -20,11 +22,11 @@ pub struct Bind<'info> {
         constraint = mpl_associated_token.key() == params.mpl_ata,
         constraint = mpl_associated_token.owner == owner.key() @ ErrorCode::NotNFTOwner
     )]
-    pub mpl_associated_token: Account<'info, TokenAccount>,
+    pub mpl_associated_token: InterfaceAccount<'info, TokenAccount>,
     #[account(
         constraint = device_associated_token.owner == owner.key() @ ErrorCode::NotDeviceOwner
     )]
-    pub device_associated_token: Account<'info, TokenAccount>,
+    pub device_associated_token: InterfaceAccount<'info, TokenAccount>,
     #[account(
         init,
         payer = payer,
