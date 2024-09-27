@@ -6,7 +6,7 @@ use arrayref::array_ref;
 use clap::{Args, Parser, Subcommand, ValueEnum};
 use dephy_id_program_client::{
     instructions::{
-        ActivateDeviceBuilder, CreateDeviceBuilder, CreateProductBuilder, InitializeBuilder,
+        ActivateDeviceBuilder, CreateDeviceBuilder,CreateActivatedDeviceBuilder, CreateProductBuilder, InitializeBuilder,
     },
     types::{self, DeviceActivationSignature},
     DEVICE_MESSAGE_PREFIX, DEVICE_MINT_SEED_PREFIX, EIP191_MESSAGE_PREFIX, ID as PROGRAM_ID,
@@ -35,6 +35,7 @@ enum Commands {
     CreateProduct(CreateProductCliArgs),
     CalcDevicePubkey(CalcDevicePubkeyCliArgs),
     CreateDevice(CreateDeviceCliArgs),
+    DevCreateActivatedDevice(DevCreateActivatedDeviceCliArgs),
     GenerateMessage(GenerateMessageCliArgs),
     SignMessage(SignMessageCliArgs),
     ActivateDeviceOffchain(ActivateDeviceOffchainCliArgs),
@@ -110,6 +111,22 @@ struct CreateDeviceCliArgs {
     metadata_uri: String,
     #[arg(short = 'm', value_parser = parse_key_val::<String, String>)]
     additional_metadata: Vec<(String, String)>,
+    #[command(flatten)]
+    common: CommonArgs,
+}
+
+#[derive(Debug, Args)]
+struct DevCreateActivatedDeviceCliArgs {
+    #[arg(long = "vendor")]
+    vendor_keypair: String,
+    #[arg(long = "product", value_parser = parse_pubkey)]
+    product_pubkey: Pubkey,
+    #[arg(long = "device")]
+    device_keypair: String,
+    #[arg(value_enum, long, default_value_t = SignatureType::Secp256k1)]
+    signature_type: SignatureType,
+    #[arg(long = "user")]
+    user_keypair: String,
     #[command(flatten)]
     common: CommonArgs,
 }
@@ -220,6 +237,7 @@ fn main() {
         Commands::CreateProduct(args) => create_product(args),
         Commands::CalcDevicePubkey(args) => calc_device_pubkey(args),
         Commands::CreateDevice(args) => create_device(args),
+        Commands::DevCreateActivatedDevice(args) => dev_create_activated_device(args),
         Commands::GenerateMessage(args) => generate_message(args),
         Commands::SignMessage(args) => sign_message(args),
         Commands::ActivateDeviceOffchain(args) => activate_device_offchain(args),
@@ -406,6 +424,72 @@ fn create_device(args: CreateDeviceCliArgs) {
     };
 }
 
+fn dev_create_activated_device(args: DevCreateActivatedDeviceCliArgs) {
+    let client = get_client(&args.common.url);
+    let program_id = args.common.program_id.unwrap_or(PROGRAM_ID);
+    let token_program_id = spl_token_2022::ID;
+
+    let device = read_key(&args.device_keypair);
+    let device_pubkey = get_device_pubkey(&device, &args.signature_type.into());
+
+    let vendor = read_key(&args.vendor_keypair);
+    let user = read_key(&args.user_keypair);
+    let payer = read_key(&args.common.payer.unwrap_or(args.user_keypair));
+    let latest_block = client.get_latest_blockhash().unwrap();
+
+    let product_atoken_pubkey =
+        spl_associated_token_account::get_associated_token_address_with_program_id(
+            &device_pubkey,
+            &args.product_pubkey,
+            &token_program_id,
+        );
+
+    let (did_mint_pubkey, _bump) = Pubkey::find_program_address(
+        &[
+            DEVICE_MINT_SEED_PREFIX,
+            args.product_pubkey.as_ref(),
+            device_pubkey.as_ref(),
+        ],
+        &program_id,
+    );
+
+    let did_atoken_pubkey =
+        spl_associated_token_account::get_associated_token_address_with_program_id(
+            &user.pubkey(),
+            &did_mint_pubkey,
+            &token_program_id,
+        );
+
+    let transaction = Transaction::new_signed_with_payer(
+        &[CreateActivatedDeviceBuilder::new()
+            .payer(payer.pubkey())
+            .vendor(vendor.pubkey())
+            .product_mint(args.product_pubkey)
+            .product_associated_token(product_atoken_pubkey)
+            .device(device_pubkey)
+            .device_mint(did_mint_pubkey)
+            .device_associated_token(did_atoken_pubkey)
+            .owner(user.pubkey())
+            .instruction()],
+        Some(&payer.pubkey()),
+        &[&payer],
+        latest_block
+    );
+
+    match client.send_and_confirm_transaction(&transaction) {
+        Ok(sig) => {
+            println!("Success: {:?}", sig);
+            println!("User:    {}", user.pubkey());
+            println!("Device:  {}", device_pubkey);
+            println!("Mint:    {}", did_mint_pubkey);
+            println!("AToken:  {}", did_atoken_pubkey);
+        }
+        Err(err) => {
+            eprintln!("Error: {:?}", err);
+        }
+    };
+}
+
 fn dev_activate_device(args: DevActivateDeviceCliArgs) {
     let client = get_client(&args.common.url);
     let program_id = args.common.program_id.unwrap_or(PROGRAM_ID);
@@ -444,6 +528,7 @@ fn dev_activate_device(args: DevActivateDeviceCliArgs) {
         .ok()
         .unwrap()
         .as_secs();
+
     let message = [
         DEVICE_MESSAGE_PREFIX,
         args.product_mint_pubkey.as_ref(),
@@ -481,6 +566,7 @@ fn dev_activate_device(args: DevActivateDeviceCliArgs) {
             eprintln!("Device:  {}", device_pubkey);
             eprintln!("Mint:    {}", did_mint_pubkey);
             eprintln!("AToken:  {}", did_atoken_pubkey);
+            println!("{}", did_atoken_pubkey)
         }
         Err(err) => {
             eprintln!("Error: {:?}", err);
