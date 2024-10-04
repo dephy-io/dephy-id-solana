@@ -35,6 +35,12 @@ import {
   type ResolvedAccount,
 } from '../shared';
 
+export const INITIALIZE_DISCRIMINATOR = 0;
+
+export function getInitializeDiscriminatorBytes() {
+  return getU8Encoder().encode(INITIALIZE_DISCRIMINATOR);
+}
+
 export type InitializeInstruction<
   TProgram extends string = typeof DEPHY_ID_PROGRAM_ADDRESS,
   TAccountSystemProgram extends
@@ -76,7 +82,7 @@ export function getInitializeInstructionDataEncoder(): Encoder<InitializeInstruc
       ['discriminator', getU8Encoder()],
       ['bump', getU8Encoder()],
     ]),
-    (value) => ({ ...value, discriminator: 0 })
+    (value) => ({ ...value, discriminator: INITIALIZE_DISCRIMINATOR })
   );
 }
 
@@ -119,22 +125,24 @@ export function getInitializeInstruction<
   TAccountPayer extends string,
   TAccountProgramData extends string,
   TAccountAuthority extends string,
+  TProgramAddress extends Address = typeof DEPHY_ID_PROGRAM_ADDRESS,
 >(
   input: InitializeInput<
     TAccountSystemProgram,
     TAccountPayer,
     TAccountProgramData,
     TAccountAuthority
-  >
+  >,
+  config?: { programAddress?: TProgramAddress }
 ): InitializeInstruction<
-  typeof DEPHY_ID_PROGRAM_ADDRESS,
+  TProgramAddress,
   TAccountSystemProgram,
   TAccountPayer,
   TAccountProgramData,
   TAccountAuthority
 > {
   // Program address.
-  const programAddress = DEPHY_ID_PROGRAM_ADDRESS;
+  const programAddress = config?.programAddress ?? DEPHY_ID_PROGRAM_ADDRESS;
 
   // Original accounts.
   const originalAccounts = {
@@ -173,7 +181,7 @@ export function getInitializeInstruction<
       args as InitializeInstructionDataArgs
     ),
   } as InitializeInstruction<
-    typeof DEPHY_ID_PROGRAM_ADDRESS,
+    TProgramAddress,
     TAccountSystemProgram,
     TAccountPayer,
     TAccountProgramData,

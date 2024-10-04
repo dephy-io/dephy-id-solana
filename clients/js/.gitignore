@@ -1,4 +1,4 @@
 .vercel
 docs
-
+node_modules
 dist/test

@@ -13,6 +13,7 @@ publish = false
 [package.metadata.solana]
 program-id = "hdMghjD73uASxgJXi6e1mGPsXqnADMsrqB1bveqABP1"
 program-dependencies = []
+account-dependencies = []
 
 [lib]
 crate-type = ["cdylib", "lib"]

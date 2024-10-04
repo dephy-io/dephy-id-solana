@@ -1,7 +1,7 @@
 [package]
 name = "dephy-id-program-client"
 version = "0.0.1"
-description = "Client for the DePHY ID Solana program"
+description = "Client SDK for the DePHY ID Solana program"
 authors.workspace = true
 homepage.workspace = true
 repository.workspace = true
@@ -11,6 +11,7 @@ edition = "2021"
 publish = false
 
 [dependencies]
+anchor-lang = { workspace = true, optional = true }
 borsh = { workspace = true }
 num-derive = { workspace = true }
 num-traits = { workspace = true }
@@ -27,5 +28,7 @@ solana-program-test = { workspace = true }
 solana-sdk = { workspace = true }
 
 [features]
+anchor = ["dep:anchor-lang"]
+anchor-idl-build = ["dep:anchor-lang"]
 test-sbf = []
 serde = ["dep:serde", "dep:serde_with"]

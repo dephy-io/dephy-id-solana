@@ -2,8 +2,7 @@
 
 var web3_js = require('@solana/web3.js');
 
-// env-shim.ts
-var __DEV__ = /* @__PURE__ */ (() => process["env"].NODE_ENV === "development")();
+// src/generated/accounts/programDataAccount.ts
 async function findDeviceATokenPda(seeds, config = {}) {
   const {
     programAddress = "hdMghjD73uASxgJXi6e1mGPsXqnADMsrqB1bveqABP1"
@@ -236,6 +235,10 @@ function getProgramDataCodec() {
 }
 
 // src/generated/accounts/programDataAccount.ts
+var PROGRAM_DATA_ACCOUNT_KEY = 1 /* ProgramDataAccount */;
+function getProgramDataAccountKeyBytes() {
+  return getKeyEncoder().encode(PROGRAM_DATA_ACCOUNT_KEY);
+}
 function getProgramDataAccountEncoder() {
   return web3_js.transformEncoder(
     web3_js.getStructEncoder([
@@ -243,7 +246,7 @@ function getProgramDataAccountEncoder() {
       ["authority", web3_js.getAddressEncoder()],
       ["data", getProgramDataEncoder()]
     ]),
-    (value) => ({ ...value, key: 1 /* ProgramDataAccount */ })
+    (value) => ({ ...value, key: PROGRAM_DATA_ACCOUNT_KEY })
   );
 }
 function getProgramDataAccountDecoder() {
@@ -302,52 +305,13 @@ async function fetchMaybeProgramDataAccountFromSeeds(rpc, config = {}) {
   const [address3] = await findProgramDataAccountPda({ programAddress });
   return await fetchMaybeProgramDataAccount(rpc, address3, fetchConfig);
 }
-
-// src/generated/errors/dephyId.ts
-var DEPHY_ID_ERROR__DESERIALIZATION_ERROR = 0;
-var DEPHY_ID_ERROR__SERIALIZATION_ERROR = 1;
-var DEPHY_ID_ERROR__INVALID_PROGRAM_OWNER = 2;
-var DEPHY_ID_ERROR__INVALID_PDA = 3;
-var DEPHY_ID_ERROR__EXPECTED_EMPTY_ACCOUNT = 4;
-var DEPHY_ID_ERROR__EXPECTED_NON_EMPTY_ACCOUNT = 5;
-var DEPHY_ID_ERROR__EXPECTED_SIGNER_ACCOUNT = 6;
-var DEPHY_ID_ERROR__EXPECTED_WRITABLE_ACCOUNT = 7;
-var DEPHY_ID_ERROR__ACCOUNT_MISMATCH = 8;
-var DEPHY_ID_ERROR__INVALID_ACCOUNT_KEY = 9;
-var DEPHY_ID_ERROR__NUMERICAL_OVERFLOW = 10;
-var DEPHY_ID_ERROR__MISSING_INSTRUCTION = 11;
-var DEPHY_ID_ERROR__SIGNATURE_MISMATCH = 12;
-var dephyIdErrorMessages;
-if (__DEV__) {
-  dephyIdErrorMessages = {
-    [DEPHY_ID_ERROR__ACCOUNT_MISMATCH]: `Account mismatch`,
-    [DEPHY_ID_ERROR__DESERIALIZATION_ERROR]: `Error deserializing an account`,
-    [DEPHY_ID_ERROR__EXPECTED_EMPTY_ACCOUNT]: `Expected empty account`,
-    [DEPHY_ID_ERROR__EXPECTED_NON_EMPTY_ACCOUNT]: `Expected non empty account`,
-    [DEPHY_ID_ERROR__EXPECTED_SIGNER_ACCOUNT]: `Expected signer account`,
-    [DEPHY_ID_ERROR__EXPECTED_WRITABLE_ACCOUNT]: `Expected writable account`,
-    [DEPHY_ID_ERROR__INVALID_ACCOUNT_KEY]: `Invalid account key`,
-    [DEPHY_ID_ERROR__INVALID_PDA]: `Invalid PDA derivation`,
-    [DEPHY_ID_ERROR__INVALID_PROGRAM_OWNER]: `Invalid program owner. This likely mean the provided account does not exist`,
-    [DEPHY_ID_ERROR__MISSING_INSTRUCTION]: `Missing instruction`,
-    [DEPHY_ID_ERROR__NUMERICAL_OVERFLOW]: `Numerical overflow`,
-    [DEPHY_ID_ERROR__SERIALIZATION_ERROR]: `Error serializing an account`,
-    [DEPHY_ID_ERROR__SIGNATURE_MISMATCH]: `Signature mismatch`
-  };
-}
-function getDephyIdErrorMessage(code) {
-  if (__DEV__) {
-    return dephyIdErrorMessages[code];
-  }
-  return "Error message not available in production bundles. Compile with `__DEV__` set to true to see more information.";
-}
 var DEPHY_ID_PROGRAM_ADDRESS = "hdMghjD73uASxgJXi6e1mGPsXqnADMsrqB1bveqABP1";
 var DephyIdAccount = /* @__PURE__ */ ((DephyIdAccount2) => {
   DephyIdAccount2[DephyIdAccount2["ProgramDataAccount"] = 0] = "ProgramDataAccount";
   return DephyIdAccount2;
 })(DephyIdAccount || {});
 function identifyDephyIdAccount(account) {
-  const data = account instanceof Uint8Array ? account : account.data;
+  const data = "data" in account ? account.data : account;
   if (web3_js.containsBytes(data, getKeyEncoder().encode(1 /* ProgramDataAccount */), 0)) {
     return 0 /* ProgramDataAccount */;
   }
@@ -365,7 +329,7 @@ var DephyIdInstruction = /* @__PURE__ */ ((DephyIdInstruction2) => {
   return DephyIdInstruction2;
 })(DephyIdInstruction || {});
 function identifyDephyIdInstruction(instruction) {
-  const data = instruction instanceof Uint8Array ? instruction : instruction.data;
+  const data = "data" in instruction ? instruction.data : instruction;
   if (web3_js.containsBytes(data, web3_js.getU8Encoder().encode(0), 0)) {
     return 0 /* Initialize */;
   }
@@ -386,6 +350,53 @@ function identifyDephyIdInstruction(instruction) {
   }
   throw new Error(
     "The provided instruction could not be identified as a dephyId instruction."
+  );
+}
+
+// src/generated/errors/dephyId.ts
+var DEPHY_ID_ERROR__DESERIALIZATION_ERROR = 0;
+var DEPHY_ID_ERROR__SERIALIZATION_ERROR = 1;
+var DEPHY_ID_ERROR__INVALID_PROGRAM_OWNER = 2;
+var DEPHY_ID_ERROR__INVALID_PDA = 3;
+var DEPHY_ID_ERROR__EXPECTED_EMPTY_ACCOUNT = 4;
+var DEPHY_ID_ERROR__EXPECTED_NON_EMPTY_ACCOUNT = 5;
+var DEPHY_ID_ERROR__EXPECTED_SIGNER_ACCOUNT = 6;
+var DEPHY_ID_ERROR__EXPECTED_WRITABLE_ACCOUNT = 7;
+var DEPHY_ID_ERROR__ACCOUNT_MISMATCH = 8;
+var DEPHY_ID_ERROR__INVALID_ACCOUNT_KEY = 9;
+var DEPHY_ID_ERROR__NUMERICAL_OVERFLOW = 10;
+var DEPHY_ID_ERROR__MISSING_INSTRUCTION = 11;
+var DEPHY_ID_ERROR__SIGNATURE_MISMATCH = 12;
+var dephyIdErrorMessages;
+if (process.env.NODE_ENV !== "production") {
+  dephyIdErrorMessages = {
+    [DEPHY_ID_ERROR__ACCOUNT_MISMATCH]: `Account mismatch`,
+    [DEPHY_ID_ERROR__DESERIALIZATION_ERROR]: `Error deserializing an account`,
+    [DEPHY_ID_ERROR__EXPECTED_EMPTY_ACCOUNT]: `Expected empty account`,
+    [DEPHY_ID_ERROR__EXPECTED_NON_EMPTY_ACCOUNT]: `Expected non empty account`,
+    [DEPHY_ID_ERROR__EXPECTED_SIGNER_ACCOUNT]: `Expected signer account`,
+    [DEPHY_ID_ERROR__EXPECTED_WRITABLE_ACCOUNT]: `Expected writable account`,
+    [DEPHY_ID_ERROR__INVALID_ACCOUNT_KEY]: `Invalid account key`,
+    [DEPHY_ID_ERROR__INVALID_PDA]: `Invalid PDA derivation`,
+    [DEPHY_ID_ERROR__INVALID_PROGRAM_OWNER]: `Invalid program owner. This likely mean the provided account does not exist`,
+    [DEPHY_ID_ERROR__MISSING_INSTRUCTION]: `Missing instruction`,
+    [DEPHY_ID_ERROR__NUMERICAL_OVERFLOW]: `Numerical overflow`,
+    [DEPHY_ID_ERROR__SERIALIZATION_ERROR]: `Error serializing an account`,
+    [DEPHY_ID_ERROR__SIGNATURE_MISMATCH]: `Signature mismatch`
+  };
+}
+function getDephyIdErrorMessage(code) {
+  if (process.env.NODE_ENV !== "production") {
+    return dephyIdErrorMessages[code];
+  }
+  return "Error message not available in production bundles.";
+}
+function isDephyIdError(error, transactionMessage, code) {
+  return web3_js.isProgramError(
+    error,
+    transactionMessage,
+    DEPHY_ID_PROGRAM_ADDRESS,
+    code
   );
 }
 function expectSome(value) {
@@ -427,6 +438,10 @@ function isTransactionSigner(value) {
 }
 
 // src/generated/instructions/activateDevice.ts
+var ACTIVATE_DEVICE_DISCRIMINATOR = 3;
+function getActivateDeviceDiscriminatorBytes() {
+  return web3_js.getU8Encoder().encode(ACTIVATE_DEVICE_DISCRIMINATOR);
+}
 function getActivateDeviceInstructionDataEncoder() {
   return web3_js.transformEncoder(
     web3_js.getStructEncoder([
@@ -434,7 +449,7 @@ function getActivateDeviceInstructionDataEncoder() {
       ["signature", getDeviceActivationSignatureEncoder()],
       ["timestamp", web3_js.getU64Encoder()]
     ]),
-    (value) => ({ ...value, discriminator: 3 })
+    (value) => ({ ...value, discriminator: ACTIVATE_DEVICE_DISCRIMINATOR })
   );
 }
 function getActivateDeviceInstructionDataDecoder() {
@@ -450,8 +465,8 @@ function getActivateDeviceInstructionDataCodec() {
     getActivateDeviceInstructionDataDecoder()
   );
 }
-function getActivateDeviceInstruction(input) {
-  const programAddress = DEPHY_ID_PROGRAM_ADDRESS;
+function getActivateDeviceInstruction(input, config) {
+  const programAddress = config?.programAddress ?? DEPHY_ID_PROGRAM_ADDRESS;
   const originalAccounts = {
     systemProgram: { value: input.systemProgram ?? null, isWritable: false },
     token2022Program: {
@@ -535,13 +550,20 @@ function parseActivateDeviceInstruction(instruction) {
     data: getActivateDeviceInstructionDataDecoder().decode(instruction.data)
   };
 }
+var CREATE_ACTIVATED_DEVICE_DISCRIMINATOR = 4;
+function getCreateActivatedDeviceDiscriminatorBytes() {
+  return web3_js.getU8Encoder().encode(CREATE_ACTIVATED_DEVICE_DISCRIMINATOR);
+}
 function getCreateActivatedDeviceInstructionDataEncoder() {
   return web3_js.transformEncoder(
     web3_js.getStructEncoder([
       ["discriminator", web3_js.getU8Encoder()],
       ["createActivatedDeviceArgs", getCreateActivatedDeviceArgsEncoder()]
     ]),
-    (value) => ({ ...value, discriminator: 4 })
+    (value) => ({
+      ...value,
+      discriminator: CREATE_ACTIVATED_DEVICE_DISCRIMINATOR
+    })
   );
 }
 function getCreateActivatedDeviceInstructionDataDecoder() {
@@ -556,8 +578,8 @@ function getCreateActivatedDeviceInstructionDataCodec() {
     getCreateActivatedDeviceInstructionDataDecoder()
   );
 }
-function getCreateActivatedDeviceInstruction(input) {
-  const programAddress = DEPHY_ID_PROGRAM_ADDRESS;
+function getCreateActivatedDeviceInstruction(input, config) {
+  const programAddress = config?.programAddress ?? DEPHY_ID_PROGRAM_ADDRESS;
   const originalAccounts = {
     systemProgram: { value: input.systemProgram ?? null, isWritable: false },
     token2022Program: {
@@ -646,13 +668,22 @@ function parseCreateActivatedDeviceInstruction(instruction) {
     )
   };
 }
+var CREATE_ACTIVATED_DEVICE_NON_SIGNER_DISCRIMINATOR = 5;
+function getCreateActivatedDeviceNonSignerDiscriminatorBytes() {
+  return web3_js.getU8Encoder().encode(
+    CREATE_ACTIVATED_DEVICE_NON_SIGNER_DISCRIMINATOR
+  );
+}
 function getCreateActivatedDeviceNonSignerInstructionDataEncoder() {
   return web3_js.transformEncoder(
     web3_js.getStructEncoder([
       ["discriminator", web3_js.getU8Encoder()],
       ["createActivatedDeviceArgs", getCreateActivatedDeviceArgsEncoder()]
     ]),
-    (value) => ({ ...value, discriminator: 5 })
+    (value) => ({
+      ...value,
+      discriminator: CREATE_ACTIVATED_DEVICE_NON_SIGNER_DISCRIMINATOR
+    })
   );
 }
 function getCreateActivatedDeviceNonSignerInstructionDataDecoder() {
@@ -667,8 +698,8 @@ function getCreateActivatedDeviceNonSignerInstructionDataCodec() {
     getCreateActivatedDeviceNonSignerInstructionDataDecoder()
   );
 }
-function getCreateActivatedDeviceNonSignerInstruction(input) {
-  const programAddress = DEPHY_ID_PROGRAM_ADDRESS;
+function getCreateActivatedDeviceNonSignerInstruction(input, config) {
+  const programAddress = config?.programAddress ?? DEPHY_ID_PROGRAM_ADDRESS;
   const originalAccounts = {
     systemProgram: { value: input.systemProgram ?? null, isWritable: false },
     token2022Program: {
@@ -757,6 +788,10 @@ function parseCreateActivatedDeviceNonSignerInstruction(instruction) {
     )
   };
 }
+var CREATE_DEVICE_DISCRIMINATOR = 2;
+function getCreateDeviceDiscriminatorBytes() {
+  return web3_js.getU8Encoder().encode(CREATE_DEVICE_DISCRIMINATOR);
+}
 function getCreateDeviceInstructionDataEncoder() {
   return web3_js.transformEncoder(
     web3_js.getStructEncoder([
@@ -774,7 +809,7 @@ function getCreateDeviceInstructionDataEncoder() {
       ],
       ["signingAlg", getDeviceSigningAlgorithmEncoder()]
     ]),
-    (value) => ({ ...value, discriminator: 2 })
+    (value) => ({ ...value, discriminator: CREATE_DEVICE_DISCRIMINATOR })
   );
 }
 function getCreateDeviceInstructionDataDecoder() {
@@ -800,8 +835,8 @@ function getCreateDeviceInstructionDataCodec() {
     getCreateDeviceInstructionDataDecoder()
   );
 }
-function getCreateDeviceInstruction(input) {
-  const programAddress = DEPHY_ID_PROGRAM_ADDRESS;
+function getCreateDeviceInstruction(input, config) {
+  const programAddress = config?.programAddress ?? DEPHY_ID_PROGRAM_ADDRESS;
   const originalAccounts = {
     systemProgram: { value: input.systemProgram ?? null, isWritable: false },
     token2022Program: {
@@ -879,6 +914,10 @@ function parseCreateDeviceInstruction(instruction) {
     data: getCreateDeviceInstructionDataDecoder().decode(instruction.data)
   };
 }
+var CREATE_PRODUCT_DISCRIMINATOR = 1;
+function getCreateProductDiscriminatorBytes() {
+  return web3_js.getU8Encoder().encode(CREATE_PRODUCT_DISCRIMINATOR);
+}
 function getCreateProductInstructionDataEncoder() {
   return web3_js.transformEncoder(
     web3_js.getStructEncoder([
@@ -896,7 +935,7 @@ function getCreateProductInstructionDataEncoder() {
         )
       ]
     ]),
-    (value) => ({ ...value, discriminator: 1 })
+    (value) => ({ ...value, discriminator: CREATE_PRODUCT_DISCRIMINATOR })
   );
 }
 function getCreateProductInstructionDataDecoder() {
@@ -922,8 +961,8 @@ function getCreateProductInstructionDataCodec() {
     getCreateProductInstructionDataDecoder()
   );
 }
-function getCreateProductInstruction(input) {
-  const programAddress = DEPHY_ID_PROGRAM_ADDRESS;
+function getCreateProductInstruction(input, config) {
+  const programAddress = config?.programAddress ?? DEPHY_ID_PROGRAM_ADDRESS;
   const originalAccounts = {
     systemProgram: { value: input.systemProgram ?? null, isWritable: false },
     token2022Program: {
@@ -980,13 +1019,17 @@ function parseCreateProductInstruction(instruction) {
     data: getCreateProductInstructionDataDecoder().decode(instruction.data)
   };
 }
+var INITIALIZE_DISCRIMINATOR = 0;
+function getInitializeDiscriminatorBytes() {
+  return web3_js.getU8Encoder().encode(INITIALIZE_DISCRIMINATOR);
+}
 function getInitializeInstructionDataEncoder() {
   return web3_js.transformEncoder(
     web3_js.getStructEncoder([
       ["discriminator", web3_js.getU8Encoder()],
       ["bump", web3_js.getU8Encoder()]
     ]),
-    (value) => ({ ...value, discriminator: 0 })
+    (value) => ({ ...value, discriminator: INITIALIZE_DISCRIMINATOR })
   );
 }
 function getInitializeInstructionDataDecoder() {
@@ -1001,8 +1044,8 @@ function getInitializeInstructionDataCodec() {
     getInitializeInstructionDataDecoder()
   );
 }
-function getInitializeInstruction(input) {
-  const programAddress = DEPHY_ID_PROGRAM_ADDRESS;
+function getInitializeInstruction(input, config) {
+  const programAddress = config?.programAddress ?? DEPHY_ID_PROGRAM_ADDRESS;
   const originalAccounts = {
     systemProgram: { value: input.systemProgram ?? null, isWritable: false },
     payer: { value: input.payer ?? null, isWritable: true },
@@ -1054,6 +1097,11 @@ function parseInitializeInstruction(instruction) {
   };
 }
 
+exports.ACTIVATE_DEVICE_DISCRIMINATOR = ACTIVATE_DEVICE_DISCRIMINATOR;
+exports.CREATE_ACTIVATED_DEVICE_DISCRIMINATOR = CREATE_ACTIVATED_DEVICE_DISCRIMINATOR;
+exports.CREATE_ACTIVATED_DEVICE_NON_SIGNER_DISCRIMINATOR = CREATE_ACTIVATED_DEVICE_NON_SIGNER_DISCRIMINATOR;
+exports.CREATE_DEVICE_DISCRIMINATOR = CREATE_DEVICE_DISCRIMINATOR;
+exports.CREATE_PRODUCT_DISCRIMINATOR = CREATE_PRODUCT_DISCRIMINATOR;
 exports.DEPHY_ID_ERROR__ACCOUNT_MISMATCH = DEPHY_ID_ERROR__ACCOUNT_MISMATCH;
 exports.DEPHY_ID_ERROR__DESERIALIZATION_ERROR = DEPHY_ID_ERROR__DESERIALIZATION_ERROR;
 exports.DEPHY_ID_ERROR__EXPECTED_EMPTY_ACCOUNT = DEPHY_ID_ERROR__EXPECTED_EMPTY_ACCOUNT;
@@ -1071,7 +1119,9 @@ exports.DEPHY_ID_PROGRAM_ADDRESS = DEPHY_ID_PROGRAM_ADDRESS;
 exports.DephyIdAccount = DephyIdAccount;
 exports.DephyIdInstruction = DephyIdInstruction;
 exports.DeviceSigningAlgorithm = DeviceSigningAlgorithm;
+exports.INITIALIZE_DISCRIMINATOR = INITIALIZE_DISCRIMINATOR;
 exports.Key = Key;
+exports.PROGRAM_DATA_ACCOUNT_KEY = PROGRAM_DATA_ACCOUNT_KEY;
 exports.decodeProgramDataAccount = decodeProgramDataAccount;
 exports.deviceActivationSignature = deviceActivationSignature;
 exports.fetchAllMaybeProgramDataAccount = fetchAllMaybeProgramDataAccount;
@@ -1086,6 +1136,7 @@ exports.findProductATokenPda = findProductATokenPda;
 exports.findProductMintPda = findProductMintPda;
 exports.findProgramDataAccountPda = findProgramDataAccountPda;
 exports.findProgramDataPda = findProgramDataPda;
+exports.getActivateDeviceDiscriminatorBytes = getActivateDeviceDiscriminatorBytes;
 exports.getActivateDeviceInstruction = getActivateDeviceInstruction;
 exports.getActivateDeviceInstructionDataCodec = getActivateDeviceInstructionDataCodec;
 exports.getActivateDeviceInstructionDataDecoder = getActivateDeviceInstructionDataDecoder;
@@ -1093,18 +1144,22 @@ exports.getActivateDeviceInstructionDataEncoder = getActivateDeviceInstructionDa
 exports.getCreateActivatedDeviceArgsCodec = getCreateActivatedDeviceArgsCodec;
 exports.getCreateActivatedDeviceArgsDecoder = getCreateActivatedDeviceArgsDecoder;
 exports.getCreateActivatedDeviceArgsEncoder = getCreateActivatedDeviceArgsEncoder;
+exports.getCreateActivatedDeviceDiscriminatorBytes = getCreateActivatedDeviceDiscriminatorBytes;
 exports.getCreateActivatedDeviceInstruction = getCreateActivatedDeviceInstruction;
 exports.getCreateActivatedDeviceInstructionDataCodec = getCreateActivatedDeviceInstructionDataCodec;
 exports.getCreateActivatedDeviceInstructionDataDecoder = getCreateActivatedDeviceInstructionDataDecoder;
 exports.getCreateActivatedDeviceInstructionDataEncoder = getCreateActivatedDeviceInstructionDataEncoder;
+exports.getCreateActivatedDeviceNonSignerDiscriminatorBytes = getCreateActivatedDeviceNonSignerDiscriminatorBytes;
 exports.getCreateActivatedDeviceNonSignerInstruction = getCreateActivatedDeviceNonSignerInstruction;
 exports.getCreateActivatedDeviceNonSignerInstructionDataCodec = getCreateActivatedDeviceNonSignerInstructionDataCodec;
 exports.getCreateActivatedDeviceNonSignerInstructionDataDecoder = getCreateActivatedDeviceNonSignerInstructionDataDecoder;
 exports.getCreateActivatedDeviceNonSignerInstructionDataEncoder = getCreateActivatedDeviceNonSignerInstructionDataEncoder;
+exports.getCreateDeviceDiscriminatorBytes = getCreateDeviceDiscriminatorBytes;
 exports.getCreateDeviceInstruction = getCreateDeviceInstruction;
 exports.getCreateDeviceInstructionDataCodec = getCreateDeviceInstructionDataCodec;
 exports.getCreateDeviceInstructionDataDecoder = getCreateDeviceInstructionDataDecoder;
 exports.getCreateDeviceInstructionDataEncoder = getCreateDeviceInstructionDataEncoder;
+exports.getCreateProductDiscriminatorBytes = getCreateProductDiscriminatorBytes;
 exports.getCreateProductInstruction = getCreateProductInstruction;
 exports.getCreateProductInstructionDataCodec = getCreateProductInstructionDataCodec;
 exports.getCreateProductInstructionDataDecoder = getCreateProductInstructionDataDecoder;
@@ -1116,6 +1171,7 @@ exports.getDeviceActivationSignatureEncoder = getDeviceActivationSignatureEncode
 exports.getDeviceSigningAlgorithmCodec = getDeviceSigningAlgorithmCodec;
 exports.getDeviceSigningAlgorithmDecoder = getDeviceSigningAlgorithmDecoder;
 exports.getDeviceSigningAlgorithmEncoder = getDeviceSigningAlgorithmEncoder;
+exports.getInitializeDiscriminatorBytes = getInitializeDiscriminatorBytes;
 exports.getInitializeInstruction = getInitializeInstruction;
 exports.getInitializeInstructionDataCodec = getInitializeInstructionDataCodec;
 exports.getInitializeInstructionDataDecoder = getInitializeInstructionDataDecoder;
@@ -1126,12 +1182,14 @@ exports.getKeyEncoder = getKeyEncoder;
 exports.getProgramDataAccountCodec = getProgramDataAccountCodec;
 exports.getProgramDataAccountDecoder = getProgramDataAccountDecoder;
 exports.getProgramDataAccountEncoder = getProgramDataAccountEncoder;
+exports.getProgramDataAccountKeyBytes = getProgramDataAccountKeyBytes;
 exports.getProgramDataAccountSize = getProgramDataAccountSize;
 exports.getProgramDataCodec = getProgramDataCodec;
 exports.getProgramDataDecoder = getProgramDataDecoder;
 exports.getProgramDataEncoder = getProgramDataEncoder;
 exports.identifyDephyIdAccount = identifyDephyIdAccount;
 exports.identifyDephyIdInstruction = identifyDephyIdInstruction;
+exports.isDephyIdError = isDephyIdError;
 exports.isDeviceActivationSignature = isDeviceActivationSignature;
 exports.parseActivateDeviceInstruction = parseActivateDeviceInstruction;
 exports.parseCreateActivatedDeviceInstruction = parseCreateActivatedDeviceInstruction;
@@ -1139,5 +1197,5 @@ exports.parseCreateActivatedDeviceNonSignerInstruction = parseCreateActivatedDev
 exports.parseCreateDeviceInstruction = parseCreateDeviceInstruction;
 exports.parseCreateProductInstruction = parseCreateProductInstruction;
 exports.parseInitializeInstruction = parseInitializeInstruction;
-//# sourceMappingURL=out.js.map
+//# sourceMappingURL=index.js.map
 //# sourceMappingURL=index.js.map

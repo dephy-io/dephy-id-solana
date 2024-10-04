@@ -40,6 +40,12 @@ import {
   type ProgramDataArgs,
 } from '../types';
 
+export const PROGRAM_DATA_ACCOUNT_KEY = Key.ProgramDataAccount;
+
+export function getProgramDataAccountKeyBytes() {
+  return getKeyEncoder().encode(PROGRAM_DATA_ACCOUNT_KEY);
+}
+
 export type ProgramDataAccount = {
   key: Key;
   authority: Address;
@@ -58,7 +64,7 @@ export function getProgramDataAccountEncoder(): Encoder<ProgramDataAccountArgs> 
       ['authority', getAddressEncoder()],
       ['data', getProgramDataEncoder()],
     ]),
-    (value) => ({ ...value, key: Key.ProgramDataAccount })
+    (value) => ({ ...value, key: PROGRAM_DATA_ACCOUNT_KEY })
   );
 }
 

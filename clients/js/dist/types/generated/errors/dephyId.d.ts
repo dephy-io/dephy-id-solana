@@ -5,6 +5,7 @@
  *
  * @see https://github.com/kinobi-so/kinobi
  */
+import { type Address, type SOLANA_ERROR__INSTRUCTION_ERROR__CUSTOM, type SolanaError } from '@solana/web3.js';
 /** DeserializationError: Error deserializing an account */
 export declare const DEPHY_ID_ERROR__DESERIALIZATION_ERROR = 0;
 /** SerializationError: Error serializing an account */
@@ -33,4 +34,13 @@ export declare const DEPHY_ID_ERROR__MISSING_INSTRUCTION = 11;
 export declare const DEPHY_ID_ERROR__SIGNATURE_MISMATCH = 12;
 export type DephyIdError = typeof DEPHY_ID_ERROR__ACCOUNT_MISMATCH | typeof DEPHY_ID_ERROR__DESERIALIZATION_ERROR | typeof DEPHY_ID_ERROR__EXPECTED_EMPTY_ACCOUNT | typeof DEPHY_ID_ERROR__EXPECTED_NON_EMPTY_ACCOUNT | typeof DEPHY_ID_ERROR__EXPECTED_SIGNER_ACCOUNT | typeof DEPHY_ID_ERROR__EXPECTED_WRITABLE_ACCOUNT | typeof DEPHY_ID_ERROR__INVALID_ACCOUNT_KEY | typeof DEPHY_ID_ERROR__INVALID_PDA | typeof DEPHY_ID_ERROR__INVALID_PROGRAM_OWNER | typeof DEPHY_ID_ERROR__MISSING_INSTRUCTION | typeof DEPHY_ID_ERROR__NUMERICAL_OVERFLOW | typeof DEPHY_ID_ERROR__SERIALIZATION_ERROR | typeof DEPHY_ID_ERROR__SIGNATURE_MISMATCH;
 export declare function getDephyIdErrorMessage(code: DephyIdError): string;
+export declare function isDephyIdError<TProgramErrorCode extends DephyIdError>(error: unknown, transactionMessage: {
+    instructions: Record<number, {
+        programAddress: Address;
+    }>;
+}, code?: TProgramErrorCode): error is SolanaError<typeof SOLANA_ERROR__INSTRUCTION_ERROR__CUSTOM> & Readonly<{
+    context: Readonly<{
+        code: TProgramErrorCode;
+    }>;
+}>;
 //# sourceMappingURL=dephyId.d.ts.map
