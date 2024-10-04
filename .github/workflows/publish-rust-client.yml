@@ -44,8 +44,7 @@ jobs:
         uses: ./.github/actions/setup
         with:
           cargo-cache-key: cargo-rust-client
-          clippy: true
-          rustfmt: true
+          rust: true
           solana: true
 
       - name: Format Rust Client
@@ -75,8 +74,7 @@ jobs:
         with:
           cargo-cache-key: cargo-publish-rust-client
           cargo-cache-fallback-key: cargo-rust-client
-          clippy: true
-          rustfmt: true
+          rust: true
 
       - name: Install Cargo Release
         run: which cargo-release || cargo install cargo-release

@@ -10,11 +10,8 @@ inputs:
   cargo-cache-local-key:
     description: The key to cache local cargo dependencies. Skips local cargo caching if not provided.
     required: false
-  clippy:
-    description: Install Clippy if `true`. Defaults to `false`.
-    required: false
-  rustfmt:
-    description: Install Rustfmt if `true`. Defaults to `false`.
+  rust:
+    description: Install Rust if `true`. Defaults to `false`.
     required: false
   solana:
     description: Install Solana if `true`. Defaults to `false`.
@@ -43,19 +40,12 @@ runs:
       shell: bash
       run: pnpm zx ./scripts/ci/set-env.mjs
 
-    - name: Install Rustfmt
-      if: ${{ inputs.rustfmt == 'true' }}
+    - name: Install Rust
+      if: ${{ inputs.rust == 'true' }}
       uses: dtolnay/rust-toolchain@master
       with:
-        toolchain: ${{ env.TOOLCHAIN_FORMAT }}
-        components: rustfmt
-
-    - name: Install Clippy
-      if: ${{ inputs.clippy == 'true' }}
-      uses: dtolnay/rust-toolchain@master
-      with:
-        toolchain: ${{ env.TOOLCHAIN_LINT }}
-        components: clippy
+        toolchain: ${{ env.RUST_TOOLCHAIN }}
+        components: rustc, cargo, rustfmt, clippy
 
     - name: Install Solana
       if: ${{ inputs.solana == 'true' }}

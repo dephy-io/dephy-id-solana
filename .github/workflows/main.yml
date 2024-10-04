@@ -17,8 +17,7 @@ jobs:
       - name: Setup Environment
         uses: ./.github/actions/setup
         with:
-          clippy: true
-          rustfmt: true
+          rust: true
 
       - name: Format Programs
         run: pnpm programs:format
@@ -52,8 +51,7 @@ jobs:
       - name: Setup Environment
         uses: ./.github/actions/setup
         with:
-          clippy: true
-          rustfmt: true
+          rust: true
 
       - name: Format Client Rust
         run: pnpm clients:rust:format
@@ -73,6 +71,7 @@ jobs:
         uses: ./.github/actions/setup
         with:
           cargo-cache-key: cargo-programs
+          rust: true
           solana: true
 
       - name: Build Programs
@@ -104,6 +103,7 @@ jobs:
         with:
           cargo-cache-key: cargo-program-tests
           cargo-cache-fallback-key: cargo-programs
+          rust: true
           solana: true
 
       - name: Test Programs
@@ -143,7 +143,7 @@ jobs:
       - name: Setup Environment
         uses: ./.github/actions/setup
         with:
-          rustfmt: true
+          rust: true
 
       - name: Generate Clients
         run: pnpm generate:clients
@@ -187,6 +187,7 @@ jobs:
         uses: ./.github/actions/setup
         with:
           cargo-cache-key: cargo-rust-client
+          rust: true
           solana: true
 
       - name: Restore Program Builds

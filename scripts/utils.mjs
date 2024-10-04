@@ -79,6 +79,16 @@ export function getCargo(folder) {
   );
 }
 
+export function getRustVersion() {
+  const toml = parseToml(
+      fs.readFileSync(
+          path.join(workingDirectory, 'rust-toolchain.toml'),
+          'utf8'
+      )
+  );
+  return toml?.toolchain?.channel;
+}
+
 export function getCargoMetadata(folder) {
   const cargo = getCargo(folder);
   return folder ? cargo?.package?.metadata : cargo?.workspace?.metadata;
