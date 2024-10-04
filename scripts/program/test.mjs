@@ -16,14 +16,25 @@ const testArgs = cliArguments();
 const hasSolfmt = await which('solfmt', { nothrow: true });
 
 // Test the programs.
-await Promise.all(
-  getProgramFolders().map(async (folder) => {
+// await Promise.all(
+//   getProgramFolders().map(async (folder) => {
+//     const manifestPath = path.join(workingDirectory, folder, 'Cargo.toml');
+//
+//     if (hasSolfmt) {
+//       await $`RUST_LOG=error cargo test-sbf --manifest-path ${manifestPath} ${testArgs} 2>&1 | solfmt`;
+//     } else {
+//       await $`RUST_LOG=error cargo test-sbf --manifest-path ${manifestPath} ${testArgs}`;
+//     }
+//   })
+// );
+
+// Test the programs.
+for await (const folder of getProgramFolders()) {
     const manifestPath = path.join(workingDirectory, folder, 'Cargo.toml');
 
     if (hasSolfmt) {
-      await $`RUST_LOG=error cargo test-sbf --manifest-path ${manifestPath} ${testArgs} 2>&1 | solfmt`;
+        await $`RUST_LOG=error cargo test-sbf --manifest-path ${manifestPath} ${testArgs} 2>&1 | solfmt`;
     } else {
-      await $`RUST_LOG=error cargo test-sbf --manifest-path ${manifestPath} ${testArgs}`;
+        await $`RUST_LOG=error cargo test-sbf --manifest-path ${manifestPath} ${testArgs}`;
     }
-  })
-);
+}

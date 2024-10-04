@@ -14,10 +14,17 @@ import './dump.mjs';
 const buildArgs = cliArguments();
 
 // Build the programs.
-await Promise.all(
-  getProgramFolders().map(async (folder) => {
+// await Promise.all(
+//   getProgramFolders().map(async (folder) => {
+//     const manifestPath = path.join(workingDirectory, folder, 'Cargo.toml');
+//
+//     await $`cargo-build-sbf --manifest-path ${manifestPath} ${buildArgs}`;
+//   })
+// );
+
+// Build the programs.
+for await (const folder of getProgramFolders()) {
     const manifestPath = path.join(workingDirectory, folder, 'Cargo.toml');
 
     await $`cargo-build-sbf --manifest-path ${manifestPath} ${buildArgs}`;
-  })
-);
+}

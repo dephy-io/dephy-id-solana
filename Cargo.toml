@@ -18,7 +18,7 @@ repository = "https://github.com/dephy-io/dephy-id"
 license = "Apache-2.0"
 
 [workspace.metadata.cli]
-solana = "2.0.13"
+solana = "1.18.25"
 
 [workspace.dependencies]
 anchor-lang = "0.30.1"
