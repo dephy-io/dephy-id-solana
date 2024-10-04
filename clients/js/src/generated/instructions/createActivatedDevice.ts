@@ -41,6 +41,12 @@ import {
   type CreateActivatedDeviceArgsArgs,
 } from '../types';
 
+export const CREATE_ACTIVATED_DEVICE_DISCRIMINATOR = 4;
+
+export function getCreateActivatedDeviceDiscriminatorBytes() {
+  return getU8Encoder().encode(CREATE_ACTIVATED_DEVICE_DISCRIMINATOR);
+}
+
 export type CreateActivatedDeviceInstruction<
   TProgram extends string = typeof DEPHY_ID_PROGRAM_ADDRESS,
   TAccountSystemProgram extends
@@ -120,7 +126,10 @@ export function getCreateActivatedDeviceInstructionDataEncoder(): Encoder<Create
       ['discriminator', getU8Encoder()],
       ['createActivatedDeviceArgs', getCreateActivatedDeviceArgsEncoder()],
     ]),
-    (value) => ({ ...value, discriminator: 4 })
+    (value) => ({
+      ...value,
+      discriminator: CREATE_ACTIVATED_DEVICE_DISCRIMINATOR,
+    })
   );
 }
 
@@ -191,6 +200,7 @@ export function getCreateActivatedDeviceInstruction<
   TAccountDeviceMint extends string,
   TAccountDeviceAssociatedToken extends string,
   TAccountOwner extends string,
+  TProgramAddress extends Address = typeof DEPHY_ID_PROGRAM_ADDRESS,
 >(
   input: CreateActivatedDeviceInput<
     TAccountSystemProgram,
@@ -204,9 +214,10 @@ export function getCreateActivatedDeviceInstruction<
     TAccountDeviceMint,
     TAccountDeviceAssociatedToken,
     TAccountOwner
-  >
+  >,
+  config?: { programAddress?: TProgramAddress }
 ): CreateActivatedDeviceInstruction<
-  typeof DEPHY_ID_PROGRAM_ADDRESS,
+  TProgramAddress,
   TAccountSystemProgram,
   TAccountToken2022Program,
   TAccountAtaProgram,
@@ -220,7 +231,7 @@ export function getCreateActivatedDeviceInstruction<
   TAccountOwner
 > {
   // Program address.
-  const programAddress = DEPHY_ID_PROGRAM_ADDRESS;
+  const programAddress = config?.programAddress ?? DEPHY_ID_PROGRAM_ADDRESS;
 
   // Original accounts.
   const originalAccounts = {
@@ -290,7 +301,7 @@ export function getCreateActivatedDeviceInstruction<
       args as CreateActivatedDeviceInstructionDataArgs
     ),
   } as CreateActivatedDeviceInstruction<
-    typeof DEPHY_ID_PROGRAM_ADDRESS,
+    TProgramAddress,
     TAccountSystemProgram,
     TAccountToken2022Program,
     TAccountAtaProgram,

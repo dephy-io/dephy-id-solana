@@ -40,7 +40,6 @@ impl ProgramDataAccount {
     }
 }
 
-///
 #[derive(Clone, BorshSerialize, BorshDeserialize, Debug)]
 pub struct ProgramData {
     pub bump: u8,

@@ -7,14 +7,14 @@
   },
   "dependencies": {
     "@dephy-io/dephy-id-program-client": "file:../clients/js",
-    "@noble/hashes": "^1.4.0",
-    "@solana/rpc-graphql": "^2.0.0-preview.3.20240701083225.ffcfc631e7b6588082115bddafc22d7a23139115",
-    "@solana/web3.js": "^2.0.0-preview.3.20240701083225.ffcfc631e7b6588082115bddafc22d7a23139115",
-    "edgedb": "^1.5.7"
+    "@noble/hashes": "^1.5.0",
+    "@solana/rpc-graphql": "^2.0.0-rc.1",
+    "@solana/web3.js": "^2.0.0-rc.1",
+    "edgedb": "^1.5.12"
   },
   "devDependencies": {
-    "@edgedb/generate": "^0.5.3",
-    "@types/express": "^4.17.21",
+    "@edgedb/generate": "^0.5.6",
+    "@types/express": "^5.0.0",
     "bun-types": "latest"
   }
 }

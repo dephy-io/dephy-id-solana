@@ -1,14 +1,14 @@
 pub mod assertions;
 pub mod constants;
+#[cfg(feature = "ed25519-sign")]
+mod ed25519;
 pub mod entrypoint;
 pub mod error;
 pub mod instruction;
 pub mod processor;
+mod secp256k1;
 pub mod state;
 pub mod utils;
-#[cfg(feature = "ed25519-sign")]
-mod ed25519;
-mod secp256k1;
 
 pub use constants::*;
 pub use solana_program;

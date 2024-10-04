@@ -41,6 +41,12 @@ import {
 import { DEPHY_ID_PROGRAM_ADDRESS } from '../programs';
 import { getAccountMetaFactory, type ResolvedAccount } from '../shared';
 
+export const CREATE_PRODUCT_DISCRIMINATOR = 1;
+
+export function getCreateProductDiscriminatorBytes() {
+  return getU8Encoder().encode(CREATE_PRODUCT_DISCRIMINATOR);
+}
+
 export type CreateProductInstruction<
   TProgram extends string = typeof DEPHY_ID_PROGRAM_ADDRESS,
   TAccountSystemProgram extends
@@ -110,7 +116,7 @@ export function getCreateProductInstructionDataEncoder(): Encoder<CreateProductI
         ),
       ],
     ]),
-    (value) => ({ ...value, discriminator: 1 })
+    (value) => ({ ...value, discriminator: CREATE_PRODUCT_DISCRIMINATOR })
   );
 }
 
@@ -171,6 +177,7 @@ export function getCreateProductInstruction<
   TAccountPayer extends string,
   TAccountVendor extends string,
   TAccountProductMint extends string,
+  TProgramAddress extends Address = typeof DEPHY_ID_PROGRAM_ADDRESS,
 >(
   input: CreateProductInput<
     TAccountSystemProgram,
@@ -178,9 +185,10 @@ export function getCreateProductInstruction<
     TAccountPayer,
     TAccountVendor,
     TAccountProductMint
-  >
+  >,
+  config?: { programAddress?: TProgramAddress }
 ): CreateProductInstruction<
-  typeof DEPHY_ID_PROGRAM_ADDRESS,
+  TProgramAddress,
   TAccountSystemProgram,
   TAccountToken2022Program,
   TAccountPayer,
@@ -188,7 +196,7 @@ export function getCreateProductInstruction<
   TAccountProductMint
 > {
   // Program address.
-  const programAddress = DEPHY_ID_PROGRAM_ADDRESS;
+  const programAddress = config?.programAddress ?? DEPHY_ID_PROGRAM_ADDRESS;
 
   // Original accounts.
   const originalAccounts = {
@@ -233,7 +241,7 @@ export function getCreateProductInstruction<
       args as CreateProductInstructionDataArgs
     ),
   } as CreateProductInstruction<
-    typeof DEPHY_ID_PROGRAM_ADDRESS,
+    TProgramAddress,
     TAccountSystemProgram,
     TAccountToken2022Program,
     TAccountPayer,

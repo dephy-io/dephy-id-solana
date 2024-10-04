@@ -28,7 +28,6 @@ use spl_token_2022::{
 use spl_token_metadata_interface::state::TokenMetadata;
 use std::time::{SystemTime, UNIX_EPOCH};
 
-
 #[tokio::test]
 async fn test_smoke() {
     let program_id = dephy_id_program::id();

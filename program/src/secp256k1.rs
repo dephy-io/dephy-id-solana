@@ -1,7 +1,6 @@
 use crate::error::Error;
 use solana_program::{
-    msg,
-    entrypoint::ProgramResult, keccak, pubkey::Pubkey, secp256k1_recover::secp256k1_recover,
+    entrypoint::ProgramResult, keccak, msg, pubkey::Pubkey, secp256k1_recover::secp256k1_recover,
 };
 
 pub(crate) fn verify_signature(
@@ -21,12 +20,8 @@ pub(crate) fn verify_signature(
         }
     }
 
-    let recovered_pubkey = secp256k1_recover(
-        &message_hash.0,
-        recovery_id,
-        signature,
-    )
-    .map_err(|_| Error::SignatureMismatch)?;
+    let recovered_pubkey = secp256k1_recover(&message_hash.0, recovery_id, signature)
+        .map_err(|_| Error::SignatureMismatch)?;
 
     let mapped_pubkey = keccak::hash(recovered_pubkey.0.as_ref());
     if mapped_pubkey.as_ref() != pubkey.as_ref() {
@@ -36,4 +31,3 @@ pub(crate) fn verify_signature(
 
     Ok(())
 }
-

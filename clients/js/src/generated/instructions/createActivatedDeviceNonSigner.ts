@@ -41,6 +41,14 @@ import {
   type CreateActivatedDeviceArgsArgs,
 } from '../types';
 
+export const CREATE_ACTIVATED_DEVICE_NON_SIGNER_DISCRIMINATOR = 5;
+
+export function getCreateActivatedDeviceNonSignerDiscriminatorBytes() {
+  return getU8Encoder().encode(
+    CREATE_ACTIVATED_DEVICE_NON_SIGNER_DISCRIMINATOR
+  );
+}
+
 export type CreateActivatedDeviceNonSignerInstruction<
   TProgram extends string = typeof DEPHY_ID_PROGRAM_ADDRESS,
   TAccountSystemProgram extends
@@ -119,7 +127,10 @@ export function getCreateActivatedDeviceNonSignerInstructionDataEncoder(): Encod
       ['discriminator', getU8Encoder()],
       ['createActivatedDeviceArgs', getCreateActivatedDeviceArgsEncoder()],
     ]),
-    (value) => ({ ...value, discriminator: 5 })
+    (value) => ({
+      ...value,
+      discriminator: CREATE_ACTIVATED_DEVICE_NON_SIGNER_DISCRIMINATOR,
+    })
   );
 }
 
@@ -190,6 +201,7 @@ export function getCreateActivatedDeviceNonSignerInstruction<
   TAccountDeviceMint extends string,
   TAccountDeviceAssociatedToken extends string,
   TAccountOwner extends string,
+  TProgramAddress extends Address = typeof DEPHY_ID_PROGRAM_ADDRESS,
 >(
   input: CreateActivatedDeviceNonSignerInput<
     TAccountSystemProgram,
@@ -203,9 +215,10 @@ export function getCreateActivatedDeviceNonSignerInstruction<
     TAccountDeviceMint,
     TAccountDeviceAssociatedToken,
     TAccountOwner
-  >
+  >,
+  config?: { programAddress?: TProgramAddress }
 ): CreateActivatedDeviceNonSignerInstruction<
-  typeof DEPHY_ID_PROGRAM_ADDRESS,
+  TProgramAddress,
   TAccountSystemProgram,
   TAccountToken2022Program,
   TAccountAtaProgram,
@@ -219,7 +232,7 @@ export function getCreateActivatedDeviceNonSignerInstruction<
   TAccountOwner
 > {
   // Program address.
-  const programAddress = DEPHY_ID_PROGRAM_ADDRESS;
+  const programAddress = config?.programAddress ?? DEPHY_ID_PROGRAM_ADDRESS;
 
   // Original accounts.
   const originalAccounts = {
@@ -289,7 +302,7 @@ export function getCreateActivatedDeviceNonSignerInstruction<
       args as CreateActivatedDeviceNonSignerInstructionDataArgs
     ),
   } as CreateActivatedDeviceNonSignerInstruction<
-    typeof DEPHY_ID_PROGRAM_ADDRESS,
+    TProgramAddress,
     TAccountSystemProgram,
     TAccountToken2022Program,
     TAccountAtaProgram,

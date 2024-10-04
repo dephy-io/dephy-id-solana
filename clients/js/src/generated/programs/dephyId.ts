@@ -6,7 +6,12 @@
  * @see https://github.com/kinobi-so/kinobi
  */
 
-import { containsBytes, getU8Encoder, type Address } from '@solana/web3.js';
+import {
+  containsBytes,
+  getU8Encoder,
+  type Address,
+  type ReadonlyUint8Array,
+} from '@solana/web3.js';
 import {
   type ParsedActivateDeviceInstruction,
   type ParsedCreateActivatedDeviceInstruction,
@@ -25,9 +30,9 @@ export enum DephyIdAccount {
 }
 
 export function identifyDephyIdAccount(
-  account: { data: Uint8Array } | Uint8Array
+  account: { data: ReadonlyUint8Array } | ReadonlyUint8Array
 ): DephyIdAccount {
-  const data = account instanceof Uint8Array ? account : account.data;
+  const data = 'data' in account ? account.data : account;
   if (containsBytes(data, getKeyEncoder().encode(Key.ProgramDataAccount), 0)) {
     return DephyIdAccount.ProgramDataAccount;
   }
@@ -46,10 +51,9 @@ export enum DephyIdInstruction {
 }
 
 export function identifyDephyIdInstruction(
-  instruction: { data: Uint8Array } | Uint8Array
+  instruction: { data: ReadonlyUint8Array } | ReadonlyUint8Array
 ): DephyIdInstruction {
-  const data =
-    instruction instanceof Uint8Array ? instruction : instruction.data;
+  const data = 'data' in instruction ? instruction.data : instruction;
   if (containsBytes(data, getU8Encoder().encode(0), 0)) {
     return DephyIdInstruction.Initialize;
   }

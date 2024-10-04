@@ -183,4 +183,3 @@ pub struct CreateActivatedDeviceArgs {
     pub uri: String,
     pub additional_metadata: Vec<(String, String)>,
 }
-

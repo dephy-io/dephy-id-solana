@@ -6,10 +6,10 @@ use arrayref::array_ref;
 use clap::{Args, Parser, Subcommand, ValueEnum};
 use dephy_id_program_client::{
     instructions::{
-        ActivateDeviceBuilder, CreateDeviceBuilder, CreateProductBuilder, InitializeBuilder,
-        CreateActivatedDeviceNonSignerBuilder,
+        ActivateDeviceBuilder, CreateActivatedDeviceNonSignerBuilder, CreateDeviceBuilder,
+        CreateProductBuilder, InitializeBuilder,
     },
-    types::{self, DeviceActivationSignature, CreateActivatedDeviceArgs},
+    types::{self, CreateActivatedDeviceArgs, DeviceActivationSignature},
     DEVICE_MESSAGE_PREFIX, DEVICE_MINT_SEED_PREFIX, EIP191_MESSAGE_PREFIX, ID as PROGRAM_ID,
     PRODUCT_MINT_SEED_PREFIX, PROGRAM_PDA_SEED_PREFIX,
 };
@@ -80,9 +80,9 @@ enum DeviceSigningAlgorithm {
     Secp256k1,
 }
 
-impl Into<types::DeviceSigningAlgorithm> for DeviceSigningAlgorithm {
-    fn into(self) -> types::DeviceSigningAlgorithm {
-        match self {
+impl From<DeviceSigningAlgorithm> for types::DeviceSigningAlgorithm {
+    fn from(val: DeviceSigningAlgorithm) -> Self {
+        match val {
             DeviceSigningAlgorithm::Ed25519 => types::DeviceSigningAlgorithm::Ed25519,
             DeviceSigningAlgorithm::Secp256k1 => types::DeviceSigningAlgorithm::Secp256k1,
         }
@@ -146,9 +146,9 @@ enum SignatureType {
     EthSecp256k1,
 }
 
-impl Into<DeviceSigningAlgorithm> for SignatureType {
-    fn into(self) -> DeviceSigningAlgorithm {
-        match self {
+impl From<SignatureType> for DeviceSigningAlgorithm {
+    fn from(val: SignatureType) -> Self {
+        match val {
             SignatureType::Ed25519 => DeviceSigningAlgorithm::Ed25519,
             SignatureType::Secp256k1 => DeviceSigningAlgorithm::Secp256k1,
             SignatureType::EthSecp256k1 => DeviceSigningAlgorithm::Secp256k1,
@@ -257,13 +257,13 @@ fn get_client(url: &String) -> RpcClient {
     let timeout = Duration::from_secs(10);
     let commitment_config = CommitmentConfig::processed();
     let confirm_transaction_initial_timeout = Duration::from_secs(10);
-    let client = RpcClient::new_with_timeouts_and_commitment(
+
+    RpcClient::new_with_timeouts_and_commitment(
         url,
         timeout,
         commitment_config,
         confirm_transaction_initial_timeout,
-    );
-    client
+    )
 }
 
 fn read_key(path: &String) -> Keypair {
@@ -486,7 +486,7 @@ fn dev_create_activated_device(args: DevCreateActivatedDeviceCliArgs) {
             .instruction()],
         Some(&payer.pubkey()),
         &[&payer, &vendor],
-        latest_block
+        latest_block,
     );
 
     match client.send_and_confirm_transaction(&transaction) {
@@ -496,7 +496,10 @@ fn dev_create_activated_device(args: DevCreateActivatedDeviceCliArgs) {
             eprintln!("Device:  {}", device_pubkey);
             eprintln!("Mint:    {}", did_mint_pubkey);
             eprintln!("AToken:  {}", did_atoken_pubkey);
-            println!("{},{},{}", device_pubkey, did_mint_pubkey, did_atoken_pubkey);
+            println!(
+                "{},{},{}",
+                device_pubkey, did_mint_pubkey, did_atoken_pubkey
+            );
         }
         Err(err) => {
             eprintln!("Error: {:?}", err);
@@ -698,8 +701,8 @@ fn sign_message(args: SignMessageCliArgs) {
         | DeviceActivationSignature::EthSecp256k1(signature_bytes, recovery_id) => {
             println!(
                 "{}{}",
-                hex::encode(&signature_bytes),
-                hex::encode(&[recovery_id])
+                hex::encode(signature_bytes),
+                hex::encode([recovery_id])
             );
         }
     }

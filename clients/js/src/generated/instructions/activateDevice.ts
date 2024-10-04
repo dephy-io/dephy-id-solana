@@ -38,6 +38,12 @@ import {
   type DeviceActivationSignatureArgs,
 } from '../types';
 
+export const ACTIVATE_DEVICE_DISCRIMINATOR = 3;
+
+export function getActivateDeviceDiscriminatorBytes() {
+  return getU8Encoder().encode(ACTIVATE_DEVICE_DISCRIMINATOR);
+}
+
 export type ActivateDeviceInstruction<
   TProgram extends string = typeof DEPHY_ID_PROGRAM_ADDRESS,
   TAccountSystemProgram extends
@@ -118,7 +124,7 @@ export function getActivateDeviceInstructionDataEncoder(): Encoder<ActivateDevic
       ['signature', getDeviceActivationSignatureEncoder()],
       ['timestamp', getU64Encoder()],
     ]),
-    (value) => ({ ...value, discriminator: 3 })
+    (value) => ({ ...value, discriminator: ACTIVATE_DEVICE_DISCRIMINATOR })
   );
 }
 
@@ -191,6 +197,7 @@ export function getActivateDeviceInstruction<
   TAccountDeviceMint extends string,
   TAccountDeviceAssociatedToken extends string,
   TAccountOwner extends string,
+  TProgramAddress extends Address = typeof DEPHY_ID_PROGRAM_ADDRESS,
 >(
   input: ActivateDeviceInput<
     TAccountSystemProgram,
@@ -204,9 +211,10 @@ export function getActivateDeviceInstruction<
     TAccountDeviceMint,
     TAccountDeviceAssociatedToken,
     TAccountOwner
-  >
+  >,
+  config?: { programAddress?: TProgramAddress }
 ): ActivateDeviceInstruction<
-  typeof DEPHY_ID_PROGRAM_ADDRESS,
+  TProgramAddress,
   TAccountSystemProgram,
   TAccountToken2022Program,
   TAccountAtaProgram,
@@ -220,7 +228,7 @@ export function getActivateDeviceInstruction<
   TAccountOwner
 > {
   // Program address.
-  const programAddress = DEPHY_ID_PROGRAM_ADDRESS;
+  const programAddress = config?.programAddress ?? DEPHY_ID_PROGRAM_ADDRESS;
 
   // Original accounts.
   const originalAccounts = {
@@ -287,7 +295,7 @@ export function getActivateDeviceInstruction<
       args as ActivateDeviceInstructionDataArgs
     ),
   } as ActivateDeviceInstruction<
-    typeof DEPHY_ID_PROGRAM_ADDRESS,
+    TProgramAddress,
     TAccountSystemProgram,
     TAccountToken2022Program,
     TAccountAtaProgram,

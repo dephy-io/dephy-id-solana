@@ -7,6 +7,8 @@
  */
 import { type Address, type Codec, type Decoder, type Encoder, type IAccountMeta, type IAccountSignerMeta, type IInstruction, type IInstructionWithAccounts, type IInstructionWithData, type ReadonlyAccount, type ReadonlySignerAccount, type TransactionSigner, type WritableAccount, type WritableSignerAccount } from '@solana/web3.js';
 import { DEPHY_ID_PROGRAM_ADDRESS } from '../programs';
+export declare const INITIALIZE_DISCRIMINATOR = 0;
+export declare function getInitializeDiscriminatorBytes(): import("@solana/web3.js").ReadonlyUint8Array;
 export type InitializeInstruction<TProgram extends string = typeof DEPHY_ID_PROGRAM_ADDRESS, TAccountSystemProgram extends string | IAccountMeta<string> = '11111111111111111111111111111111', TAccountPayer extends string | IAccountMeta<string> = string, TAccountProgramData extends string | IAccountMeta<string> = string, TAccountAuthority extends string | IAccountMeta<string> = string, TRemainingAccounts extends readonly IAccountMeta<string>[] = []> = IInstruction<TProgram> & IInstructionWithData<Uint8Array> & IInstructionWithAccounts<[
     TAccountSystemProgram extends string ? ReadonlyAccount<TAccountSystemProgram> : TAccountSystemProgram,
     TAccountPayer extends string ? WritableSignerAccount<TAccountPayer> & IAccountSignerMeta<TAccountPayer> : TAccountPayer,
@@ -35,7 +37,9 @@ export type InitializeInput<TAccountSystemProgram extends string = string, TAcco
     authority: TransactionSigner<TAccountAuthority>;
     bump: InitializeInstructionDataArgs['bump'];
 };
-export declare function getInitializeInstruction<TAccountSystemProgram extends string, TAccountPayer extends string, TAccountProgramData extends string, TAccountAuthority extends string>(input: InitializeInput<TAccountSystemProgram, TAccountPayer, TAccountProgramData, TAccountAuthority>): InitializeInstruction<typeof DEPHY_ID_PROGRAM_ADDRESS, TAccountSystemProgram, TAccountPayer, TAccountProgramData, TAccountAuthority>;
+export declare function getInitializeInstruction<TAccountSystemProgram extends string, TAccountPayer extends string, TAccountProgramData extends string, TAccountAuthority extends string, TProgramAddress extends Address = typeof DEPHY_ID_PROGRAM_ADDRESS>(input: InitializeInput<TAccountSystemProgram, TAccountPayer, TAccountProgramData, TAccountAuthority>, config?: {
+    programAddress?: TProgramAddress;
+}): InitializeInstruction<TProgramAddress, TAccountSystemProgram, TAccountPayer, TAccountProgramData, TAccountAuthority>;
 export type ParsedInitializeInstruction<TProgram extends string = typeof DEPHY_ID_PROGRAM_ADDRESS, TAccountMetas extends readonly IAccountMeta[] = readonly IAccountMeta[]> = {
     programAddress: Address<TProgram>;
     accounts: {

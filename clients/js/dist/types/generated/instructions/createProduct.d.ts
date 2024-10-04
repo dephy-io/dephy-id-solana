@@ -7,6 +7,8 @@
  */
 import { type Address, type Codec, type Decoder, type Encoder, type IAccountMeta, type IAccountSignerMeta, type IInstruction, type IInstructionWithAccounts, type IInstructionWithData, type ReadonlyAccount, type ReadonlySignerAccount, type TransactionSigner, type WritableAccount, type WritableSignerAccount } from '@solana/web3.js';
 import { DEPHY_ID_PROGRAM_ADDRESS } from '../programs';
+export declare const CREATE_PRODUCT_DISCRIMINATOR = 1;
+export declare function getCreateProductDiscriminatorBytes(): import("@solana/web3.js").ReadonlyUint8Array;
 export type CreateProductInstruction<TProgram extends string = typeof DEPHY_ID_PROGRAM_ADDRESS, TAccountSystemProgram extends string | IAccountMeta<string> = '11111111111111111111111111111111', TAccountToken2022Program extends string | IAccountMeta<string> = 'TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb', TAccountPayer extends string | IAccountMeta<string> = string, TAccountVendor extends string | IAccountMeta<string> = string, TAccountProductMint extends string | IAccountMeta<string> = string, TRemainingAccounts extends readonly IAccountMeta<string>[] = []> = IInstruction<TProgram> & IInstructionWithData<Uint8Array> & IInstructionWithAccounts<[
     TAccountSystemProgram extends string ? ReadonlyAccount<TAccountSystemProgram> : TAccountSystemProgram,
     TAccountToken2022Program extends string ? ReadonlyAccount<TAccountToken2022Program> : TAccountToken2022Program,
@@ -47,7 +49,9 @@ export type CreateProductInput<TAccountSystemProgram extends string = string, TA
     uri: CreateProductInstructionDataArgs['uri'];
     additionalMetadata: CreateProductInstructionDataArgs['additionalMetadata'];
 };
-export declare function getCreateProductInstruction<TAccountSystemProgram extends string, TAccountToken2022Program extends string, TAccountPayer extends string, TAccountVendor extends string, TAccountProductMint extends string>(input: CreateProductInput<TAccountSystemProgram, TAccountToken2022Program, TAccountPayer, TAccountVendor, TAccountProductMint>): CreateProductInstruction<typeof DEPHY_ID_PROGRAM_ADDRESS, TAccountSystemProgram, TAccountToken2022Program, TAccountPayer, TAccountVendor, TAccountProductMint>;
+export declare function getCreateProductInstruction<TAccountSystemProgram extends string, TAccountToken2022Program extends string, TAccountPayer extends string, TAccountVendor extends string, TAccountProductMint extends string, TProgramAddress extends Address = typeof DEPHY_ID_PROGRAM_ADDRESS>(input: CreateProductInput<TAccountSystemProgram, TAccountToken2022Program, TAccountPayer, TAccountVendor, TAccountProductMint>, config?: {
+    programAddress?: TProgramAddress;
+}): CreateProductInstruction<TProgramAddress, TAccountSystemProgram, TAccountToken2022Program, TAccountPayer, TAccountVendor, TAccountProductMint>;
 export type ParsedCreateProductInstruction<TProgram extends string = typeof DEPHY_ID_PROGRAM_ADDRESS, TAccountMetas extends readonly IAccountMeta[] = readonly IAccountMeta[]> = {
     programAddress: Address<TProgram>;
     accounts: {

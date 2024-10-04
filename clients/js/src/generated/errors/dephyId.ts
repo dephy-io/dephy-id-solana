@@ -6,6 +6,14 @@
  * @see https://github.com/kinobi-so/kinobi
  */
 
+import {
+  isProgramError,
+  type Address,
+  type SOLANA_ERROR__INSTRUCTION_ERROR__CUSTOM,
+  type SolanaError,
+} from '@solana/web3.js';
+import { DEPHY_ID_PROGRAM_ADDRESS } from '../programs';
+
 /** DeserializationError: Error deserializing an account */
 export const DEPHY_ID_ERROR__DESERIALIZATION_ERROR = 0x0; // 0
 /** SerializationError: Error serializing an account */
@@ -49,7 +57,7 @@ export type DephyIdError =
   | typeof DEPHY_ID_ERROR__SIGNATURE_MISMATCH;
 
 let dephyIdErrorMessages: Record<DephyIdError, string> | undefined;
-if (__DEV__) {
+if (process.env.NODE_ENV !== 'production') {
   dephyIdErrorMessages = {
     [DEPHY_ID_ERROR__ACCOUNT_MISMATCH]: `Account mismatch`,
     [DEPHY_ID_ERROR__DESERIALIZATION_ERROR]: `Error deserializing an account`,
@@ -68,9 +76,25 @@ if (__DEV__) {
 }
 
 export function getDephyIdErrorMessage(code: DephyIdError): string {
-  if (__DEV__) {
+  if (process.env.NODE_ENV !== 'production') {
     return (dephyIdErrorMessages as Record<DephyIdError, string>)[code];
   }
 
-  return 'Error message not available in production bundles. Compile with `__DEV__` set to true to see more information.';
+  return 'Error message not available in production bundles.';
+}
+
+export function isDephyIdError<TProgramErrorCode extends DephyIdError>(
+  error: unknown,
+  transactionMessage: {
+    instructions: Record<number, { programAddress: Address }>;
+  },
+  code?: TProgramErrorCode
+): error is SolanaError<typeof SOLANA_ERROR__INSTRUCTION_ERROR__CUSTOM> &
+  Readonly<{ context: Readonly<{ code: TProgramErrorCode }> }> {
+  return isProgramError<TProgramErrorCode>(
+    error,
+    transactionMessage,
+    DEPHY_ID_PROGRAM_ADDRESS,
+    code
+  );
 }

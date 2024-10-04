@@ -5,15 +5,15 @@
  *
  * @see https://github.com/kinobi-so/kinobi
  */
-import { type Address } from '@solana/web3.js';
+import { type Address, type ReadonlyUint8Array } from '@solana/web3.js';
 import { type ParsedActivateDeviceInstruction, type ParsedCreateActivatedDeviceInstruction, type ParsedCreateActivatedDeviceNonSignerInstruction, type ParsedCreateDeviceInstruction, type ParsedCreateProductInstruction, type ParsedInitializeInstruction } from '../instructions';
 export declare const DEPHY_ID_PROGRAM_ADDRESS: Address<"hdMghjD73uASxgJXi6e1mGPsXqnADMsrqB1bveqABP1">;
 export declare enum DephyIdAccount {
     ProgramDataAccount = 0
 }
 export declare function identifyDephyIdAccount(account: {
-    data: Uint8Array;
-} | Uint8Array): DephyIdAccount;
+    data: ReadonlyUint8Array;
+} | ReadonlyUint8Array): DephyIdAccount;
 export declare enum DephyIdInstruction {
     Initialize = 0,
     CreateProduct = 1,
@@ -23,8 +23,8 @@ export declare enum DephyIdInstruction {
     CreateActivatedDeviceNonSigner = 5
 }
 export declare function identifyDephyIdInstruction(instruction: {
-    data: Uint8Array;
-} | Uint8Array): DephyIdInstruction;
+    data: ReadonlyUint8Array;
+} | ReadonlyUint8Array): DephyIdInstruction;
 export type ParsedDephyIdInstruction<TProgram extends string = 'hdMghjD73uASxgJXi6e1mGPsXqnADMsrqB1bveqABP1'> = ({
     instructionType: DephyIdInstruction.Initialize;
 } & ParsedInitializeInstruction<TProgram>) | ({
