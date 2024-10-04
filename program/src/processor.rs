@@ -126,7 +126,7 @@ fn create_product<'a>(
 
     // Guards
     assert_signer("vendor", ctx.accounts.vendor)?;
-    if args.name.len() == 0 {
+    if args.name.is_empty() {
         msg!("Name should not be empty");
         return Err(ProgramError::InvalidArgument);
     };
@@ -174,7 +174,7 @@ fn create_product<'a>(
         base_size,
         Some(base_size + metadata_size),
         &token_program_id,
-        &[&product_mint_seeds],
+        &[product_mint_seeds],
     )?;
 
     // init Permanent Delegate
@@ -293,7 +293,7 @@ fn create_device<'a>(
     )?;
 
     assert_signer("vendor", ctx.accounts.vendor)?;
-    if args.name.len() == 0 {
+    if args.name.is_empty() {
         msg!("Name should not be empty");
         return Err(ProgramError::InvalidArgument);
     };
@@ -322,7 +322,7 @@ fn create_device<'a>(
     )?;
 
     let product_ata_pubkey = get_associated_token_address_with_program_id(
-        &device_pubkey,
+        device_pubkey,
         &product_mint_pubkey,
         &token_program_id,
     );
@@ -417,8 +417,8 @@ fn activate_device<'a>(
     )?;
 
     let product_ata_pubkey = get_associated_token_address_with_program_id(
-        &device_pubkey,
-        &product_mint_pubkey,
+        device_pubkey,
+        product_mint_pubkey,
         &token_program_id,
     );
 
@@ -522,7 +522,7 @@ fn create_activated_device<'a>(
     )?;
 
     assert_signer("vendor", ctx.accounts.vendor)?;
-    if args.name.len() == 0 {
+    if args.name.is_empty() {
         msg!("Name should not be empty");
         return Err(ProgramError::InvalidArgument);
     };
@@ -555,7 +555,7 @@ fn create_activated_device<'a>(
     )?;
 
     let product_ata_pubkey = get_associated_token_address_with_program_id(
-        &device_pubkey,
+        device_pubkey,
         &product_mint_pubkey,
         &token_program_id,
     );
@@ -568,7 +568,7 @@ fn create_activated_device<'a>(
 
     let device_ata_pubkey = get_associated_token_address_with_program_id(
         owner_pubkey,
-        &device_mint_pubkey,
+        device_mint_pubkey,
         &token_program_id,
     );
     assert_same_pubkeys(
@@ -732,15 +732,15 @@ fn create_device_mint_internal(
         base_size,
         Some(base_size + metadata_size),
         accounts.token_program.key,
-        &[&device_mint_seeds],
+        &[device_mint_seeds],
     )?;
 
     // init Mint Close Authroity
     invoke(
         &spl_token_2022::instruction::initialize_mint_close_authority(
             accounts.token_program.key,
-            &device_mint_pubkey,
-            Some(&device_mint_pubkey),
+            device_mint_pubkey,
+            Some(device_mint_pubkey),
         )?,
         &[
             // 0. `[writable]` The mint account to initialize.
@@ -752,7 +752,7 @@ fn create_device_mint_internal(
     invoke(
         &spl_token_2022::instruction::initialize_non_transferable_mint(
             accounts.token_program.key,
-            &device_mint_pubkey,
+            device_mint_pubkey,
         )?,
         &[
             // 0. `[writable]` The mint account to initialize.
@@ -764,7 +764,7 @@ fn create_device_mint_internal(
     invoke(
         &metadata_pointer::instruction::initialize(
             accounts.token_program.key,
-            &device_mint_pubkey,
+            device_mint_pubkey,
             None,
             Some(*device_mint_pubkey),
         )?,
@@ -778,8 +778,8 @@ fn create_device_mint_internal(
     invoke_signed(
         &spl_token_2022::instruction::initialize_mint2(
             accounts.token_program.key,
-            &device_mint_pubkey,
-            &device_mint_pubkey,
+            device_mint_pubkey,
+            device_mint_pubkey,
             None,
             0,
         )?,
@@ -794,10 +794,10 @@ fn create_device_mint_internal(
     invoke_signed(
         &spl_token_metadata_interface::instruction::initialize(
             accounts.token_program.key,
-            &device_mint_pubkey,
-            &device_mint_pubkey,
-            &device_mint_pubkey,
-            &device_mint_pubkey,
+            device_mint_pubkey,
+            device_mint_pubkey,
+            device_mint_pubkey,
+            device_mint_pubkey,
             metadata.name,
             metadata.symbol,
             metadata.uri,
@@ -819,8 +819,8 @@ fn create_device_mint_internal(
         invoke_signed(
             &spl_token_metadata_interface::instruction::update_field(
                 accounts.token_program.key,
-                &device_mint_pubkey,
-                &device_mint_pubkey,
+                device_mint_pubkey,
+                device_mint_pubkey,
                 Field::Key(field),
                 value,
             ),
@@ -856,7 +856,7 @@ fn activate_device_internal(
             accounts.payer.key,
             accounts.owner.key,
             accounts.device_mint.key,
-            &accounts.token_program.key,
+            accounts.token_program.key,
         ),
         &[
             // 0. `[writeable,signer]` Funding account (must be a system account)
@@ -877,7 +877,7 @@ fn activate_device_internal(
     // mint to user
     invoke_signed(
         &spl_token_2022::instruction::mint_to(
-            &accounts.token_program.key,
+            accounts.token_program.key,
             accounts.device_mint.key,
             accounts.device_atoken.key,
             accounts.device_mint.key,
@@ -898,7 +898,7 @@ fn activate_device_internal(
     // disable mint
     invoke_signed(
         &spl_token_2022::instruction::set_authority(
-            &accounts.token_program.key,
+            accounts.token_program.key,
             accounts.device_mint.key,
             None,
             spl_token_2022::instruction::AuthorityType::MintTokens,
