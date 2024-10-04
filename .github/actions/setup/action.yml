@@ -19,6 +19,9 @@ inputs:
   solana:
     description: Install Solana if `true`. Defaults to `false`.
     required: false
+  shank:
+    description: Install Shank if `true`. Defaults to `false`.
+    required: false
 
 runs:
   using: 'composite'
@@ -60,6 +63,12 @@ runs:
       with:
         version: ${{ env.SOLANA_VERSION }}
         cache: true
+
+    - name: Install Shank
+      if: ${{ inputs.shank == 'true' }}
+      uses: baptiste0928/cargo-install@v3
+      with:
+        crate: shank-cli
 
     - name: Cache Cargo Dependencies
       if: ${{ inputs.cargo-cache-key && !inputs.cargo-cache-fallback-key }}

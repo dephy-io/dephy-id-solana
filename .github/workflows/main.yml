@@ -122,6 +122,7 @@ jobs:
         with:
           cargo-cache-key: cargo-programs
           cargo-cache-local-key: cargo-local
+          shank: true
 
       - name: Generate IDLs
         run: pnpm generate:idls
