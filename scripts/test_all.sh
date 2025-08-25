@@ -5,8 +5,7 @@ DEVICE=tmp/keys/device1.json
 USER=tmp/keys/user1.json
 
 PRODUCT_NAME=$1
-if [ -e $PRODUCT_NAME ]
-then
+if [ -z "$PRODUCT_NAME" ]; then
     PRODUCT_NAME='Product 1'
 fi
 
